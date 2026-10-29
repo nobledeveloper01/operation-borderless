@@ -1,7 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { parseCurrencyApi } from '../../../src/fx/providers/currency-api.provider.js';
 import { parseExchangeRateApi } from '../../../src/fx/providers/exchangerate-api.provider.js';
-import { checkJump, InvalidRates } from '../../../src/fx/rate-validation.js';
+import {
+  InvalidRates,
+  movedTooFar,
+  sourcesAgree,
+} from '../../../src/fx/rate-validation.js';
 
 const load = (name: string) =>
   JSON.parse(
@@ -71,11 +75,15 @@ describe('FX provider answers', () => {
       ...previous,
       ratesPerUsd: { ...previous.ratesPerUsd, NGN: '1700.000000000000' },
     };
-    expect(() => checkJump(moved, previous)).toThrow(/NGN moved/);
+    expect(movedTooFar(moved, previous)).toBe(true);
     const small = {
       ...previous,
       ratesPerUsd: { ...previous.ratesPerUsd, NGN: '1400.000000000000' },
     };
-    expect(() => checkJump(small, previous)).not.toThrow();
+    expect(movedTooFar(small, previous)).toBe(false);
+    expect(
+      sourcesAgree(previous, parseCurrencyApi(load('currency-api'), now)),
+    ).toBe(true);
+    expect(sourcesAgree(previous, small)).toBe(false);
   });
 });

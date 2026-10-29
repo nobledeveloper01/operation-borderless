@@ -16,7 +16,7 @@ import { FIXED_RATES_PER_USD } from './fixed-table.js';
 import { FxSnapshotsRepository } from './fx-snapshots.repository.js';
 import type { FxSnapshot, FxSource, ProviderRates } from './fx.types.js';
 import { FX_PROVIDERS, type FxProvider } from './providers/fx-provider.js';
-import { checkJump } from './rate-validation.js';
+import { movedTooFar, sourcesAgree } from './rate-validation.js';
 import { nextRefreshDelay, type RefreshOutcome } from './refresh-schedule.js';
 
 export interface PricedRate {
@@ -32,6 +32,7 @@ export class FxService implements OnModuleInit, OnModuleDestroy {
   private current: FxSnapshot | undefined;
   private refreshing: Promise<RefreshOutcome> | undefined;
   private timer: NodeJS.Timeout | undefined;
+  private destroyed = false;
 
   constructor(
     @Inject(FX_PROVIDERS) private readonly providers: FxProvider[],
@@ -42,11 +43,12 @@ export class FxService implements OnModuleInit, OnModuleDestroy {
 
   // Startup never waits on a provider: it loads the last snapshot and refreshes in the background.
   async onModuleInit(): Promise<void> {
-    this.current = await this.snapshots.latest();
+    this.current = await this.snapshots.latest(this.config.FX_FIXED_TABLE);
     if (this.config.FX_REFRESH_ENABLED) this.schedule(0);
   }
 
   onModuleDestroy(): void {
+    this.destroyed = true;
     clearTimeout(this.timer);
   }
 
@@ -106,42 +108,60 @@ export class FxService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async runRefresh(): Promise<RefreshOutcome> {
+    const now = this.now();
     let rateLimited = false;
-    for (const [index, provider] of this.providers.entries()) {
-      try {
-        const rates = await provider.fetchLatest();
-        await this.adopt(rates);
-        if (this.isFresh(this.current)) {
-          return index === 0
-            ? { kind: 'primary', nextUpdateAt: rates.nextUpdateAt }
-            : { kind: 'secondary' };
-        }
-        this.logger.warn(
-          { source: provider.name, providerUpdatedAt: rates.providerUpdatedAt },
-          'FX data is stale',
-        );
-      } catch (error) {
-        if (
-          index === 0 &&
-          error instanceof FetchFailure &&
-          error.kind === 'rate_limited'
-        )
-          rateLimited = true;
-        this.logger.warn(
-          { source: provider.name, reason: (error as Error).message },
-          'FX refresh failed',
+    // Each provider is called at most once per refresh, even when it is also needed to confirm the other.
+    const answers = new Map<number, Promise<ProviderRates | Error>>();
+    const answer = (index: number) => {
+      if (!answers.has(index)) {
+        const provider = this.providers[index]!;
+        answers.set(
+          index,
+          provider.fetchLatest(now).catch((error: unknown) => {
+            if (
+              index === 0 &&
+              error instanceof FetchFailure &&
+              error.kind === 'rate_limited'
+            )
+              rateLimited = true;
+            this.logger.warn(
+              { source: provider.name, reason: (error as Error).message },
+              'FX refresh failed',
+            );
+            return error instanceof Error ? error : new Error(String(error));
+          }),
         );
       }
-    }
-    if (this.config.FX_FIXED_TABLE && !this.isFresh(this.current)) {
-      await this.adopt(
-        {
-          source: 'fixed-table',
-          ratesPerUsd: FIXED_RATES_PER_USD,
-          providerUpdatedAt: this.now(),
-        },
-        false,
+      return answers.get(index)!;
+    };
+
+    for (const [index, provider] of this.providers.entries()) {
+      const rates = await answer(index);
+      if (rates instanceof Error) continue;
+      if (!(await this.trusted(rates, index, answer))) {
+        this.logger.warn(
+          { source: provider.name },
+          'FX answer refused: a big move the other source does not confirm',
+        );
+        continue;
+      }
+      await this.adopt(rates);
+      if (this.isFresh(this.current, now)) {
+        return index === 0
+          ? { kind: 'primary', nextUpdateAt: rates.nextUpdateAt }
+          : { kind: 'secondary', rateLimited };
+      }
+      this.logger.warn(
+        { source: provider.name, providerUpdatedAt: rates.providerUpdatedAt },
+        'FX data is stale',
       );
+    }
+    if (this.config.FX_FIXED_TABLE && !this.isFresh(this.current, now)) {
+      await this.adopt({
+        source: 'fixed-table',
+        ratesPerUsd: FIXED_RATES_PER_USD,
+        providerUpdatedAt: now,
+      });
       this.logger.warn(
         'Both live FX sources failed, so the fixed demo table is in use',
       );
@@ -149,18 +169,42 @@ export class FxService implements OnModuleInit, OnModuleDestroy {
     return { kind: 'failed', rateLimited };
   }
 
-  // Saves a valid answer and makes it current only if it is newer than what is in use.
-  private async adopt(rates: ProviderRates, checkMove = true): Promise<void> {
-    if (checkMove) checkJump(rates, this.current);
+  // An answer is trusted when it stays near the current live rates, or when the other source confirms it.
+  private async trusted(
+    rates: ProviderRates,
+    index: number,
+    answer: (index: number) => Promise<ProviderRates | Error>,
+  ): Promise<boolean> {
+    const reference =
+      this.current?.source !== 'fixed-table' && this.isFresh(this.current)
+        ? this.current
+        : undefined;
+    if (reference && !movedTooFar(rates, reference)) return true;
+    const otherIndex = this.providers.findIndex((_, i) => i !== index);
+    const other =
+      otherIndex >= 0 ? await answer(otherIndex) : new Error('no other source');
+    if (!(other instanceof Error)) return sourcesAgree(rates, other);
+    // With no trusted reference and nothing to compare with, a single answer that passed validation is all there is.
+    return !reference;
+  }
+
+  // Saves a valid answer and makes it current if it is newer, or if it replaces the fixed demo table.
+  private async adopt(rates: ProviderRates): Promise<void> {
     const saved = await this.snapshots.save(rates);
+    const current = this.current;
+    const replacesDemo =
+      current?.source === 'fixed-table' && saved.source !== 'fixed-table';
     if (
-      !this.current ||
-      saved.providerUpdatedAt >= this.current.providerUpdatedAt
+      !current ||
+      replacesDemo ||
+      saved.providerUpdatedAt >= current.providerUpdatedAt
     )
       this.current = saved;
   }
 
   private schedule(delayMs: number): void {
+    // A refresh that finishes after shutdown must not start a new timer.
+    if (this.destroyed) return;
     clearTimeout(this.timer);
     this.timer = setTimeout(() => {
       void this.refresh()
@@ -172,10 +216,18 @@ export class FxService implements OnModuleInit, OnModuleDestroy {
           return { kind: 'failed' as const, rateLimited: false };
         })
         .then((outcome) =>
-          this.schedule(nextRefreshDelay(outcome, this.now())),
+          this.schedule(
+            nextRefreshDelay(outcome, this.now(), Math.random, this.staleAt()),
+          ),
         );
     }, delayMs);
     this.timer.unref();
+  }
+
+  private staleAt(): Date | undefined {
+    return this.current
+      ? new Date(this.current.providerUpdatedAt.getTime() + this.maxAgeMs())
+      : undefined;
   }
 
   private maxAgeMs(): number {

@@ -47,19 +47,25 @@ export function checkedTime(value: unknown, now = new Date()): Date {
   return time;
 }
 
-// A move of more than 20% in a day is far more likely a broken feed than a real market.
-export function checkJump(
+// The biggest relative change between two rate sets, used both for jump checks and for source agreement.
+export function largestMove(
   next: ProviderRates,
-  previous: ProviderRates | undefined,
-): void {
-  if (!previous) return;
+  previous: ProviderRates,
+): { code: Fiat; change: number } {
+  let worst: { code: Fiat; change: number } = { code: 'USD', change: 0 };
   for (const code of FIAT_CODES) {
     const change =
       Number(next.ratesPerUsd[code]) / Number(previous.ratesPerUsd[code]) - 1;
-    if (Math.abs(change) > MAX_JUMP) {
-      throw new InvalidRates(
-        `${code} moved ${(change * 100).toFixed(1)}% since the last snapshot`,
-      );
-    }
+    if (Math.abs(change) > Math.abs(worst.change)) worst = { code, change };
   }
+  return worst;
 }
+
+// A move of more than 20% in a day is far more likely a broken feed than a real market, unless the other source agrees.
+export const movedTooFar = (next: ProviderRates, previous: ProviderRates) =>
+  Math.abs(largestMove(next, previous).change) > MAX_JUMP;
+
+export const AGREEMENT = 0.02;
+
+export const sourcesAgree = (a: ProviderRates, b: ProviderRates) =>
+  Math.abs(largestMove(a, b).change) <= AGREEMENT;

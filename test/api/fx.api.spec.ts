@@ -34,7 +34,10 @@ describe('FX rates', () => {
   it('TC-015 falls back to the secondary source when the primary times out', async () => {
     primary.answer = new FetchFailure('timeout', 'No answer within 3000 ms');
     secondary.answer = () => secondaryRates(now);
-    await expect(fx().refresh()).resolves.toEqual({ kind: 'secondary' });
+    await expect(fx().refresh()).resolves.toEqual({
+      kind: 'secondary',
+      rateLimited: false,
+    });
     expect(primary.calls).toBe(1);
     const res = await http().get('/api/v1/fx/rates').expect(200);
     expect(res.body.data).toMatchObject({
@@ -134,6 +137,31 @@ describe('FX rates', () => {
 
     expect(() => fx().quote('cNGN', 'USDx')).toThrow(AppError);
     expect(fx().quote('USDx', 'USDx').source).toBe('none');
+  });
+
+  it('never loads the fixed table after a restart with it switched off', async () => {
+    const demo = await createTestApp(
+      { FX_FIXED_TABLE: 'true' },
+      { fxProviders: [primary, secondary], clock: () => now },
+    );
+    try {
+      primary.answer = new FetchFailure('network', 'down');
+      secondary.answer = new FetchFailure('network', 'down');
+      now = new Date(now.getTime() + 5 * 86_400_000);
+      await demo.get(FxService).refresh();
+      expect(demo.get(FxService).latest()?.source).toBe('fixed-table');
+    } finally {
+      await demo.close();
+    }
+    const restarted = await createTestApp(
+      {},
+      { fxProviders: [primary, secondary], clock: () => now },
+    );
+    try {
+      expect(restarted.get(FxService).latest()?.source).not.toBe('fixed-table');
+    } finally {
+      await restarted.close();
+    }
   });
 
   it('uses the fixed table only when it is switched on and both live sources fail', async () => {
