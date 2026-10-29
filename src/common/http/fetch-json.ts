@@ -1,4 +1,5 @@
 // Outbound JSON fetch with a timeout, no redirects, a size cap and bounded jittered retries.
+import { FX_FETCH_RETRY, withRetry } from '../retry/retry.js';
 
 export interface FetchJsonOptions {
   timeoutMs: number;
@@ -31,30 +32,29 @@ export class FetchFailure extends Error {
   }
 }
 
-const defaultSleep = (ms: number) =>
-  new Promise<void>((resolve) => setTimeout(resolve, ms));
-
 export async function fetchJson(
   url: string,
   options: FetchJsonOptions,
 ): Promise<unknown> {
-  const retries = options.retries ?? 2;
-  const base = options.baseDelayMs ?? 500;
-  const sleep = options.sleep ?? defaultSleep;
-  let lastError: FetchFailure | undefined;
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    if (attempt > 0) await sleep(Math.random() * base * 2 ** attempt);
-    try {
-      return await fetchOnce(url, options);
-    } catch (error) {
-      lastError =
-        error instanceof FetchFailure
+  const policy = {
+    ...FX_FETCH_RETRY,
+    retries: options.retries ?? FX_FETCH_RETRY.retries,
+    baseDelayMs: options.baseDelayMs ?? FX_FETCH_RETRY.baseDelayMs,
+  };
+  return withRetry(
+    async () => {
+      try {
+        return await fetchOnce(url, options);
+      } catch (error) {
+        throw error instanceof FetchFailure
           ? error
           : new FetchFailure('network', (error as Error).message);
-      if (!lastError.retryable) break;
-    }
-  }
-  throw lastError ?? new FetchFailure('network', 'No attempt was made');
+      }
+    },
+    policy,
+    (error) => error instanceof FetchFailure && error.retryable,
+    { sleep: options.sleep },
+  );
 }
 
 async function fetchOnce(

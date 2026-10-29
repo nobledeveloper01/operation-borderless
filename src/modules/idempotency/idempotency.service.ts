@@ -6,7 +6,9 @@ import {
 } from '@nestjs/common';
 import { DataSource, type EntityManager } from 'typeorm';
 import { AppError } from '../../common/errors/app-error.js';
+import { isTransientConflict } from '../../common/database/db-errors.js';
 import { returned } from '../../common/database/returned.js';
+import { DB_CONFLICT_RETRY, withRetry } from '../../common/retry/retry.js';
 import { sameHash } from '../auth/secrets.js';
 import type { IdempotencyRequest } from './idempotency-key.decorator.js';
 
@@ -36,6 +38,27 @@ export class IdempotencyService implements OnModuleInit, OnModuleDestroy {
 
   // Claims the key in the same transaction as the money movement, so it is stored only if the movement commits.
   async run<T>(
+    accountId: string,
+    request: IdempotencyRequest,
+    work: (
+      manager: EntityManager,
+    ) => Promise<{ body: T; transactionId: string }>,
+  ): Promise<IdempotentResult<T>> {
+    return withRetry(
+      () => this.attempt(accountId, request, work),
+      DB_CONFLICT_RETRY,
+      isTransientConflict,
+      {
+        onRetry: (attempt, error, delayMs) =>
+          this.logger.warn(
+            { attempt, code: (error as { code?: string }).code, delayMs },
+            'Retrying a money transaction after a database conflict',
+          ),
+      },
+    );
+  }
+
+  private attempt<T>(
     accountId: string,
     request: IdempotencyRequest,
     work: (

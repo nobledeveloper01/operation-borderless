@@ -9,6 +9,7 @@ import {
 import { ThrottlerException } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import { STATUS_CODES } from 'node:http';
+import { PG, pgCode as codeOf } from '../database/db-errors.js';
 import { AppError } from './app-error.js';
 import type { ErrorResponseDto } from './error-response.dto.js';
 
@@ -19,15 +20,12 @@ interface Mapped {
   details?: Record<string, unknown>;
 }
 
-const PG_LOCK_TIMEOUT = '55P03';
-const PG_STATEMENT_TIMEOUT = '57014';
-const PG_OUT_OF_RANGE = '22003';
-// Locks are taken in a fixed order, so these should not happen; if one does, a retry succeeds.
-const PG_RETRYABLE = new Set([
-  PG_LOCK_TIMEOUT,
-  PG_STATEMENT_TIMEOUT,
-  '40P01',
-  '40001',
+// The money transaction already retried a conflict; whatever is left is still safe for the client to retry.
+const BUSY = new Set<string>([
+  PG.lockTimeout,
+  PG.statementTimeout,
+  PG.deadlock,
+  PG.serialization,
 ]);
 
 // Every error leaves through here, so clients get one shape and never see internals.
@@ -81,8 +79,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       return this.fromHttpException(exception);
     }
-    const pgCode = (exception as { code?: unknown } | null)?.code;
-    if (typeof pgCode === 'string' && PG_RETRYABLE.has(pgCode)) {
+    const pgCode = codeOf(exception);
+    if (pgCode !== undefined && BUSY.has(pgCode)) {
       return {
         status: HttpStatus.SERVICE_UNAVAILABLE,
         code: 'SERVICE_BUSY',
@@ -90,7 +88,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       };
     }
     // The ledger checks this first; the database's own range error is the backstop.
-    if (pgCode === PG_OUT_OF_RANGE) {
+    if (pgCode === PG.outOfRange) {
       return {
         status: HttpStatus.UNPROCESSABLE_ENTITY,
         code: 'BALANCE_LIMIT',

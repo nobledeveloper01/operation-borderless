@@ -824,18 +824,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nestjs/schedule@npm:^12.0.2":
-  version: 12.0.2
-  resolution: "@nestjs/schedule@npm:12.0.2"
-  dependencies:
-    cron: "npm:4.4.0"
-  peerDependencies:
-    "@nestjs/common": ^11.0.0 || ^12.0.0
-    "@nestjs/core": ^11.0.0 || ^12.0.0
-  checksum: 10c0/c253910c01d8e9ff88e7490c278ecc175ac1485052a885c881ca00c95922659f286b1f58ba007e9038416c8fc37c3a775f8fd5c8c16f11b40f29079f76a0a88e
-  languageName: node
-  linkType: hard
-
 "@nestjs/schematics@npm:^12.0.0":
   version: 12.0.11
   resolution: "@nestjs/schematics@npm:12.0.11"
@@ -1318,13 +1306,6 @@ __metadata:
   version: 7.0.15
   resolution: "@types/json-schema@npm:7.0.15"
   checksum: 10c0/a996a745e6c5d60292f36731dd41341339d4eeed8180bb09226e5c8d23759067692b1d88e5d91d72ee83dfc00d3aca8e7bd43ea120516c17922cbcb7c3e252db
-  languageName: node
-  linkType: hard
-
-"@types/luxon@npm:~3.7.0":
-  version: 3.7.6
-  resolution: "@types/luxon@npm:3.7.6"
-  checksum: 10c0/135c55910d8f4fb615cbfaa93b173e57e3eed9731da683005acdb84dba5ece5dbbf56cc82330015ccf5247a6e84fefbb2e2ebe255c957636f604f79efacb4214
   languageName: node
   linkType: hard
 
@@ -2498,16 +2479,6 @@ __metadata:
     crc-32: "npm:^1.2.0"
     readable-stream: "npm:^4.0.0"
   checksum: 10c0/bf9c84571ede2d119c2b4f3a9ef5eeb9ff94b588493c0d3862259af86d3679dcce1c8569dd2b0a6eff2f35f5e2081cc1263b846d2538d4054da78cf34f262a3d
-  languageName: node
-  linkType: hard
-
-"cron@npm:4.4.0":
-  version: 4.4.0
-  resolution: "cron@npm:4.4.0"
-  dependencies:
-    "@types/luxon": "npm:~3.7.0"
-    luxon: "npm:~3.7.0"
-  checksum: 10c0/e3762fda4a9a2404ac2e54e1104a3c6c695747e14b2321bbc5531aa1192c75a319075695fcaf68b6927e0ffd877b5454f314c680f6586db1a78b2c25b76b8a32
   languageName: node
   linkType: hard
 
@@ -3896,13 +3867,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"luxon@npm:~3.7.0":
-  version: 3.7.2
-  resolution: "luxon@npm:3.7.2"
-  checksum: 10c0/ed8f0f637826c08c343a29dd478b00628be93bba6f068417b1d8896b61cb61c6deacbe1df1e057dbd9298334044afa150f9aaabbeb3181418ac8520acfdc2ae2
-  languageName: node
-  linkType: hard
-
 "magic-string@npm:1.4.1":
   version: 1.4.1
   resolution: "magic-string@npm:1.4.1"
@@ -4296,7 +4260,6 @@ __metadata:
     "@nestjs/common": "npm:^12.0.1"
     "@nestjs/core": "npm:^12.0.1"
     "@nestjs/platform-express": "npm:^12.0.1"
-    "@nestjs/schedule": "npm:^12.0.2"
     "@nestjs/schematics": "npm:^12.0.0"
     "@nestjs/swagger": "npm:^12.0.5"
     "@nestjs/testing": "npm:^12.0.1"

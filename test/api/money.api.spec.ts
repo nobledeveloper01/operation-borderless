@@ -383,4 +383,37 @@ describe('deposits and swaps', () => {
       }
     });
   });
+  it('retries a money transaction after a deadlock and moves the money once', async () => {
+    const w = await createWallet(app);
+    const ledger = app.get(LedgerService);
+    const deadlock = Object.assign(new Error('deadlock detected'), {
+      code: '40P01',
+    });
+    const post = vi.spyOn(ledger, 'post').mockRejectedValueOnce(deadlock);
+    const key = newKey();
+    await deposit(app, w, 'cGHS', '7', key).expect(201);
+    expect(post).toHaveBeenCalledTimes(2);
+    post.mockRestore();
+    const again = await deposit(app, w, 'cGHS', '7', key).expect(201);
+    expect(again.headers['idempotent-replayed']).toBe('true');
+    expect((await balancesOf(db, w.walletId)).cGHS).toBe('7000000');
+  });
+
+  it('answers 503 after the retries run out, without storing the key', async () => {
+    const w = await createWallet(app);
+    const ledger = app.get(LedgerService);
+    const conflict = Object.assign(new Error('could not serialize'), {
+      code: '40001',
+    });
+    const post = vi.spyOn(ledger, 'post').mockRejectedValue(conflict);
+    const key = newKey();
+    const busy = await deposit(app, w, 'cGHS', '3', key).expect(503);
+    expect(busy.body.code).toBe('SERVICE_BUSY');
+    expect(post).toHaveBeenCalledTimes(3);
+    post.mockRestore();
+    expect((await balancesOf(db, w.walletId)).cGHS).toBe('0');
+    const later = await deposit(app, w, 'cGHS', '3', key).expect(201);
+    expect(later.headers['idempotent-replayed']).toBeUndefined();
+    expect((await balancesOf(db, w.walletId)).cGHS).toBe('3000000');
+  });
 });
