@@ -307,6 +307,20 @@ Leave out `toCurrency` to send the same currency. Asking for more than the balan
 }
 ```
 
+### Quote first, then pay exactly that
+
+```bash
+curl -k https://localhost:8443/api/v1/quotes \
+  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"fromCurrency":"USDx","toCurrency":"cGHS","amount":"25"}'
+```
+
+`201` with the fee, the exact amount that will arrive and when the price expires (30 seconds).
+Nothing moves yet. Send the same transfer with `"quoteId": "<quoteId>"` to get exactly that
+amount, even if the rates refresh in between. A quote is used once, only by the account that
+asked for it, and only for the same currencies and amount
+([ADR-015](docs/decisions/ADR-015-quotes.md)).
+
 ### Balances
 
 `GET /wallets/{walletId}/balances` → `200`:
@@ -561,14 +575,11 @@ Full detail is in [money handling](docs/money-handling.md). In short:
 - Email or SMS verification, password reset, MFA and roles.
 - Real payment rails, withdrawals, custody, KYC and any blockchain.
 - Spreads, and daily or monthly limits.
-- The two could-have routes I designed but didn't build: `GET /fx/quote` (price preview with a
-  30-second hold) and looking up a wallet by email or phone. I spent that time on the money
-  tests instead.
+- A route to look up a wallet by email or phone. I designed it but didn't build it, and spent
+  that time on the money tests instead.
 
 ## With more time
 
-- An FX quote endpoint that holds a rate for 30 seconds, so the client sees the exact amount
-  before confirming.
 - Cursor paging for history, so walking every page is exact.
 - A paid, intraday FX feed for real pricing, with the same two-source check.
 - Redis for the rate limiter and a lock for the FX job, so several API instances can run.

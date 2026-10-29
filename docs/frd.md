@@ -216,8 +216,8 @@ Same as FR-009. Tests TC-011, TC-036.
 
 ## Could-have (only if time allows)
 
-- **FR-019 Quote:** `GET /api/v1/fx/quote?from=&to=&amount=` returns the amount the client
-  would get now, with the rate. No money moves.
+- **FR-019 Quote (built):** `POST /api/v1/quotes` returns the fee and the exact amount, held for
+  30 seconds; a swap or transfer with `quoteId` pays exactly that. See ADR-015.
 - **FR-020 Wallet lookup:** `GET /api/v1/wallets?email=` or `?phoneNumber=`.
 
 ## FR-022 Log in (beyond the brief)
