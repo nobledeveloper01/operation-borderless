@@ -160,8 +160,16 @@ holder in:
 }
 ```
 
-A phone number works too (`"phoneNumber": "+233241234567"`). Each email and each phone number
-can own one wallet; a second one gets `409 WALLET_ALREADY_EXISTS`. Later sign-ins use
+Keep the wallet ID and the access token for the next calls:
+
+```bash
+WALLET=<data.walletId>
+TOKEN=<data.session.accessToken>
+```
+
+A phone number works too (`"phoneNumber": "+233241234567"`). Create a second wallet that way
+and keep its ID as `FRIEND` for the transfer below. Each email and each phone number can own
+one wallet; a second one gets `409 WALLET_ALREADY_EXISTS`. Later sign-ins use
 `POST /auth/login`, and `POST /auth/refresh` swaps a refresh token for a new pair.
 
 Every other route needs `Authorization: Bearer <accessToken>` or a wallet key
@@ -237,7 +245,7 @@ curl -k https://localhost:8443/api/v1/wallets/$WALLET/swaps \
 curl -k https://localhost:8443/api/v1/transfers \
   -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
   -H "Idempotency-Key: $(uuidgen)" \
-  -d '{"fromWalletId":"'$WALLET'","toWalletId":"555a8bcf-f4ff-406b-85f7-ba322d19ebc5","fromCurrency":"USDx","toCurrency":"cGHS","amount":"25"}'
+  -d '{"fromWalletId":"'$WALLET'","toWalletId":"'$FRIEND'","fromCurrency":"USDx","toCurrency":"cGHS","amount":"25"}'
 ```
 
 `201`. The receiver gets cGHS at the current rate. The answer shows only the sender's own
