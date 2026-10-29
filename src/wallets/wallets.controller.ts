@@ -59,6 +59,6 @@ export class WalletsController {
     @IdParam('walletId') walletId: string,
   ): Promise<WalletBalancesDto> {
     assertOwnsWallet(caller, walletId);
-    return { walletId, balances: await this.wallets.balances(walletId) };
+    return { walletId, ...(await this.wallets.balances(walletId)) };
   }
 }

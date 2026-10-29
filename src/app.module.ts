@@ -13,6 +13,7 @@ import { databaseOptions } from './database/database.options.js';
 import { AUTH_RATE_LIMITED } from './auth/access.decorators.js';
 import { AuthGuard } from './auth/auth.guard.js';
 import { AuthModule } from './auth/auth.module.js';
+import { FxModule } from './fx/fx.module.js';
 import { HealthModule } from './health/health.module.js';
 import { WalletsModule } from './wallets/wallets.module.js';
 
@@ -44,6 +45,7 @@ import { WalletsModule } from './wallets/wallets.module.js';
       useFactory: databaseOptions,
     }),
     AuthModule,
+    FxModule,
     HealthModule,
     WalletsModule,
   ],

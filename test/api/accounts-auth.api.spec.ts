@@ -41,7 +41,7 @@ describe('accounts and auth', () => {
         message: 'Wallet created',
       });
       expect(res.body.data).toMatchObject({ email, phoneNumber: null });
-      expect(res.body.data.balances).toEqual(
+      expect(res.body.data.balances).toMatchObject(
         ['cNGN', 'cGHS', 'cXAF', 'USDx', 'EURx'].map((currency) => ({
           currency,
           amount: '0.000000',

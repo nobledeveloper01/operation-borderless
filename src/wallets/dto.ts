@@ -12,9 +12,49 @@ export class BalanceDto {
     description: 'Decimal string with 6 places.',
   })
   amount: string;
+
+  @ApiProperty({
+    nullable: true,
+    type: String,
+    example: '37.140545',
+    description: 'Value in USDx, rounded down; null when no fresh rate exists.',
+  })
+  usdValue: string | null;
 }
 
-export class WalletDto {
+export class ValuationRatesDto {
+  @ApiProperty({ nullable: true, type: String, example: 'exchangerate-api' })
+  source: string | null;
+
+  @ApiProperty({
+    nullable: true,
+    type: String,
+    example: '2026-10-29T00:02:31.000Z',
+  })
+  asOf: string | null;
+
+  @ApiProperty({
+    nullable: true,
+    type: String,
+    example: null,
+    description: 'Why USD values are missing, when they are.',
+  })
+  unavailableReason: string | null;
+}
+
+// Balances always travel with their USD values and the rate they used, so both answers share this.
+export class WalletValuationDto {
+  @ApiProperty({ type: [BalanceDto] })
+  balances: BalanceDto[];
+
+  @ApiProperty({ nullable: true, type: String, example: '47.140545' })
+  totalUsd: string | null;
+
+  @ApiProperty({ type: ValuationRatesDto })
+  rates: ValuationRatesDto;
+}
+
+export class WalletDto extends WalletValuationDto {
   @ApiProperty({ example: '0192f5c2-7b1e-7c40-9d1a-2f6b8f0c9e11' })
   walletId: string;
 
@@ -23,9 +63,6 @@ export class WalletDto {
 
   @ApiProperty({ nullable: true, type: String, example: null })
   phoneNumber: string | null;
-
-  @ApiProperty({ type: [BalanceDto] })
-  balances: BalanceDto[];
 
   @ApiProperty({ example: '2026-10-29T10:00:00.000Z' })
   createdAt: string;
@@ -39,12 +76,9 @@ export class CreatedWalletDto extends WalletDto {
   session: SessionTokensDto;
 }
 
-export class WalletBalancesDto {
+export class WalletBalancesDto extends WalletValuationDto {
   @ApiProperty()
   walletId: string;
-
-  @ApiProperty({ type: [BalanceDto] })
-  balances: BalanceDto[];
 }
 
 export class CreateWalletKeyDto {

@@ -17,6 +17,8 @@ Object.assign(process.env, {
   AUTH_RATE_LIMIT_PER_MINUTE: '1000',
   JWT_KEYS_DIR: mkdtempSync(join(tmpdir(), 'borderless-jwt-')),
   JWT_ACTIVE_KID: 'test-1',
+  // Tests never call a real FX provider; they inject fakes and refresh by hand.
+  FX_REFRESH_ENABLED: 'false',
   PII_ENCRYPTION_KEYS: '1:bG9jYWwtcGlpLWVuY3J5cHRpb24ta2V5LXYxLTAwMDE=',
   PII_LOOKUP_KEY: 'bG9jYWwtcGlpLWxvb2t1cC1rZXktZm9yLWRldi0wMDA=',
 });
