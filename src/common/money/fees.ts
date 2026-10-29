@@ -51,7 +51,10 @@ export function parseFeeOverrides(text: string | undefined): FeeOverrides {
         `FEE_BPS_BY_PAIR entry "${part}" must look like cNGN:cGHS=25, with two different stablecoins and at most ${MAX_FEE_BPS} basis points`,
       );
     }
-    overrides.set(pairKey(from as Stablecoin, to as Stablecoin), bps!);
+    const key = pairKey(from as Stablecoin, to as Stablecoin);
+    if (overrides.has(key))
+      throw new Error(`FEE_BPS_BY_PAIR lists ${key} twice`);
+    overrides.set(key, bps!);
   }
   return overrides;
 }

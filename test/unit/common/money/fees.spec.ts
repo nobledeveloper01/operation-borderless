@@ -54,6 +54,7 @@ describe('fees', () => {
       'NGN:cGHS=5',
       'cNGN:cGHS=1001',
       'cNGN-cGHS=5',
+      'cNGN:cGHS=25,cNGN:cGHS=0',
     ]) {
       expect(() => parseFeeOverrides(bad)).toThrow(/FEE_BPS_BY_PAIR/);
     }

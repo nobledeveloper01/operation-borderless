@@ -155,7 +155,44 @@ describe('fees and the platform account', () => {
       .expect(200);
     expect(check.body.data.platformMatches).toBe(true);
   });
-  // Runs last: platform entries are append-only, so the extra one stays for the rest of the run.
+  // Runs last: platform entries are append-only, so the extra rows stay for the rest of the run.
+  it('notices platform entries that cancel out in total but not row by row', async () => {
+    const w = await createWallet(app);
+    await deposit(app, w, 'cXAF', '1000').expect(201);
+    const one = await swap(app, w, {
+      fromCurrency: 'cXAF',
+      toCurrency: 'USDx',
+      amount: '100',
+    }).expect(201);
+    const two = await swap(app, w, {
+      fromCurrency: 'cXAF',
+      toCurrency: 'USDx',
+      amount: '100',
+    }).expect(201);
+    // Both swaps booked the same fee; move one millionth of it from the first to the second.
+    const ids = [one, two].map(
+      (r) => r.body.data.transaction.transactionId as string,
+    );
+    await db.query(`SET session_replication_role = replica`);
+    try {
+      await db.query(
+        `UPDATE platform_entries SET amount = amount - 1 WHERE transaction_id = $1 AND kind = 'fee'`,
+        [ids[0]],
+      );
+      await db.query(
+        `UPDATE platform_entries SET amount = amount + 1 WHERE transaction_id = $1 AND kind = 'fee'`,
+        [ids[1]],
+      );
+    } finally {
+      await db.query(`SET session_replication_role = origin`);
+    }
+    const check = await request(app.getHttpServer())
+      .get('/api/v1/ops/ledger-check')
+      .set(OPS)
+      .expect(200);
+    expect(check.body.data.platformMatches).toBe(false);
+  });
+
   it('notices a platform entry that no transaction accounts for', async () => {
     const w = await createWallet(app);
     const dep = await deposit(app, w, 'EURx', '1').expect(201);

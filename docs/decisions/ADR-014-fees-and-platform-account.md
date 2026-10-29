@@ -19,16 +19,17 @@ unit they keep. You chose 0.5% on conversions as the default.
 - The platform account is the append-only table `platform_entries` (one `fee` and one
   `rounding` row per transaction at most), written in the same database transaction as the
   movement. Its balance is the sum of its entries; `GET /api/v1/ops/platform-account` shows it.
-- The ledger check also compares, per currency, the fees and rounding recorded on transactions
-  with what the platform entries hold.
+- The ledger check also compares each transaction's fee and rounding with its platform entries,
+  row by row and currency by currency, so errors that cancel out in a total still show up.
 
 **Why not a platform wallet with a balance row.** Every conversion in a currency would then lock
 the same balance row, so conversions would queue one at a time. The load test showed that one
 hot wallet runs at about half the speed of spread-out traffic. Append-only rows need no lock.
 
-**Why round the fee up and the conversion down.** Both directions favour the platform by less
-than one millionth, so the platform can never pay out more than it took in, and the customer
-sees the exact fee before the conversion.
+**Why round the fee up and the conversion down.** The fee rounds up by less than one millionth.
+Rounding the conversion down keeps at most `⌈1 ÷ rate⌉ − 1` source millionths (130 for 1 cNGN to
+USDx), and all of it is booked as `rounding`. So the receiver never gets more than the sender
+paid for, and every whole millionth the platform keeps is on record.
 
 **Consequences.** Tests that check exact conversion maths run with `FEE_BPS=0`; the fee tests
 run with the default and an override. The quote endpoint uses the same pricing code, so a

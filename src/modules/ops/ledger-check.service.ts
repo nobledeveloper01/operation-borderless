@@ -60,18 +60,16 @@ export class LedgerCheckService implements OnModuleInit, OnModuleDestroy {
           LIMIT $1`,
         [MISMATCHES_SHOWN],
       );
-      // Every fee and rounding amount on a transaction must have the same amount waiting in the platform account.
+      // Row by row, so two wrong entries that cancel out in a total still show up.
       const [platform] = await m.query<{ drift: number }[]>(
-        `SELECT count(*)::int AS drift FROM (
-           SELECT from_currency AS currency, 'fee' AS kind, sum(fee_amount) AS expected
-             FROM transactions WHERE fee_amount > 0 GROUP BY from_currency
-           UNION ALL
-           SELECT from_currency, 'rounding', sum(rounding_amount)
-             FROM transactions WHERE rounding_amount > 0 GROUP BY from_currency
-         ) t
-         FULL JOIN (SELECT currency, kind, sum(amount) AS booked FROM platform_entries GROUP BY currency, kind) p
-           ON p.currency = t.currency AND p.kind = t.kind
-         WHERE COALESCE(t.expected, 0) <> COALESCE(p.booked, 0)`,
+        `SELECT count(*)::int AS drift
+           FROM transactions t
+           LEFT JOIN platform_entries f ON f.transaction_id = t.id AND f.kind = 'fee'
+           LEFT JOIN platform_entries r ON r.transaction_id = t.id AND r.kind = 'rounding'
+          WHERE t.fee_amount <> COALESCE(f.amount, 0)
+             OR t.rounding_amount <> COALESCE(r.amount, 0)
+             OR f.currency <> t.from_currency
+             OR r.currency <> t.from_currency`,
       );
       return { counts, rows, platformDrift: platform?.drift ?? 0 };
     });
