@@ -1,0 +1,11 @@
+# Uses gitleaks' default rules, minus values that exist only for local runs and that production refuses.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Local-only compose values and documented examples"
+regexes = [
+  '''local-ops-token-for-the-compose-stack-only''',
+  '''test-ops-token-0123456789abcdefghijklmnop''',
+  '''bG9jYWwt[A-Za-z0-9+/=]+''',
+]
