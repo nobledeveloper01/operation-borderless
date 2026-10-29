@@ -15,3 +15,7 @@ const app = await NestFactory.create<NestExpressApplication>(AppModule, {
 configureApp(app);
 app.enableShutdownHooks();
 await app.listen(app.get(EnvironmentVariables).PORT, '0.0.0.0');
+// The proxy drops idle connections first (30 s); Node's 5 s default reset some under load and gave 502s.
+const server = app.getHttpServer();
+server.keepAliveTimeout = 65_000;
+server.headersTimeout = 66_000;
