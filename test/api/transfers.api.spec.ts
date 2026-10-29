@@ -123,6 +123,35 @@ describe('transfers', () => {
     expect((await balancesOf(db, b.walletId)).cNGN).toBe('0');
   });
 
+  it('treats wallet IDs the same in any letter case', async () => {
+    const a = await createWallet(app);
+    const b = await createWallet(app);
+    await deposit(app, a, 'cNGN', '10').expect(201);
+
+    const self = await transfer(app, a, {
+      toWalletId: a.walletId.toUpperCase(),
+      fromCurrency: 'cNGN',
+      amount: '1',
+    }).expect(422);
+    expect(self.body.code).toBe('SAME_WALLET');
+    const sent = await transfer(app, a, {
+      fromWalletId: a.walletId.toUpperCase(),
+      toWalletId: b.walletId.toUpperCase(),
+      fromCurrency: 'cNGN',
+      amount: '1',
+    }).expect(201);
+    expect(sent.body.data.transaction.toWalletId).toBe(b.walletId);
+    await deposit(
+      app,
+      { ...a, walletId: a.walletId.toUpperCase() },
+      'cNGN',
+      '1',
+    ).expect(201);
+
+    expect((await balancesOf(db, a.walletId)).cNGN).toBe('10000000');
+    expect((await balancesOf(db, b.walletId)).cNGN).toBe('1000000');
+  });
+
   it('TC-027 runs opposite transfers in parallel without a deadlock and keeps the total', async () => {
     const a = await createWallet(app);
     const b = await createWallet(app);

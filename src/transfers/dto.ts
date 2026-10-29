@@ -1,17 +1,16 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsIn, IsOptional, IsUUID } from 'class-validator';
+import { IsIn, IsOptional } from 'class-validator';
 import { AmountField } from '../common/validation/amount.js';
+import { UuidField } from '../common/validation/id-param.js';
 import { STABLECOINS, type Stablecoin } from '../currencies/currency.js';
 
 const coin = { message: `currency must be one of ${STABLECOINS.join(', ')}.` };
 
 export class CreateTransferDto {
-  @ApiProperty({ description: 'Your wallet, which sends the money.' })
-  @IsUUID('all', { message: 'fromWalletId must be a UUID.' })
+  @UuidField('fromWalletId', 'Your wallet, which sends the money.')
   fromWalletId: string;
 
-  @ApiProperty({ description: 'The wallet that receives the money.' })
-  @IsUUID('all', { message: 'toWalletId must be a UUID.' })
+  @UuidField('toWalletId', 'The wallet that receives the money.')
   toWalletId: string;
 
   @ApiProperty({ enum: STABLECOINS, example: 'USDx' })

@@ -22,6 +22,13 @@ interface Mapped {
 const PG_LOCK_TIMEOUT = '55P03';
 const PG_STATEMENT_TIMEOUT = '57014';
 const PG_OUT_OF_RANGE = '22003';
+// Locks are taken in a fixed order, so these should not happen; if one does, a retry succeeds.
+const PG_RETRYABLE = new Set([
+  PG_LOCK_TIMEOUT,
+  PG_STATEMENT_TIMEOUT,
+  '40P01',
+  '40001',
+]);
 
 // Every error leaves through here, so clients get one shape and never see internals.
 @Catch()
@@ -75,7 +82,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       return this.fromHttpException(exception);
     }
     const pgCode = (exception as { code?: unknown } | null)?.code;
-    if (pgCode === PG_LOCK_TIMEOUT || pgCode === PG_STATEMENT_TIMEOUT) {
+    if (typeof pgCode === 'string' && PG_RETRYABLE.has(pgCode)) {
       return {
         status: HttpStatus.SERVICE_UNAVAILABLE,
         code: 'SERVICE_BUSY',

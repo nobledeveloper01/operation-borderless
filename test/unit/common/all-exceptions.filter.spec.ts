@@ -74,6 +74,11 @@ describe('AllExceptionsFilter', () => {
       run(Object.assign(new Error('canceling statement'), { code: '57014' }))
         .body.code,
     ).toBe('SERVICE_BUSY');
+    for (const code of ['40P01', '40001']) {
+      expect(
+        run(Object.assign(new Error('deadlock detected'), { code })).statusCode,
+      ).toBe(503);
+    }
   });
 
   it('TC-044 hides unexpected errors behind a generic 500', () => {
