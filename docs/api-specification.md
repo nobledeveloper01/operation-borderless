@@ -95,11 +95,11 @@ test fails if the two drift.
 | API-010 | `GET /health`, `GET /health/ready`           | Liveness, readiness (outside `/api/v1`) | 200 / 503 |
 | API-013 | `POST /auth/login`                           | Log in                                  | 200       |
 | API-014 | `POST /auth/refresh`                         | New token pair (rotation)               | 200       |
-| API-015 | `POST /auth/logout`, `POST /auth/logout-all` | End this or every session               | 204       |
+| API-015 | `POST /auth/logout`, `POST /auth/logout-all` | End this or every session               | 200       |
 | API-016 | `GET /auth/me`                               | Account and wallet ID                   | 200       |
 | API-017 | `POST /wallets/{walletId}/keys`              | Create a wallet key (shown once)        | 201       |
 | API-018 | `GET /wallets/{walletId}/keys`               | List keys, no secrets                   | 200       |
-| API-019 | `DELETE /wallets/{walletId}/keys/{keyId}`    | Revoke a key                            | 204       |
+| API-019 | `DELETE /wallets/{walletId}/keys/{keyId}`    | Revoke a key                            | 200       |
 | API-011 | `GET /fx/quote`                              | Could-have: price preview               | 200       |
 | API-012 | `GET /wallets?email=` / `?phoneNumber=`      | Could-have: lookup                      | 200       |
 
