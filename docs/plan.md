@@ -82,8 +82,8 @@ Dependencies: Docker, internet for live rates (optional), GitHub.
 | D-09 | Could-haves (quote, lookup) | Only after mandatory items are green |
 | D-10 | Commit style | Conventional commits, small and frequent |
 | D-11 | Auth | Account sessions (argon2id, 15-min ES256 JWT, rotating refresh) plus wallet keys; owner-only routes |
-| D-13 | Encryption | HTTPS via Caddy with HSTS, database TLS setting, AES-256-GCM email and phone with HMAC lookup, ES256 tokens; no JWE or JWS now (ADR-009) |
 | D-12 | Account vs wallet | One account per identifier, one wallet per account, created together by `POST /wallets` |
+| D-13 | Encryption | HTTPS via Caddy with HSTS, database TLS setting, AES-256-GCM email and phone with HMAC lookup, ES256 tokens; no JWE or JWS now (ADR-009) |
 
 ## Submission
 
