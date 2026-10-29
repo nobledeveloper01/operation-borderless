@@ -6,6 +6,7 @@ import {
   IsInt,
   IsOptional,
   IsString,
+  IsUrl,
   Matches,
   Max,
   Min,
@@ -13,6 +14,8 @@ import {
   validateSync,
 } from 'class-validator';
 
+const toBool = ({ value }: { value: unknown }) =>
+  value === 'true' || value === true;
 const toInt = ({ value }: { value: unknown }) =>
   value === undefined || value === '' ? undefined : Number(value);
 
@@ -126,6 +129,33 @@ export class EnvironmentVariables {
   @IsInt()
   @Min(1)
   LOGIN_LOCK_MINUTES = 15;
+
+  @IsUrl({ protocols: ['https'], require_protocol: true, require_tld: false })
+  FX_PRIMARY_URL = 'https://open.er-api.com/v6/latest/USD';
+
+  @IsUrl({ protocols: ['https'], require_protocol: true, require_tld: false })
+  FX_SECONDARY_URL =
+    'https://latest.currency-api.pages.dev/v1/currencies/usd.json';
+
+  @Transform(toInt)
+  @IsInt()
+  @Min(1)
+  @Max(72)
+  FX_MAX_DATA_AGE_HOURS = 26;
+
+  @Transform(toInt)
+  @IsInt()
+  @Min(500)
+  @Max(10_000)
+  FX_TIMEOUT_MS = 3000;
+
+  @Transform(toBool)
+  @IsBoolean()
+  FX_FIXED_TABLE = false;
+
+  @Transform(toBool)
+  @IsBoolean()
+  FX_REFRESH_ENABLED = true;
 }
 
 export function validateEnv(
