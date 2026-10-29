@@ -20,3 +20,4 @@ Each record says what I decided, why, and what it costs.
 | [014](ADR-014-fees-and-platform-account.md)  | A 0.5% conversion fee, booked with rounding to a platform account           |
 | [015](ADR-015-quotes.md)                     | Quotes that hold a price for 30 seconds and are spent once                  |
 | [016](ADR-016-outbox-and-notifications.md)   | A transactional outbox, delivered inside the API as in-app notices          |
+| [017](ADR-017-send-to-email-or-phone.md)     | Send to an email or phone number; inviting people needs SMTP, so it waits   |

@@ -77,17 +77,17 @@ Both lead to the same check: the caller must own the wallet it acts on.
 
 ## Authorization rules
 
-| Route                                                     | Who                                                                     |
-| --------------------------------------------------------- | ----------------------------------------------------------------------- |
-| `POST /wallets`, `POST /auth/login`, `POST /auth/refresh` | Public                                                                  |
-| `GET /fx/rates`, `/health`, `/health/ready`, `/docs`      | Public                                                                  |
-| `POST /auth/logout`, `/auth/logout-all`, `GET /auth/me`   | Session                                                                 |
-| Wallet keys routes                                        | Session, own wallet                                                     |
-| `GET /wallets/{walletId}`, balances, history              | Session or key, own wallet                                              |
-| Deposits, swaps                                           | Session or key, own wallet                                              |
-| `POST /transfers`                                         | Session or key, must own `fromWalletId`; `toWalletId` can be any wallet |
-| `GET /transactions/{transactionId}`                       | Session or key, caller's wallet must be sender or receiver              |
-| `GET /ops/metrics`, `GET /ops/ledger-check`               | Operator token in `X-Ops-Token` only; `404` when `OPS_TOKEN` is unset   |
+| Route                                                     | Who                                                                                                                  |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `POST /wallets`, `POST /auth/login`, `POST /auth/refresh` | Public                                                                                                               |
+| `GET /fx/rates`, `/health`, `/health/ready`, `/docs`      | Public                                                                                                               |
+| `POST /auth/logout`, `/auth/logout-all`, `GET /auth/me`   | Session                                                                                                              |
+| Wallet keys routes                                        | Session, own wallet                                                                                                  |
+| `GET /wallets/{walletId}`, balances, history              | Session or key, own wallet                                                                                           |
+| Deposits, swaps                                           | Session or key, own wallet                                                                                           |
+| `POST /transfers`                                         | Session or key, must own `fromWalletId`; the receiver (`toWalletId`, `toEmail` or `toPhoneNumber`) can be any wallet |
+| `GET /transactions/{transactionId}`                       | Session or key, caller's wallet must be sender or receiver                                                           |
+| `GET /ops/metrics`, `GET /ops/ledger-check`               | Operator token in `X-Ops-Token` only; `404` when `OPS_TOKEN` is unset                                                |
 
 - No header or a bad token/key → `401 UNAUTHENTICATED`.
 - Valid caller, someone else's wallet or transaction → `404` (same as not found), so wallet

@@ -218,7 +218,8 @@ Same as FR-009. Tests TC-011, TC-036.
 
 - **FR-019 Quote (built):** `POST /api/v1/quotes` returns the fee and the exact amount, held for
   30 seconds; a swap or transfer with `quoteId` pays exactly that. See ADR-015.
-- **FR-020 Wallet lookup:** `GET /api/v1/wallets?email=` or `?phoneNumber=`.
+- **FR-020 Send to an address (built instead of a lookup route):** a transfer may name the
+  receiver by `toEmail` or `toPhoneNumber`. See ADR-017.
 
 ## FR-022 Log in (beyond the brief)
 

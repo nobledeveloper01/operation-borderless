@@ -287,7 +287,10 @@ balance:
 }
 ```
 
-Leave out `toCurrency` to send the same currency. Asking for more than the balance:
+Leave out `toCurrency` to send the same currency. Instead of `toWalletId` you can send
+`toEmail` or `toPhoneNumber` to reach the wallet registered with it
+([ADR-017](docs/decisions/ADR-017-send-to-email-or-phone.md)); an unknown address answers like
+an unknown wallet. Asking for more than the balance:
 
 ```json
 {
@@ -581,8 +584,9 @@ Full detail is in [money handling](docs/money-handling.md). In short:
   bodies (JWS or JWE) add nothing for this API today. The reasons and when I'd add them are
   in [ADR-009](docs/decisions/ADR-009-encryption.md).
 - **A taken email or phone shows up as taken.** The brief requires refusing a second wallet for
-  the same identifier, so `POST /wallets` answers `409` for it. Wallet creation is limited to
-  10 a minute per IP to slow down anyone checking lists of addresses.
+  the same identifier, so `POST /wallets` answers `409` for it. A transfer to an email or phone
+  also shows whether it has a wallet. Wallet creation is limited to 10 a minute per IP and money
+  routes to 30, to slow down anyone checking lists of addresses.
 - **One API instance.** The FX refresh job and the in-memory rate limiter assume one process.
 - **Local only.** There is no hosted deployment; the brief doesn't ask for one.
 
@@ -592,8 +596,8 @@ Full detail is in [money handling](docs/money-handling.md). In short:
 - Email or SMS verification, password reset, MFA and roles.
 - Real payment rails, withdrawals, custody, KYC and any blockchain.
 - Spreads, and daily or monthly limits.
-- A route to look up a wallet by email or phone. I designed it but didn't build it, and spent
-  that time on the money tests instead.
+- Sending to someone who has no wallet yet, and email or SMS notices. Both need an SMTP server
+  or SMS provider to reach the person.
 
 ## With more time
 
