@@ -77,14 +77,14 @@ so in the README), NOT APPLICABLE. Checked on 29 Oct 2026 against `main`.
 
 ## G. Performance and reliability
 
-| Item                                                            | Applies | Status   | Evidence needed                                                                   |
-| --------------------------------------------------------------- | ------- | -------- | --------------------------------------------------------------------------------- |
-| FX timeouts and bounded retries                                 | M       | PASS     | TC-015, TC-018                                                                    |
-| FX failure handled gracefully (secondary source; 503 past 26 h) | M       | PASS     | TC-015, TC-016, TC-008                                                            |
-| DB statement and lock timeouts                                  | R       | PASS     | `statement_timeout` 5 s, `lock_timeout` 3 s; 55P03/57014 → 503 in the filter test |
-| Indexed history queries, no N+1                                 | R       | PASS     | `EXPLAIN`: BitmapOr over both wallet indexes; two queries per page                |
-| Load test                                                       | R       | DEFERRED | Not run; listed in the README under "With more time"                              |
-| Graceful shutdown                                               | R       | PASS     | `enableShutdownHooks`; `docker compose stop api` exits 0 at once                  |
+| Item                                                            | Applies | Status | Evidence needed                                                                              |
+| --------------------------------------------------------------- | ------- | ------ | -------------------------------------------------------------------------------------------- |
+| FX timeouts and bounded retries                                 | M       | PASS   | TC-015, TC-018                                                                               |
+| FX failure handled gracefully (secondary source; 503 past 26 h) | M       | PASS   | TC-015, TC-016, TC-008                                                                       |
+| DB statement and lock timeouts                                  | R       | PASS   | `statement_timeout` 5 s, `lock_timeout` 3 s; 55P03/57014 → 503 in the filter test            |
+| Indexed history queries, no N+1                                 | R       | PASS   | `EXPLAIN`: BitmapOr over both wallet indexes; two queries per page                           |
+| Load test                                                       | R       | PASS   | `docs/load-test.md`: 606–2,720 requests a second, no errors, money unchanged, ledger matches |
+| Graceful shutdown                                               | R       | PASS   | `enableShutdownHooks`; `docker compose stop api` exits 0 at once                             |
 
 ## H. Business workflows (money)
 

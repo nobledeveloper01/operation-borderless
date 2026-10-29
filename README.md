@@ -105,7 +105,9 @@ yarn typecheck
 CI runs the first three, `yarn test`, the build and a Docker image build on every push to
 `main` and every pull request.
 `smoke-tls.sh` checks a running compose stack: HTTPS, HSTS, the HTTP redirect, and that
-only TLS 1.2 and 1.3 are accepted.
+only TLS 1.2 and 1.3 are accepted. `scripts/load-test.mjs` runs reads, deposits and transfers
+in parallel and then checks that no money moved by mistake; the results and how to run it are
+in [load test](docs/load-test.md).
 
 The OpenAPI document is committed at [`docs/openapi.json`](docs/openapi.json). It is generated
 from the code, and a test fails if the two differ. After changing a route, run `yarn openapi`
@@ -532,7 +534,7 @@ Full detail is in [money handling](docs/money-handling.md). In short:
 - A paid, intraday FX feed for real pricing, with the same two-source check.
 - Redis for the rate limiter and a lock for the FX job, so several API instances can run.
 - An outbox for events (transfer received, low balance) once there's anything to notify.
-- Load tests, metrics and alerts on stale rates and lock timeouts.
+- Metrics and alerts on stale rates and lock timeouts, and a load test on separate machines.
 
 ## Documents
 
@@ -550,6 +552,7 @@ Full detail is in [money handling](docs/money-handling.md). In short:
 | [Money, idempotency, concurrency and FX](docs/money-handling.md)   | Precision, rounding, locking, retries and rate failures        |
 | [Security review](docs/security-review.md)                         | Threat model and the control for each threat                   |
 | [Test strategy](docs/test-strategy.md)                             | Unit, integration, API, concurrency and contract tests         |
+| [Load test](docs/load-test.md)                                     | Throughput, latency and money checks under parallel load       |
 | [Requirements traceability](docs/requirements-traceability.md)     | Brief → requirement → component → test → evidence              |
 | [Delivery plan](docs/plan.md)                                      | The 48-hour schedule, assumptions, risks and open decisions    |
 | [Pre-launch checklist](docs/checklists/pre-launch-checklist.md)    | Every check, marked mandatory, recommended or not applicable   |
