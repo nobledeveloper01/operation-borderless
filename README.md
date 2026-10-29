@@ -479,6 +479,9 @@ Full detail is in [money handling](docs/money-handling.md). In short:
 - **No message-level encryption.** TLS protects every body in transit; signed or encrypted
   bodies (JWS or JWE) add nothing for this API today. The reasons and when I'd add them are
   in [ADR-009](docs/decisions/ADR-009-encryption.md).
+- **A taken email or phone shows up as taken.** The brief requires refusing a second wallet for
+  the same identifier, so `POST /wallets` answers `409` for it. Wallet creation is limited to
+  10 a minute per IP to slow down anyone checking lists of addresses.
 - **One API instance.** The FX refresh job and the in-memory rate limiter assume one process.
 - **Local only.** There is no hosted deployment; the brief doesn't ask for one.
 
