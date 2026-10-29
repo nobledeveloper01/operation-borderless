@@ -21,7 +21,12 @@ const toList = ({ value }: { value: unknown }): unknown =>
   );
 
 export class HistoryQueryDto {
-  @ApiPropertyOptional({ default: 1, minimum: 1, maximum: MAX_PAGE })
+  @ApiPropertyOptional({
+    type: 'integer',
+    default: 1,
+    minimum: 1,
+    maximum: MAX_PAGE,
+  })
   @IsOptional()
   @Transform(toInteger)
   @Min(1, { message: 'page must be at least 1.' })
@@ -30,7 +35,12 @@ export class HistoryQueryDto {
   @IsInt({ message: 'page must be a whole number.' })
   page: number = 1;
 
-  @ApiPropertyOptional({ default: 20, minimum: 1, maximum: MAX_LIMIT })
+  @ApiPropertyOptional({
+    type: 'integer',
+    default: 20,
+    minimum: 1,
+    maximum: MAX_LIMIT,
+  })
   @IsOptional()
   @Transform(toInteger)
   @Min(1, { message: 'limit must be at least 1.' })

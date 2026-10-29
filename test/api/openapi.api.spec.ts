@@ -67,6 +67,28 @@ describe('OpenAPI', () => {
     }
   });
 
+  it('documents the money headers, whole-number paging and which routes are throttled', () => {
+    for (const [name, op] of operations()) {
+      const params =
+        (op as { parameters?: { name: string }[] }).parameters ?? [];
+      if (params.some((p) => p.name === 'Idempotency-Key')) {
+        expect([name, Object.keys(op.responses)]).toEqual([
+          name,
+          expect.arrayContaining(['422', '503']),
+        ]);
+      }
+      const throttled = !name.includes(' /health');
+      expect([name, '429' in op.responses]).toEqual([name, throttled]);
+    }
+    const history = generated.paths['/api/v1/wallets/{walletId}/transactions']
+      ?.get as { parameters: { name: string; schema: { type: string } }[] };
+    for (const name of ['page', 'limit']) {
+      expect(history.parameters.find((p) => p.name === name)?.schema.type).toBe(
+        'integer',
+      );
+    }
+  });
+
   it('serves the same document at /docs-json', async () => {
     const res = await request(app.getHttpServer()).get('/docs-json');
     expect(res.status).toBe(200);

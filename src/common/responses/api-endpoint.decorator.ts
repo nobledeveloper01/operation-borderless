@@ -14,6 +14,7 @@ import {
   getSchemaPath,
 } from '@nestjs/swagger';
 import { type Access, RouteAccess } from '../../auth/access.decorators.js';
+import { SkipThrottle } from '@nestjs/throttler';
 import { RateLimited, type RateLimitGroup } from '../http/rate-limit-groups.js';
 import { ErrorResponseDto } from '../errors/error-response.dto.js';
 import { ResponseMessage } from './response-message.decorator.js';
@@ -28,7 +29,8 @@ export interface EndpointOptions {
   errors?: HttpStatus[];
   description?: string;
   access?: Access;
-  rateLimit?: RateLimitGroup;
+  // A group adds a tighter limit; 'none' takes the route out of rate limiting altogether.
+  rateLimit?: RateLimitGroup | 'none';
   // Money writes need an Idempotency-Key header; this documents it and its errors once.
   idempotent?: boolean;
 }
@@ -45,11 +47,8 @@ const IDEMPOTENCY_HEADER_DOC = {
   },
 };
 
-// Any route can hit these, so no controller has to list them again.
-const COMMON_ERRORS = [
-  HttpStatus.TOO_MANY_REQUESTS,
-  HttpStatus.INTERNAL_SERVER_ERROR,
-];
+// Any route can hit this, so no controller has to list it again.
+const COMMON_ERRORS = [HttpStatus.INTERNAL_SERVER_ERROR];
 
 // One decorator per route sets who may call it, its status, its message and its whole Swagger contract.
 export function ApiEndpoint(options: EndpointOptions) {
@@ -66,14 +65,22 @@ export function ApiEndpoint(options: EndpointOptions) {
       : access === 'session'
         ? [HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN]
         : [HttpStatus.UNAUTHORIZED];
+  // Money writes take row locks, so a lock timeout can answer 503 SERVICE_BUSY.
   const idempotencyErrors = options.idempotent
-    ? [HttpStatus.BAD_REQUEST, HttpStatus.UNPROCESSABLE_ENTITY]
+    ? [
+        HttpStatus.BAD_REQUEST,
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        HttpStatus.SERVICE_UNAVAILABLE,
+      ]
     : [];
+  const throttleErrors =
+    options.rateLimit === 'none' ? [] : [HttpStatus.TOO_MANY_REQUESTS];
   const errors = [
     ...new Set([
       ...(options.errors ?? []),
       ...idempotencyErrors,
       ...accessErrors,
+      ...throttleErrors,
       ...COMMON_ERRORS,
     ]),
   ];
@@ -86,7 +93,11 @@ export function ApiEndpoint(options: EndpointOptions) {
 
   return applyDecorators(
     RouteAccess(access),
-    ...(options.rateLimit ? [RateLimited(options.rateLimit)] : []),
+    ...(options.rateLimit === 'none'
+      ? [SkipThrottle()]
+      : options.rateLimit
+        ? [RateLimited(options.rateLimit)]
+        : []),
     ...(options.idempotent ? [ApiHeader(IDEMPOTENCY_HEADER_DOC)] : []),
     ...security,
     HttpCode(status),

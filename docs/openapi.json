@@ -943,6 +943,27 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "A dependency is unavailable; try again",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 503
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1422,7 +1443,7 @@
               "minimum": 1,
               "maximum": 10000,
               "default": 1,
-              "type": "number"
+              "type": "integer"
             }
           },
           {
@@ -1433,7 +1454,7 @@
               "minimum": 1,
               "maximum": 100,
               "default": 20,
-              "type": "number"
+              "type": "integer"
             }
           },
           {
@@ -1822,27 +1843,6 @@
               }
             }
           },
-          "429": {
-            "description": "Too many requests",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ErrorResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "statusCode": {
-                          "example": 429
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
           "500": {
             "description": "Unexpected error",
             "content": {
@@ -1895,27 +1895,6 @@
                         },
                         "data": {
                           "$ref": "#/components/schemas/HealthDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Too many requests",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ErrorResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "statusCode": {
-                          "example": 429
                         }
                       }
                     }

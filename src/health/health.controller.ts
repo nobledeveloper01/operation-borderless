@@ -1,6 +1,5 @@
 import { Controller, Get, HttpStatus } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { SkipThrottle } from '@nestjs/throttler';
 import { DataSource } from 'typeorm';
 import { AppError } from '../common/errors/app-error.js';
 import { ApiEndpoint } from '../common/responses/api-endpoint.decorator.js';
@@ -8,7 +7,6 @@ import { HealthDto } from './health.dto.js';
 
 // Load balancers poll these often, so they skip the rate limit.
 @ApiTags('Health')
-@SkipThrottle()
 @Controller('health')
 export class HealthController {
   constructor(private readonly dataSource: DataSource) {}
@@ -17,6 +15,7 @@ export class HealthController {
   @ApiEndpoint({
     summary: 'Is the process up?',
     access: 'public',
+    rateLimit: 'none',
     message: 'The API is up',
     type: HealthDto,
   })
@@ -28,6 +27,7 @@ export class HealthController {
   @ApiEndpoint({
     summary: 'Can the API serve traffic?',
     access: 'public',
+    rateLimit: 'none',
     message: 'The API is ready',
     type: HealthDto,
     errors: [HttpStatus.SERVICE_UNAVAILABLE],
