@@ -34,6 +34,9 @@ services:
       PII_ENCRYPTION_KEYS: ${PII_ENCRYPTION_KEYS:-1:bG9jYWwtcGlpLWVuY3J5cHRpb24ta2V5LXYxLTAwMDE=}
       PII_ACTIVE_KEY_VERSION: ${PII_ACTIVE_KEY_VERSION:-1}
       PII_LOOKUP_KEY: ${PII_LOOKUP_KEY:-bG9jYWwtcGlpLWxvb2t1cC1rZXktZm9yLWRldi0wMDA=}
+    volumes:
+      # Keeps the local signing key across restarts, so sign-ins survive a rebuild.
+      - jwt-keys:/app/keys/jwt
     depends_on:
       db:
         condition: service_healthy
@@ -57,6 +60,7 @@ services:
 volumes:
   db-data:
   caddy-data:
+  jwt-keys:
 
 networks:
   internal:

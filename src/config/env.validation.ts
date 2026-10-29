@@ -6,6 +6,7 @@ import {
   IsInt,
   IsOptional,
   IsString,
+  Matches,
   Max,
   Min,
   MinLength,
@@ -80,6 +81,45 @@ export class EnvironmentVariables {
   @IsString()
   @MinLength(1)
   PII_LOOKUP_KEY: string;
+
+  @Transform(toInt)
+  @IsInt()
+  @Min(1)
+  AUTH_RATE_LIMIT_PER_MINUTE = 10;
+
+  @IsString()
+  JWT_KEYS_DIR = './keys/jwt';
+
+  @Matches(/^[A-Za-z0-9_-]{1,40}$/)
+  JWT_ACTIVE_KID = 'dev-1';
+
+  @IsString()
+  JWT_ISSUER = 'borderless';
+
+  @IsString()
+  JWT_AUDIENCE = 'borderless-api';
+
+  @Transform(toInt)
+  @IsInt()
+  @Min(1)
+  @Max(60)
+  JWT_ACCESS_MINUTES = 15;
+
+  @Transform(toInt)
+  @IsInt()
+  @Min(1)
+  @Max(90)
+  REFRESH_TOKEN_DAYS = 30;
+
+  @Transform(toInt)
+  @IsInt()
+  @Min(1)
+  LOGIN_MAX_FAILURES = 5;
+
+  @Transform(toInt)
+  @IsInt()
+  @Min(1)
+  LOGIN_LOCK_MINUTES = 15;
 }
 
 export function validateEnv(

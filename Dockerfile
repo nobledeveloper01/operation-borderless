@@ -20,6 +20,8 @@ COPY --from=build --chown=node:node /app/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/dist ./dist
 COPY --chown=node:node package.json ./
 COPY --chown=node:node docker/entrypoint.sh ./entrypoint.sh
+# The API writes its local signing key here, so the folder must belong to the runtime user.
+RUN mkdir -p /app/keys/jwt && chown -R node:node /app/keys && chmod 700 /app/keys/jwt
 USER node
 EXPOSE 3000
 HEALTHCHECK --interval=10s --timeout=3s --start-period=20s --retries=3 \
