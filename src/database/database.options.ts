@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import type { TlsOptions } from 'node:tls';
 import type { DataSourceOptions } from 'typeorm';
 import type { EnvironmentVariables } from '../config/env.validation.js';
+import { migrations } from '../migrations/index.js';
 import { SnakeNamingStrategy } from './snake-naming.strategy.js';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
@@ -29,10 +30,10 @@ export function databaseOptions(
     ssl: ssl(config),
     namingStrategy: new SnakeNamingStrategy(),
     entities: [`${here}../**/*.entity.{js,ts}`],
-    migrations: [`${here}../migrations/*.{js,ts}`],
+    migrations,
     synchronize: false,
     migrationsRun: false,
-    // Every connection gets hard limits so a stuck query or lock can't hang a request.
+    // Hard time limits stop a stuck query or lock from hanging a request forever.
     extra: {
       max: 10,
       options: '-c statement_timeout=5000 -c lock_timeout=3000 -c TimeZone=UTC',
