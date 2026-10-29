@@ -99,6 +99,7 @@ Dependencies: Docker, internet for live rates (optional), GitHub.
 | D-21 | Send to an email or phone; inviting people without a wallet needs SMTP, so it waits         | ADR-017 |
 | D-22 | Property-based and mutation testing, in CI                                                  | ADR-018 |
 | D-23 | One wallet per email or phone; one person may hold two                                      | ADR-019 |
+| D-24 | Redis and BullMQ; API and worker roles; reads fail open, money fails closed without Redis   | ADR-020 |
 
 ## Submission
 

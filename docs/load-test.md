@@ -69,6 +69,26 @@ During that run the outbox fell behind: about 58,700 events waited to be deliver
 end, and they were all delivered within about 20 seconds afterwards. Events are late under
 that much load, never lost.
 
+## Two API instances and two workers
+
+After Redis and BullMQ were added ([ADR-020](decisions/ADR-020-redis-and-bullmq.md)), the same
+1,000-client run against `docker compose up --scale api=2 --scale worker=2`:
+
+| Scenario                                  | Requests | Per second | p50 ms | p95 ms | p99 ms | Errors |
+| ----------------------------------------- | -------: | ---------: | -----: | -----: | -----: | -----: |
+| `GET` balances (with USD values)          |   52,490 |      3,499 |    230 |    596 |  1,797 |      0 |
+| `GET` history, 20 items                   |   36,521 |      2,435 |    384 |    736 |    890 |      0 |
+| `GET /fx/rates`                           |   77,101 |      5,140 |    179 |    332 |    562 |      0 |
+| `POST` deposits                           |   11,617 |        774 |  1,024 |  2,572 |  2,708 |      0 |
+| `POST` transfers between random wallets   |    9,449 |        630 |  1,465 |  2,792 |  2,923 |      0 |
+| `POST` transfers, all from one hot wallet |    6,679 |        445 |  1,652 |  4,045 |  4,324 |      0 |
+
+Reads roughly doubled. Money writes were about a third slower: both APIs share one Postgres, 20
+connections now compete for the same rows, and the workers deliver events during the run instead
+of after it. The outbox kept up: 521 events were waiting at the end and were delivered within a
+second (58,700 with one process). Two more checks on that stack: 140 calls to the two APIs at
+once let exactly 120 through, one shared limit, and every event was delivered exactly once.
+
 ## Money checks after the run
 
 - The USDx held by the 40 wallets was the same before and after the transfer scenarios

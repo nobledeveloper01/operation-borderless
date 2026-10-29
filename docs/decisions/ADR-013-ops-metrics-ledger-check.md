@@ -52,4 +52,5 @@ way to stop. The timer is `unref`'d, so it never keeps the process alive; produc
 registry, and only test runs that start many apps have more than one.
 
 **Not done.** No Grafana, alerting rules or tracing backend: they are outside services.
-Metrics live in one process, so with several API instances each must be scraped.
+Metrics live in each process, so with several API instances each must be scraped; queue lengths
+and the last ledger check come from Redis, so every API shows them (ADR-020).

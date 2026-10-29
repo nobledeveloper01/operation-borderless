@@ -4,21 +4,30 @@
 
 A NestJS modular monolith with one PostgreSQL database. One app keeps a whole money
 movement inside one database transaction; separate services would put network calls between
-the steps. No cache or queue: PostgreSQL row locks and unique constraints give the guarantees
-the design needs, the FX snapshot lives in the database, and the two background jobs (rate refresh,
-key cleanup) run in-process on plain timers. The brief allows Redis or a queue only
-where it earns its place; here it would add a second source of truth for rates and nothing
-to process ([ADR-001](decisions/ADR-001-modular-monolith.md),
-[ADR-005](decisions/ADR-005-no-redis.md)).
+the steps. PostgreSQL row locks and unique constraints give the money guarantees.
+
+The same image runs in two roles ([ADR-020](decisions/ADR-020-redis-and-bullmq.md)):
+
+- **api** serves HTTP. Each instance keeps the current rates in memory and reloads them when a
+  worker says they changed.
+- **worker** runs BullMQ: one scheduler per job (FX refresh every minute when due, hourly ledger
+  check and cleanups, outbox relay every second) and the event deliveries.
+
+Redis holds the shared rate-limit counts and the queues. Nothing that must commit with the money
+lives there ([ADR-001](decisions/ADR-001-modular-monolith.md)).
 
 ## System context
 
 ```mermaid
 flowchart LR
-  client[API client] -->|HTTPS JSON| proxy[Caddy TLS proxy] --> api[Borderless API<br/>NestJS]
+  client[API client] -->|HTTPS JSON| proxy[Caddy TLS proxy] --> api[Borderless API<br/>role api, scalable]
   api -->|SQL| db[(PostgreSQL 17)]
-  api -->|HTTPS, after each daily update| fx[ExchangeRate-API<br/>primary]
-  api -.->|HTTPS, if primary fails| fx2[Currency API<br/>secondary]
+  api -->|rate-limit counts, queue lengths| redis[(Redis 7)]
+  worker[Borderless worker<br/>role worker, scalable] -->|BullMQ jobs| redis
+  worker -->|SQL| db
+  redis -.->|rates changed| api
+  worker -->|HTTPS, after each daily update| fx[ExchangeRate-API<br/>primary]
+  worker -.->|HTTPS, if primary fails| fx2[Currency API<br/>secondary]
   reviewer[Reviewer] -->|Swagger UI /docs| api
 ```
 
@@ -158,7 +167,7 @@ operation-borderless/
 │   │   ├── accounts/  auth/  wallets/
 │   │   ├── deposits/  swaps/  transfers/  transactions/
 │   │   ├── ledger/  idempotency/  fx/  pricing/  quotes/
-│   │   └── outbox/  ops/  health/
+│   │   └── outbox/  jobs/  ops/  health/
 │   └── migrations/
 ├── test/
 │   ├── unit/            mirrors src/: common/ and modules/

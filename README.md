@@ -21,7 +21,8 @@ and Douala as easily as inside one wallet.
 | Encryption  | HTTPS through a Caddy proxy with HSTS; AES-256-GCM for email and phone at rest                                   |
 | Tests       | Vitest and Supertest against a real PostgreSQL (Testcontainers), fast-check properties, Stryker mutation testing |
 | Tooling     | Yarn 4, ESLint, Prettier, GitHub Actions                                                                         |
-| Runtime     | Docker and docker compose                                                                                        |
+| Queues      | Redis 7 and BullMQ: shared rate limits, one scheduler per background job, event delivery                         |
+| Runtime     | Docker and docker compose; the same image runs as `api` and as `worker`                                          |
 
 ## Why PostgreSQL
 
@@ -40,12 +41,12 @@ document store would have meant rebuilding these guarantees by hand. More detail
 [ADR-002](docs/decisions/ADR-002-postgresql.md) and the
 [database design](docs/database-design.md).
 
-There is no Redis or queue; the brief allows them only "where it earns its place". Rates are
-cached in memory and refreshed by a timer, every money write is one short database
-transaction, and events leave through an outbox table. With 1,000 clients at once, one API
-process served 500 to 2,400 requests a second with no errors and the books balanced. Redis
-would earn its place once there are several API instances, for a shared rate limit and one
-FX refresh job ([ADR-005](docs/decisions/ADR-005-no-redis.md), [load test](docs/load-test.md)).
+Redis and BullMQ do three jobs, each one a problem that only appears with several instances:
+one shared rate-limit count per client, one scheduler per background job (FX refresh, ledger
+check, cleanups), and delivering events from the outbox with retries. Nothing that must commit
+with the money lives in Redis: balances, the ledger, idempotency keys and the outbox table stay
+in Postgres. If Redis goes down, reads keep working and money and sign-in routes answer `503`
+until it is back ([ADR-020](docs/decisions/ADR-020-redis-and-bullmq.md)).
 
 ## Setup and run
 
@@ -55,8 +56,10 @@ You need Docker. Then:
 docker compose up --build
 ```
 
-This starts PostgreSQL, runs the migrations, starts the API, and puts a Caddy HTTPS proxy in
-front of it. Migrations run on every start, so there is no separate step. Only the proxy is
+This starts PostgreSQL and Redis, runs the migrations, starts the API and a worker (the same
+image in its `worker` role, which runs the background jobs and delivers events), and puts a
+Caddy HTTPS proxy in front. Run more of either with
+`docker compose up --scale api=2 --scale worker=2`. Migrations run on every start, so there is no separate step. Only the proxy is
 reachable from your machine:
 
 | URL                                              | What                   |
@@ -501,8 +504,8 @@ erDiagram
 
 Every deposit, swap and transfer writes events in the same database transaction as the money:
 `deposit.completed`, `swap.completed`, `transfer.sent`, `transfer.received`, and `balance.low`
-when a debit takes a balance below 10 USD of value. A worker inside the API delivers them
-about once a second as in-app notices:
+when a debit takes a balance below 10 USD of value. Every second the worker moves due events
+into a BullMQ queue and delivers them as in-app notices:
 
 ```bash
 curl -k "https://localhost:8443/api/v1/wallets/$WALLET/notifications?unread=true" \
@@ -650,9 +653,8 @@ Full detail is in [money handling](docs/money-handling.md). In short:
   the same identifier, so `POST /wallets` answers `409` for it. A transfer to an email or phone
   also shows whether it has a wallet. Wallet creation is limited to 10 a minute per IP and money
   routes to 30, to slow down anyone checking lists of addresses.
-- **One API instance.** The FX refresh job, the hourly ledger check and the in-memory rate
-  limiter assume one process. The outbox worker is safe with several, because it claims events
-  with `SKIP LOCKED`.
+- **One Postgres.** API instances and workers scale out, but every money write goes to one
+  database, so writes stop getting faster at about 800 to 1,100 a second on this laptop.
 - **Local only.** There is no hosted deployment; the brief doesn't ask for one.
 
 ## Left out on purpose
@@ -668,7 +670,6 @@ Full detail is in [money handling](docs/money-handling.md). In short:
 
 - Cursor paging for history, so walking every page is exact.
 - A paid, intraday FX feed for real pricing, with the same two-source check.
-- Redis for the rate limiter and a lock for the FX job, so several API instances can run.
 - Email or SMS notices. They need an SMTP server or an SMS provider; the outbox already has the
   events, so each would be one more handler.
 - Alerting rules on the metrics (stale rates, parked events, ledger mismatches), and a load test

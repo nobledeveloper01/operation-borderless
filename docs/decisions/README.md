@@ -8,7 +8,7 @@ Each record says what I decided, why, and what it costs.
 | [002](ADR-002-postgresql.md)                    | PostgreSQL for money data                                                              |
 | [003](ADR-003-typeorm.md)                       | TypeORM with hand-checked migrations                                                   |
 | [004](ADR-004-integer-money.md)                 | Integer minor units for money                                                          |
-| [005](ADR-005-no-redis.md)                      | No Redis or queue                                                                      |
+| [005](ADR-005-no-redis.md)                      | No Redis or queue (superseded by ADR-020)                                              |
 | [006](ADR-006-idempotency-in-transaction.md)    | Idempotency key claimed inside the money transaction                                   |
 | [007](ADR-007-fx-provider.md)                   | Two free daily FX sources, fail closed on stale rates                                  |
 | [008](ADR-008-authentication.md)                | Account sessions and wallet keys                                                       |
@@ -23,3 +23,4 @@ Each record says what I decided, why, and what it costs.
 | [017](ADR-017-send-to-email-or-phone.md)        | Send to an email or phone number; inviting people needs SMTP, so it waits              |
 | [018](ADR-018-property-and-mutation-testing.md) | Property-based tests for the money rules, and mutation testing to prove the tests bite |
 | [019](ADR-019-one-wallet-per-identifier.md)     | One wallet per email or phone; one person may still hold two                           |
+| [020](ADR-020-redis-and-bullmq.md)              | Redis and BullMQ for shared rate limits, scheduled jobs and event delivery             |

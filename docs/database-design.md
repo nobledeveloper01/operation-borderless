@@ -222,6 +222,7 @@ Index `(expires_at)`; rows are deleted an hour after they expire.
 | `payload`                     | json             | IDs, currencies and amounts only                                                           |
 | `created_at`, `available_at`  | timestamptz      | `available_at` moves forward after a failed delivery                                       |
 | `attempts`, `last_error`      | integer, text    |                                                                                            |
+| `queued_at`                   | timestamptz null | when the relay last put it in the BullMQ queue                                             |
 | `processed_at`, `failed_at`   | timestamptz null | never both                                                                                 |
 
 Partial index on `available_at` for events not yet delivered or parked.

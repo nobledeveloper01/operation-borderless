@@ -12,9 +12,10 @@ this to run internally, without a queue or other outside service.
   `transfer.received`, and `balance.low` when a debit takes a balance from at least
   `LOW_BALANCE_USD` (10 by default) to below it. Payloads hold IDs, currencies and amounts only,
   never an email or phone number.
-- An in-process worker (`OutboxDispatcher`) polls every second. It claims due events with
-  `FOR UPDATE SKIP LOCKED`, so several API instances can share the queue without delivering
-  one event twice at the same time.
+- Every second a relay claims due events with `FOR UPDATE SKIP LOCKED` and moves them into a
+  BullMQ queue, with the event ID as the job ID, so an event is never queued twice. Workers
+  deliver them; an event queued but lost from Redis is queued again after five minutes. (Since
+  ADR-020; before, one loop per process polled the table.)
 - Each event is handled in its own savepoint. A failure rolls back only that event, records the
   error, and schedules the next try with full-jitter exponential backoff (1 s base, 5 minute
   cap). After 10 retries it is parked as failed and counted in `borderless_outbox_failed`.
@@ -25,7 +26,8 @@ this to run internally, without a queue or other outside service.
 
 **Why the database and not Redis or a broker.** The guarantee comes from writing the event in the
 money transaction, which a separate broker can't join. Postgres already holds both, and
-`SKIP LOCKED` makes it a safe work queue at this scale. This keeps ADR-005: no Redis or queue.
+`SKIP LOCKED` lets several relays share it. Redis and BullMQ (ADR-020) only carry delivery jobs;
+the table stays the record of truth.
 
 **Not done, and why.** Email or SMS notices need an SMTP server or an SMS provider, which are
 outside services; you asked for none. Adding one is a second handler on the same outbox, with

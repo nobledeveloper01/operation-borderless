@@ -113,7 +113,7 @@ running lint, type check and tests, OpenAPI drift test.
 collection in addition to OpenAPI.
 
 **Won't (this assessment):** email/SMS verification, password reset, MFA, roles, frontend, withdrawals, KYC, real chains,
-webhooks, Redis or a queue, deployment.
+webhooks, deployment. (Redis and BullMQ were added later for running several instances, ADR-020.)
 
 ## MVP
 

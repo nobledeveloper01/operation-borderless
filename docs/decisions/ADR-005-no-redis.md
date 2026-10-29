@@ -1,4 +1,7 @@
-# ADR-005: No Redis or queue
+# ADR-005: No Redis or queue (superseded by ADR-020)
+
+> Superseded on 29 Oct 2026 by [ADR-020](ADR-020-redis-and-bullmq.md), which adds Redis and BullMQ so the
+> API can run as several instances. Kept for the record.
 
 **Context.** The brief allows Redis, BullMQ or RabbitMQ "only where it earns its place" (p.2).
 

@@ -20,7 +20,7 @@ short-lived quote the customer confirms.
   transaction. If the movement fails, say for insufficient funds, the mark rolls back and the
   quote can still be used before it expires. Two movements racing for one quote: one wins,
   the rest get `409`.
-- Expired quotes are deleted an hour after they expire, by an hourly in-process job.
+- Expired quotes are deleted an hour after they expire, by an hourly job on the worker (ADR-020).
 
 **Why `POST` and not `GET /fx/quote`.** The original design had a read-only preview. Holding a
 price means storing it, so creating a quote is a write; a `GET` with side effects would be

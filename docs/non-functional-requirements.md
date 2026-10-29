@@ -6,16 +6,16 @@ latency targets) are my own; the brief sets none.
 
 ## Stack and tooling (brief p.1–2)
 
-| ID      | Requirement                                                                   | Type      |
-| ------- | ----------------------------------------------------------------------------- | --------- |
-| NFR-001 | Node.js LTS with TypeScript, `strict: true`                                   | Mandatory |
-| NFR-002 | Express or NestJS (I use NestJS)                                              | Mandatory |
-| NFR-003 | SQL or NoSQL database, choice justified in the README                         | Mandatory |
-| NFR-004 | Redis, BullMQ or RabbitMQ only where they earn their place (I use none)       | Mandatory |
-| NFR-005 | Jest or Vitest plus Supertest (I use Vitest)                                  | Mandatory |
-| NFR-006 | Yarn, ESLint, Prettier                                                        | Mandatory |
-| NFR-007 | Docker and docker compose start the API and its dependencies with one command | Mandatory |
-| NFR-008 | No frontend                                                                   | Mandatory |
+| ID      | Requirement                                                                                                                     | Type      |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| NFR-001 | Node.js LTS with TypeScript, `strict: true`                                                                                     | Mandatory |
+| NFR-002 | Express or NestJS (I use NestJS)                                                                                                | Mandatory |
+| NFR-003 | SQL or NoSQL database, choice justified in the README                                                                           | Mandatory |
+| NFR-004 | Redis, BullMQ or RabbitMQ only where they earn their place (Redis + BullMQ for shared limits, jobs and event delivery; ADR-020) | Mandatory |
+| NFR-005 | Jest or Vitest plus Supertest (I use Vitest)                                                                                    | Mandatory |
+| NFR-006 | Yarn, ESLint, Prettier                                                                                                          | Mandatory |
+| NFR-007 | Docker and docker compose start the API and its dependencies with one command                                                   | Mandatory |
+| NFR-008 | No frontend                                                                                                                     | Mandatory |
 
 ## Correctness and data integrity
 
