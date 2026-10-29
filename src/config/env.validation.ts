@@ -1,4 +1,5 @@
 import { plainToInstance, Transform } from 'class-transformer';
+import { decodeKey, parseEncryptionKeys } from '../crypto/field-cipher.js';
 import {
   IsBoolean,
   IsIn,
@@ -65,6 +66,20 @@ export class EnvironmentVariables {
   )
   @IsBoolean()
   TRUST_PROXY = false;
+
+  @IsString()
+  @MinLength(1)
+  PII_ENCRYPTION_KEYS: string;
+
+  @Transform(toInt)
+  @IsInt()
+  @Min(1)
+  @Max(255)
+  PII_ACTIVE_KEY_VERSION = 1;
+
+  @IsString()
+  @MinLength(1)
+  PII_LOOKUP_KEY: string;
 }
 
 export function validateEnv(
@@ -81,8 +96,34 @@ export function validateEnv(
   if (env.DB_SSL === 'verify-full' && !env.DB_SSL_CA) {
     problems.push('DB_SSL_CA is required when DB_SSL is verify-full');
   }
+  problems.push(...keyProblems(env));
   if (problems.length > 0) {
     throw new Error(`Invalid environment: ${problems.join('; ')}`);
   }
   return env;
+}
+
+// The compose file ships fixed keys for local use, and production must never start with them.
+export const LOCAL_ONLY_KEY_MARK = 'bG9jYWwt';
+
+function keyProblems(env: EnvironmentVariables): string[] {
+  const problems: string[] = [];
+  try {
+    const keys = parseEncryptionKeys(env.PII_ENCRYPTION_KEYS ?? '');
+    if (!keys.has(env.PII_ACTIVE_KEY_VERSION)) {
+      problems.push(
+        `PII_ENCRYPTION_KEYS has no key for version ${env.PII_ACTIVE_KEY_VERSION}`,
+      );
+    }
+    decodeKey(env.PII_LOOKUP_KEY ?? '', 'lookup key');
+  } catch (error) {
+    problems.push((error as Error).message);
+  }
+  const usesLocalKeys = [env.PII_ENCRYPTION_KEYS, env.PII_LOOKUP_KEY].some(
+    (k) => k?.includes(LOCAL_ONLY_KEY_MARK),
+  );
+  if (env.NODE_ENV === 'production' && usesLocalKeys) {
+    problems.push('Production cannot use the local-only encryption keys');
+  }
+  return problems;
 }
