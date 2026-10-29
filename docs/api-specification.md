@@ -273,6 +273,8 @@ Newest first. `currency` matches `fromCurrency` or `toCurrency`.
 - `type` and `currency` each take one value or a comma list, and can be combined.
 - Bad values get `400 VALIDATION_FAILED`. Someone else's wallet gets `404 WALLET_NOT_FOUND`.
 - The count and the page are read from one snapshot, so `total` matches the pages.
+- Paging is by offset. While a slow write commits, a client walking every page could see one
+  row twice or miss one; a cursor would fix that and is listed as a later improvement.
 
 ### API-008 Transaction by ID
 

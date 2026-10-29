@@ -24,22 +24,25 @@ export class HistoryQueryDto {
   @ApiPropertyOptional({ default: 1, minimum: 1, maximum: MAX_PAGE })
   @IsOptional()
   @Transform(toInteger)
-  @IsInt({ message: 'page must be a whole number.' })
   @Min(1, { message: 'page must be at least 1.' })
   @Max(MAX_PAGE, { message: `page must be at most ${MAX_PAGE}.` })
+  // Checks run from the property up, so the whole-number message is the one shown first.
+  @IsInt({ message: 'page must be a whole number.' })
   page: number = 1;
 
   @ApiPropertyOptional({ default: 20, minimum: 1, maximum: MAX_LIMIT })
   @IsOptional()
   @Transform(toInteger)
-  @IsInt({ message: 'limit must be a whole number.' })
   @Min(1, { message: 'limit must be at least 1.' })
   @Max(MAX_LIMIT, { message: `limit must be at most ${MAX_LIMIT}.` })
+  @IsInt({ message: 'limit must be a whole number.' })
   limit: number = 20;
 
   @ApiPropertyOptional({
-    description: 'One or more of DEPOSIT, SWAP, TRANSFER, comma separated.',
-    example: 'SWAP,TRANSFER',
+    enum: TRANSACTION_TYPES,
+    isArray: true,
+    description: 'One or more types, comma separated or repeated.',
+    example: ['SWAP', 'TRANSFER'],
   })
   @IsOptional()
   @Transform(toList)
@@ -50,9 +53,11 @@ export class HistoryQueryDto {
   type?: TransactionType[];
 
   @ApiPropertyOptional({
+    enum: STABLECOINS,
+    isArray: true,
     description:
-      'One or more stablecoins, comma separated; matches either side of the transaction.',
-    example: 'cGHS',
+      'One or more stablecoins, comma separated or repeated; matches either side of the transaction.',
+    example: ['cGHS'],
   })
   @IsOptional()
   @Transform(toList)

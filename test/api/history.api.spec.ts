@@ -139,6 +139,10 @@ describe('transaction history', () => {
       expect([query, res.status]).toEqual([query, 400]);
       expect(res.body.code).toBe('VALIDATION_FAILED');
     }
+    const words = await history(a, '?page=abc');
+    expect(words.body.message).toBe('page must be a whole number.');
+    const exponent = await history(a, '?limit=1e2');
+    expect(exponent.body.message).toBe('limit must be a whole number.');
   });
 
   it('TC-029 TC-033 shows a transaction to its sender and receiver only', async () => {
