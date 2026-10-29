@@ -42,6 +42,10 @@ describe('AllExceptionsFilter', () => {
 
   it('maps an AppError to its code and status', () => {
     const { statusCode, body } = run(new AppError('SERVICE_BUSY', 'Busy'));
+    expect(
+      run(Object.assign(new Error('bigint out of range'), { code: '22003' }))
+        .body.code,
+    ).toBe('BALANCE_LIMIT');
     expect(statusCode).toBe(503);
     expect(body).toMatchObject({
       code: 'SERVICE_BUSY',

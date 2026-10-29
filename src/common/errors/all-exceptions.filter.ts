@@ -21,6 +21,7 @@ interface Mapped {
 
 const PG_LOCK_TIMEOUT = '55P03';
 const PG_STATEMENT_TIMEOUT = '57014';
+const PG_OUT_OF_RANGE = '22003';
 
 // Every error leaves through here, so clients get one shape and never see internals.
 @Catch()
@@ -79,6 +80,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
         status: HttpStatus.SERVICE_UNAVAILABLE,
         code: 'SERVICE_BUSY',
         message: 'The service is busy. Try again shortly.',
+      };
+    }
+    // The ledger checks this first; the database's own range error is the backstop.
+    if (pgCode === PG_OUT_OF_RANGE) {
+      return {
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        code: 'BALANCE_LIMIT',
+        message: 'This would take a balance past the most a wallet can hold.',
       };
     }
     const bodyParserType = (exception as { type?: unknown } | null)?.type;

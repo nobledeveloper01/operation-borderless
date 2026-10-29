@@ -67,17 +67,17 @@ test fails if the two drift.
 }
 ```
 
-| Status | Code(s)                                                                           | When                                                              |
-| ------ | --------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| 400    | `VALIDATION_FAILED`, `IDEMPOTENCY_KEY_REQUIRED`, `SAME_CURRENCY`                  | Bad input                                                         |
-| 401    | `UNAUTHENTICATED`, `SESSION_REVOKED`                                              | Missing, bad, expired or revoked token or key; failed login       |
-| 403    | `SESSION_REQUIRED`                                                                | A wallet key used on a session-only route                         |
-| 404    | `WALLET_NOT_FOUND`, `TRANSACTION_NOT_FOUND`, `ROUTE_NOT_FOUND`                    | Unknown resource                                                  |
-| 409    | `WALLET_ALREADY_EXISTS`, `TOO_MANY_KEYS`                                          | Identifier already has a wallet; 5 active keys                    |
-| 422    | `INSUFFICIENT_FUNDS`, `AMOUNT_TOO_SMALL`, `SAME_WALLET`, `IDEMPOTENCY_KEY_REUSED` | Valid input, refused by a business rule                           |
-| 429    | `RATE_LIMITED`                                                                    | Too many requests                                                 |
-| 503    | `FX_RATE_UNAVAILABLE`, `SERVICE_BUSY`                                             | No rate within 26 h of its publication; lock or statement timeout |
-| 500    | `INTERNAL_ERROR`                                                                  | Unexpected; generic message only                                  |
+| Status | Code(s)                                                                                            | When                                                              |
+| ------ | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| 400    | `VALIDATION_FAILED`, `IDEMPOTENCY_KEY_REQUIRED`, `SAME_CURRENCY`                                   | Bad input                                                         |
+| 401    | `UNAUTHENTICATED`, `SESSION_REVOKED`                                                               | Missing, bad, expired or revoked token or key; failed login       |
+| 403    | `SESSION_REQUIRED`                                                                                 | A wallet key used on a session-only route                         |
+| 404    | `WALLET_NOT_FOUND`, `TRANSACTION_NOT_FOUND`, `ROUTE_NOT_FOUND`                                     | Unknown resource                                                  |
+| 409    | `WALLET_ALREADY_EXISTS`, `TOO_MANY_KEYS`                                                           | Identifier already has a wallet; 5 active keys                    |
+| 422    | `INSUFFICIENT_FUNDS`, `AMOUNT_TOO_SMALL`, `BALANCE_LIMIT`, `SAME_WALLET`, `IDEMPOTENCY_KEY_REUSED` | Valid input, refused by a business rule                           |
+| 429    | `RATE_LIMITED`                                                                                     | Too many requests                                                 |
+| 503    | `FX_RATE_UNAVAILABLE`, `SERVICE_BUSY`                                                              | No rate within 26 h of its publication; lock or statement timeout |
+| 500    | `INTERNAL_ERROR`                                                                                   | Unexpected; generic message only                                  |
 
 ## Endpoints
 

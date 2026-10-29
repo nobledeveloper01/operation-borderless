@@ -35,6 +35,9 @@ export interface Posted {
   balancesAfter: { walletId: string; currency: Stablecoin; amount: bigint }[];
 }
 
+// The largest amount, in millionths, that a balance column can store.
+export const MAX_BALANCE = 9_223_372_036_854_775_807n;
+
 const legKey = (leg: { walletId: string; currency: string }) =>
   `${leg.walletId}:${leg.currency}`;
 
@@ -58,6 +61,16 @@ export class LedgerService {
             currency: leg.currency,
             available: formatAmount(available),
             requested: formatAmount(-leg.delta),
+          },
+        );
+      }
+      if (leg.delta > 0n && available + leg.delta > MAX_BALANCE) {
+        throw new AppError(
+          'BALANCE_LIMIT',
+          `This would take the ${leg.currency} balance past the most a wallet can hold.`,
+          {
+            currency: leg.currency,
+            maximum: formatAmount(MAX_BALANCE),
           },
         );
       }

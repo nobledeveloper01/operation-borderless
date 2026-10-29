@@ -177,6 +177,29 @@ describe('deposits and swaps', () => {
     });
   });
 
+  describe('balance limit', () => {
+    it('refuses a deposit or swap that would push a balance past what it can hold, with a clear 422', async () => {
+      const wallet = await createWallet(app);
+      // Leaves room for 100,000 USDx, less than either a maximum deposit or the swap below brings in.
+      await db.query(
+        `UPDATE balances SET amount = 9223372036854775807 - 100000000000 WHERE wallet_id = $1 AND currency = 'USDx'`,
+        [wallet.walletId],
+      );
+      const res = await deposit(app, wallet, 'USDx', '1000000000').expect(422);
+      expect(res.body.code).toBe('BALANCE_LIMIT');
+      await deposit(app, wallet, 'cNGN', '1000000000').expect(201);
+      const swapped = await swap(app, wallet, {
+        fromCurrency: 'cNGN',
+        toCurrency: 'USDx',
+        amount: '1000000000',
+      }).expect(422);
+      expect(swapped.body.code).toBe('BALANCE_LIMIT');
+      expect((await balancesOf(db, wallet.walletId)).cNGN).toBe(
+        '1000000000000000',
+      );
+    });
+  });
+
   describe('swaps', () => {
     it('TC-012 converts at the current rate, rounding down, and records the rate used', async () => {
       const wallet = await createWallet(app);

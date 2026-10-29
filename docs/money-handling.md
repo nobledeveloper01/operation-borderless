@@ -14,7 +14,9 @@ version; the README will summarise it.
 - Cap per operation (_proposed_): 1,000,000,000 units of the currency. The largest balance a
   `bigint` holds at this scale is about 9.2 trillion units, far above any test.
 
-## FX maths
+## FX maths A credit that would take a
+
+balance past that limit is refused with `422 BALANCE_LIMIT`, checked under the row lock.
 
 - Provider rates are stored as strings with up to 12 decimals, per 1 USD.
 - Cross rate `A → B = rate(B per USD) / rate(A per USD)`, computed exactly with `bigint`
