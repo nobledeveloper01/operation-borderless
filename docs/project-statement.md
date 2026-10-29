@@ -100,7 +100,7 @@ Listed with their decision status in [plan.md](plan.md#assumptions).
 | Risk                              | Effect                                    | Response                                                                       |
 | --------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------ |
 | FX provider down, slow or changed | Swaps and transfers can't price           | Timeout, bounded retry, second live source, `503` once rates are over 26 h old |
-| Floating-point money errors       | Wrong balances                            | Integer minor units, BigInt and decimal.js only                                |
+| Floating-point money errors       | Wrong balances                            | Integer minor units and exact `bigint` maths only                              |
 | Double processing on retries      | Money created or lost                     | Idempotency key stored in the money transaction                                |
 | Races between parallel requests   | Negative balances or lost updates         | Row locks in a fixed order and a `CHECK (amount >= 0)`                         |
 | Tests need a database             | `yarn test` fails on a reviewer's machine | Testcontainers starts PostgreSQL; documented Docker requirement                |

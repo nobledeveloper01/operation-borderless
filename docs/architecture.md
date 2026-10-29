@@ -28,21 +28,21 @@ untrusted (every response validated before use); the database is trusted.
 
 ## Modules
 
-| Module                           | Responsibility                                                                                                                               |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `config`                         | Loads and validates environment variables at startup.                                                                                        |
-| `database`                       | TypeORM data source, migrations, `runInTransaction` helper, naming strategy.                                                                 |
-| `common`                         | Error filter and error codes, request ID middleware, validation pipe, money helpers (`Money`, parse/format), pagination DTOs.                |
-| `currencies`                     | The five supported stablecoins, their fiat pegs and decimals. Pure code, no table.                                                           |
-| `fx`                             | `FxProvider` interface, primary and secondary adapters, snapshot store, refresh scheduler, `FxService.rate(from, to)`, `GET /fx/rates`.      |
-| `crypto`                         | AES-256-GCM field encryption with key versions, HMAC blind index, key loading and checks.                                                    |
-| `auth`                           | Accounts, argon2id passwords, login, ES256 JWT access tokens, refresh rotation, logout, wallet keys, the auth guard and the ownership check. |
-| `wallets`                        | Create and read wallets and balances, USD total.                                                                                             |
-| `ledger`                         | `LedgerService`: the only code that changes balances. Locks rows, checks funds, writes transaction + ledger lines.                           |
-| `deposits`, `swaps`, `transfers` | Thin controllers and services that validate, price, and call `LedgerService` inside an idempotent transaction.                               |
-| `transactions`                   | History list with filters and pagination, transaction by ID.                                                                                 |
-| `idempotency`                    | Claim, replay and conflict logic on `idempotency_keys`; cleanup job.                                                                         |
-| `health`                         | Liveness and readiness.                                                                                                                      |
+| Module                           | Responsibility                                                                                                                                                                                                                                                                                                                             |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `config`                         | Loads and validates environment variables at startup.                                                                                                                                                                                                                                                                                      |
+| `database`                       | TypeORM data source, migrations, `runInTransaction` helper, naming strategy.                                                                                                                                                                                                                                                               |
+| `common`                         | Shared handlers written once: `AllExceptionsFilter` (every error), `SuccessInterceptor` + `@ResponseMessage()` (every success), `@ApiEndpoint()` (status, message and Swagger contract per route), request ID and no-store middlewares, `AppError` and error codes, money helpers (`parseAmount`, `formatAmount`, `crossRate`, `convert`). |
+| `currencies`                     | The five supported stablecoins, their fiat pegs and decimals. Pure code, no table.                                                                                                                                                                                                                                                         |
+| `fx`                             | `FxProvider` interface, primary and secondary adapters, snapshot store, refresh scheduler, `FxService.rate(from, to)`, `GET /fx/rates`.                                                                                                                                                                                                    |
+| `crypto`                         | AES-256-GCM field encryption with key versions, HMAC blind index, key loading and checks.                                                                                                                                                                                                                                                  |
+| `auth`                           | Accounts, argon2id passwords, login, ES256 JWT access tokens, refresh rotation, logout, wallet keys, the auth guard and the ownership check.                                                                                                                                                                                               |
+| `wallets`                        | Create and read wallets and balances, USD total.                                                                                                                                                                                                                                                                                           |
+| `ledger`                         | `LedgerService`: the only code that changes balances. Locks rows, checks funds, writes transaction + ledger lines.                                                                                                                                                                                                                         |
+| `deposits`, `swaps`, `transfers` | Thin controllers and services that validate, price, and call `LedgerService` inside an idempotent transaction.                                                                                                                                                                                                                             |
+| `transactions`                   | History list with filters and pagination, transaction by ID.                                                                                                                                                                                                                                                                               |
+| `idempotency`                    | Claim, replay and conflict logic on `idempotency_keys`; cleanup job.                                                                                                                                                                                                                                                                       |
+| `health`                         | Liveness and readiness.                                                                                                                                                                                                                                                                                                                    |
 
 Deposits, swaps and transfers may later merge into one `payments` module if the code is
 small; the boundaries above stay the same.
@@ -95,14 +95,15 @@ flowchart TD
 
 ## Request lifecycle
 
-1. `helmet`, body size limit, request ID middleware (accepts a safe incoming
-   `X-Request-Id` or makes one).
+1. Request ID middleware (keeps a safe incoming `X-Request-Id` or makes one), then
+   `Cache-Control: no-store`, the 16 KB JSON body limit and `helmet`.
 2. Throttler guard (per IP).
 3. Auth guard: verifies the JWT (pinned algorithm, `iss`, `aud`, `exp`) and that its session
    isn't revoked, or checks the wallet key; public routes are marked `@Public()`. Services
    then check the caller owns the wallet.
 4. Validation pipe: `whitelist`, `forbidNonWhitelisted`, `transform`.
-5. Controller → service → `LedgerService` / repositories.
+5. Controller → service → `LedgerService` / repositories. The controller returns plain data;
+   `SuccessInterceptor` wraps it in the envelope.
 6. Global error filter maps known errors to codes; anything else becomes a generic `500`
    with the request ID, and the real error is logged.
 

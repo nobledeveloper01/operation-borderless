@@ -17,7 +17,21 @@ test fails if the two drift.
 - Timestamps are ISO 8601 UTC.
 - Unknown body fields are refused (`400`).
 - Every response has an `X-Request-Id` header.
-- Success responses are the resource itself (no envelope).
+- Every answer uses one envelope, built in one place (`SuccessInterceptor` for success,
+  `AllExceptionsFilter` for errors). Examples below show only the `data` part of a success.
+
+```json
+{
+  "success": true,
+  "statusCode": 201,
+  "message": "Swap completed",
+  "data": { "transactionId": "0192f5c9-...", "type": "SWAP" },
+  "requestId": "6f1c...",
+  "timestamp": "2026-10-29T10:05:00.000Z"
+}
+```
+
+- Every answer has `Cache-Control: no-store`.
 
 ## Idempotency
 
@@ -37,6 +51,7 @@ test fails if the two drift.
 
 ```json
 {
+  "success": false,
   "statusCode": 422,
   "error": "Unprocessable Entity",
   "code": "INSUFFICIENT_FUNDS",

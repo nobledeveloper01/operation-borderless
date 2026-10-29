@@ -19,13 +19,13 @@ own targets; the brief sets none.
 
 ## Correctness and data integrity
 
-| ID      | Requirement                                                                                 | Type                                                                 |
-| ------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| NFR-010 | Money is never a float. Integer minor units in the database, BigInt and decimal.js in code. | Mandatory (brief p.3, "correct money handling"; README must explain) |
-| NFR-011 | Each money operation is one database transaction: all of it or none of it.                  | Mandatory (inferred from "never negative", "never twice")            |
-| NFR-012 | Parallel requests can't overdraw or lose updates.                                           | Mandatory (README must explain concurrency)                          |
-| NFR-013 | Transactions and ledger lines are append-only (database trigger).                           | Recommended                                                          |
-| NFR-014 | For every balance, the sum of its ledger lines equals the stored amount.                    | Recommended (checked in tests)                                       |
+| ID      | Requirement                                                                                | Type                                                                 |
+| ------- | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| NFR-010 | Money is never a float. Integer minor units in the database, exact `bigint` maths in code. | Mandatory (brief p.3, "correct money handling"; README must explain) |
+| NFR-011 | Each money operation is one database transaction: all of it or none of it.                 | Mandatory (inferred from "never negative", "never twice")            |
+| NFR-012 | Parallel requests can't overdraw or lose updates.                                          | Mandatory (README must explain concurrency)                          |
+| NFR-013 | Transactions and ledger lines are append-only (database trigger).                          | Recommended                                                          |
+| NFR-014 | For every balance, the sum of its ledger lines equals the stored amount.                   | Recommended (checked in tests)                                       |
 
 ## Reliability
 

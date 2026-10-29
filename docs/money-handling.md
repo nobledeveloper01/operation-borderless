@@ -17,8 +17,8 @@ version; the README will summarise it.
 ## FX maths
 
 - Provider rates are stored as strings with up to 12 decimals, per 1 USD.
-- Cross rate `A → B = rate(B per USD) / rate(A per USD)`, computed with `decimal.js`
-  (precision 40), then rounded **half-even to 10 decimals**. That 10-decimal rate is the rate
+- Cross rate `A → B = rate(B per USD) / rate(A per USD)`, computed exactly with `bigint`
+  (no float and no decimal library), then rounded **half-even to 10 decimals**. That 10-decimal rate is the rate
   stored on the transaction and shown to the client.
 - Converted amount = `fromAmount × rate`, rounded **down** to 6 decimals. Rounding down means
   the system never credits more than the value debited. The difference (under one millionth)
