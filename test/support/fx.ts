@@ -13,8 +13,8 @@ const fixture = (name: string): unknown =>
     ),
   );
 
-// Real recorded answers, re-dated so they read as published a given number of hours before `now`.
-export function primaryRates(now: Date, hoursOld = 1): ProviderRates {
+// Real recorded answers, re-dated to `now` (or hours before it), so a test's own refresh is always the newest snapshot its app has seen.
+export function primaryRates(now: Date, hoursOld = 0): ProviderRates {
   const body = fixture('exchangerate-api') as Record<string, unknown>;
   const published = Math.floor((now.getTime() - hoursOld * 3_600_000) / 1000);
   return parseExchangeRateApi(
@@ -27,8 +27,13 @@ export function primaryRates(now: Date, hoursOld = 1): ProviderRates {
   );
 }
 
+// Re-dated to `now`, so the answer is never stale on a later day and is the newest snapshot in a shared test database.
 export function secondaryRates(now: Date): ProviderRates {
-  return parseCurrencyApi(fixture('currency-api'), now);
+  // Whole seconds, like the primary's unix timestamps, so equal publish times compare equal.
+  return {
+    ...parseCurrencyApi(fixture('currency-api'), now),
+    providerUpdatedAt: new Date(Math.floor(now.getTime() / 1000) * 1000),
+  };
 }
 
 // A provider the test can switch between answering and failing.
