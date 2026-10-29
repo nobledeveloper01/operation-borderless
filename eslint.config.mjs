@@ -34,9 +34,12 @@ export default tseslint.config(
   },
   {
     files: ['test/**/*.ts'],
+    // Supertest types every response body as any, so these rules only add noise in tests.
     rules: {
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
     },
   },
 );

@@ -82,9 +82,6 @@ describe('platform', () => {
     expect(res.headers['access-control-allow-origin']).toBeUndefined();
   });
 
-  // Guards only run on matched routes; this moves to the wallet tests once those routes exist.
-  it.todo('TC-043 limits request rate');
-
   it('serves the OpenAPI document', async () => {
     const res = await request(app.getHttpServer())
       .get('/docs-json')
