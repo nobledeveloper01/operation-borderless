@@ -6,7 +6,10 @@ import {
 } from '@nestjs/common';
 import { ThrottlerException } from '@nestjs/throttler';
 import { AppError } from '../../../src/common/errors/app-error.js';
-import { AllExceptionsFilter } from '../../../src/common/errors/all-exceptions.filter.js';
+import {
+  AllExceptionsFilter,
+  loggableError,
+} from '../../../src/common/errors/all-exceptions.filter.js';
 
 function run(exception: unknown) {
   const res = { statusCode: 0, body: undefined as unknown };
@@ -76,5 +79,23 @@ describe('AllExceptionsFilter', () => {
     expect(statusCode).toBe(500);
     expect(body.message).toBe('Something went wrong.');
     expect(JSON.stringify(body)).not.toContain('secret_table');
+  });
+
+  it('logs query errors without their SQL parameters', () => {
+    const failed = Object.assign(new Error('insert failed'), {
+      name: 'QueryFailedError',
+      code: '23502',
+      query: 'INSERT INTO accounts ...',
+      parameters: ['$argon2id$v=19$secret-hash', Buffer.from('ciphertext')],
+    });
+    const logged = loggableError(failed);
+    expect(logged).toMatchObject({
+      type: 'QueryFailedError',
+      message: 'insert failed',
+      code: '23502',
+    });
+    expect(JSON.stringify(logged)).not.toContain('argon2id');
+    expect(logged).not.toHaveProperty('parameters');
+    expect(logged).not.toHaveProperty('query');
   });
 });

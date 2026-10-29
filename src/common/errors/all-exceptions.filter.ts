@@ -35,7 +35,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     if (mapped.status >= 500) {
       this.logger.error(
-        { err: exception, requestId: req.id },
+        { err: loggableError(exception), requestId: req.id },
         'Request failed',
       );
     }
@@ -149,4 +149,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
       message: messages[0] ?? '',
     };
   }
+}
+
+// Query errors carry their SQL parameters (ciphertexts, password hashes), so only safe fields reach the logs.
+export function loggableError(exception: unknown): Record<string, unknown> {
+  if (!(exception instanceof Error)) return { type: typeof exception };
+  const code = (exception as { code?: unknown }).code;
+  return {
+    type: exception.name,
+    message: exception.message,
+    ...(typeof code === 'string' ? { code } : {}),
+    stack: exception.stack,
+  };
 }

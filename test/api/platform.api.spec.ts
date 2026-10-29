@@ -73,6 +73,20 @@ describe('platform', () => {
     expect(broken.body.code).toBe('VALIDATION_FAILED');
   });
 
+  it('keeps a strict CSP on the API and relaxes it only for Swagger UI', async () => {
+    const api = await request(app.getHttpServer()).get('/health');
+    expect(api.headers['content-security-policy']).toBe(
+      "default-src 'none';frame-ancestors 'none'",
+    );
+    expect(api.headers['content-security-policy']).not.toContain(
+      'unsafe-inline',
+    );
+    const docs = await request(app.getHttpServer()).get('/docs/');
+    expect(docs.headers['content-security-policy']).toContain(
+      "script-src 'self' 'unsafe-inline'",
+    );
+  });
+
   it('TC-045 sends security headers and no CORS headers by default', async () => {
     const res = await request(app.getHttpServer())
       .get('/health')

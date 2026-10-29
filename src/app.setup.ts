@@ -5,6 +5,7 @@ import {
   type OpenAPIObject,
   SwaggerModule,
 } from '@nestjs/swagger';
+import type { NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
 import { noStoreMiddleware } from './common/middleware/no-store.middleware.js';
@@ -43,16 +44,27 @@ export function configureApp(app: NestExpressApplication): void {
   app.use(requestIdMiddleware);
   app.use(noStoreMiddleware);
   app.useBodyParser('json', { limit: '16kb' });
-  app.use(
-    helmet({
-      contentSecurityPolicy: {
-        // Swagger UI needs inline scripts and styles to render; the API itself only sends JSON.
-        directives: {
-          'script-src': ["'self'", "'unsafe-inline'"],
-          'style-src': ["'self'", "'unsafe-inline'"],
-        },
+  // The API only sends JSON, so it gets helmet's strict policy; Swagger UI needs inline scripts, but only under /docs.
+  const strict = helmet({
+    contentSecurityPolicy: {
+      useDefaults: false,
+      directives: { 'default-src': ["'none'"], 'frame-ancestors': ["'none'"] },
+    },
+  });
+  const docs = helmet({
+    contentSecurityPolicy: {
+      directives: {
+        'script-src': ["'self'", "'unsafe-inline'"],
+        'style-src': ["'self'", "'unsafe-inline'"],
       },
-    }),
+    },
+  });
+  app.use((req: Request, res: Response, next: NextFunction) =>
+    (req.path === '/docs' || req.path.startsWith('/docs/') ? docs : strict)(
+      req,
+      res,
+      next,
+    ),
   );
 
   const origins =
