@@ -37,3 +37,5 @@ instructions are added with the code.
 | [Test strategy](docs/test-strategy.md) | Unit, integration, API, concurrency and contract tests |
 | [Requirements traceability](docs/requirements-traceability.md) | Brief → requirement → component → test → evidence |
 | [Delivery plan](docs/plan.md) | The 48-hour schedule, assumptions, risks and open decisions |
+| [Pre-launch checklist](docs/checklists/pre-launch-checklist.md) | Every check, marked mandatory, recommended or not applicable |
+| [Decisions](docs/decisions/) | Architecture decision records |

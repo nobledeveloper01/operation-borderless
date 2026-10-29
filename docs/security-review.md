@@ -1,7 +1,8 @@
 # Security Review (design stage)
 
 This is the threat model and the planned control for each threat. Nothing here is verified
-yet; the Test column says what proves each control.
+yet; the Test column says what proves each control, and the
+[pre-launch checklist](checklists/pre-launch-checklist.md) tracks the evidence.
 
 ## Context
 

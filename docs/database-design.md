@@ -11,10 +11,10 @@ UPDATE` row locks, `CHECK` and unique constraints that enforce the rules in the 
 itself, exact `bigint` and `numeric` types, `INSERT ... ON CONFLICT` for race-free
 idempotency claims, and triggers for append-only tables. MySQL would also work but has no
 `ON CONFLICT ... RETURNING`; MongoDB's constraints and locking are weaker and this data is
-relational.
+relational ([ADR-002](decisions/ADR-002-postgresql.md)).
 
 Data access is TypeORM with `synchronize` off and migrations written by hand. Raw SQL with
-`$n` parameters is used where it is clearer (ordered locks, `ON CONFLICT`).
+`$n` parameters is used where it is clearer (ordered locks, `ON CONFLICT`). See [ADR-003](decisions/ADR-003-typeorm.md).
 
 ## Entity relationships
 
