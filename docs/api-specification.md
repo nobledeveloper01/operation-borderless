@@ -154,20 +154,22 @@ Errors: `400`, `409`.
 {
   "walletId": "0192f5c2-...",
   "balances": [
-    { "currency": "cNGN", "amount": "50000.000000", "usdValue": "37.140000" },
+    { "currency": "cNGN", "amount": "50000.000000", "usdValue": "37.140565" },
     { "currency": "USDx", "amount": "10.000000", "usdValue": "10.000000" }
   ],
-  "totalUsd": "47.140000",
+  "totalUsd": "47.140565",
   "rates": {
     "source": "exchangerate-api",
-    "isStale": false,
-    "asOf": "2026-10-29T00:02:31Z"
+    "asOf": "2026-10-29T00:02:31.000Z",
+    "unavailableReason": null
   }
 }
 ```
 
-(All five currencies are always listed; shortened here.) If no rate is usable, `usdValue`
-and `totalUsd` are `null` and `rates.unavailableReason` says why.
+(All five currencies are always listed; shortened here.) Each `usdValue` is rounded down and
+`totalUsd` is their sum. If no rate from the last 26 hours exists, `usdValue` and `totalUsd`
+are `null` and `rates.unavailableReason` says why; balances are never hidden by an FX outage.
+`GET /wallets/{walletId}` and the create answer carry the same fields.
 
 ### API-004 Deposit
 
