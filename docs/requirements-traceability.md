@@ -44,32 +44,32 @@ Brief → requirement → component/API → test → evidence → status. Status
 
 ## Stack and deliverables (brief p.1–3)
 
-| Brief                                                                                                                                                               | Req              | How it is met                                     | Evidence                         | Status  |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------------------------------------- | -------------------------------- | ------- |
-| Node LTS + TS strict                                                                                                                                                | NFR-001          | Node 24, `tsconfig` strict                        | `yarn typecheck`                 | PASS    |
-| Express or NestJS                                                                                                                                                   | NFR-002          | NestJS 12                                         | `package.json`                   | PASS    |
-| Database + justification                                                                                                                                            | NFR-003          | PostgreSQL 17, database-design.md, README section | README                           | PLANNED |
-| Cache/queue only if earned                                                                                                                                          | NFR-004          | None used, architecture.md                        | README                           | PLANNED |
-| Jest/Vitest + Supertest                                                                                                                                             | NFR-005          | Vitest + Supertest                                | `test/api`                       | PASS    |
-| Yarn, ESLint, Prettier                                                                                                                                              | NFR-006          | Yarn 4, config files                              | `yarn lint`, `yarn format:check` | PASS    |
-| Docker compose one command                                                                                                                                          | NFR-007, DEL-003 | `docker compose up` runs db, migrations, api      | Clean-checkout run               | PASS    |
-| Public repo in 48 h                                                                                                                                                 | DEL-001          | `nobledeveloper01/operation-borderless`           | Repo URL, visibility             | PASS    |
-| Clear commit history, conventional commits                                                                                                                          | DEL-002          | Conventional commit messages                      | `git log`                        | PASS    |
-| `yarn test` passes                                                                                                                                                  | DEL-004, NFR-052 | Full suite                                        | Test run output                  | PASS    |
-| OpenAPI or Postman committed                                                                                                                                        | DEL-005          | `docs/openapi.json`, `/docs`                      | TC-039                           | PASS    |
-| README: name, stack, DB why, run, tests, endpoints with examples, data model, precision, idempotency, concurrency, FX failures, assumptions, limitations, more time | DEL-006          | README sections, one per item                     | README review                    | PLANNED |
-| Say what was left out and why                                                                                                                                       | DEL-007          | README "Left out"                                 | README review                    | PLANNED |
+| Brief                                                                                                                                                               | Req              | How it is met                                     | Evidence                         | Status |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------------------------------------- | -------------------------------- | ------ |
+| Node LTS + TS strict                                                                                                                                                | NFR-001          | Node 24, `tsconfig` strict                        | `yarn typecheck`                 | PASS   |
+| Express or NestJS                                                                                                                                                   | NFR-002          | NestJS 12                                         | `package.json`                   | PASS   |
+| Database + justification                                                                                                                                            | NFR-003          | PostgreSQL 17, database-design.md, README section | README                           | PASS   |
+| Cache/queue only if earned                                                                                                                                          | NFR-004          | None used, architecture.md                        | README                           | PASS   |
+| Jest/Vitest + Supertest                                                                                                                                             | NFR-005          | Vitest + Supertest                                | `test/api`                       | PASS   |
+| Yarn, ESLint, Prettier                                                                                                                                              | NFR-006          | Yarn 4, config files                              | `yarn lint`, `yarn format:check` | PASS   |
+| Docker compose one command                                                                                                                                          | NFR-007, DEL-003 | `docker compose up` runs db, migrations, api      | Clean-checkout run               | PASS   |
+| Public repo in 48 h                                                                                                                                                 | DEL-001          | `nobledeveloper01/operation-borderless`           | Repo URL, visibility             | PASS   |
+| Clear commit history, conventional commits                                                                                                                          | DEL-002          | Conventional commit messages                      | `git log`                        | PASS   |
+| `yarn test` passes                                                                                                                                                  | DEL-004, NFR-052 | Full suite                                        | Test run output                  | PASS   |
+| OpenAPI or Postman committed                                                                                                                                        | DEL-005          | `docs/openapi.json`, `/docs`                      | TC-039                           | PASS   |
+| README: name, stack, DB why, run, tests, endpoints with examples, data model, precision, idempotency, concurrency, FX failures, assumptions, limitations, more time | DEL-006          | README sections, one per item                     | README review                    | PASS   |
+| Say what was left out and why                                                                                                                                       | DEL-007          | README "Left out"                                 | README review                    | PASS   |
 
 ## Non-functional (recommended)
 
-| Req                                                     | Component          | Tests                  | Status  |
-| ------------------------------------------------------- | ------------------ | ---------------------- | ------- |
-| NFR-010 integer money                                   | `common/money`     | TC-010, TC-012         | PASS    |
-| NFR-011 one transaction per operation                   | `ledger`           | TC-014                 | PASS    |
-| NFR-012 no races                                        | `ledger`           | TC-020, TC-027, TC-035 | PASS    |
-| NFR-013 append-only                                     | migration triggers | TC-038                 | PASS    |
-| NFR-014 ledger matches balances                         | `ledger`           | TC-037                 | PASS    |
-| NFR-020/021 FX timeouts, retries, no request-time calls | `fx`               | TC-015, TC-018         | PASS    |
-| NFR-040 logs with request ID                            | `common`           | TC-044                 | PASS    |
-| NFR-042 health                                          | `health`           | TC-046                 | PLANNED |
-| NFR-054 OpenAPI drift                                   | `test/api`         | TC-039                 | PASS    |
+| Req                                                     | Component          | Tests                         | Status |
+| ------------------------------------------------------- | ------------------ | ----------------------------- | ------ |
+| NFR-010 integer money                                   | `common/money`     | TC-010, TC-012                | PASS   |
+| NFR-011 one transaction per operation                   | `ledger`           | TC-014                        | PASS   |
+| NFR-012 no races                                        | `ledger`           | TC-020, TC-027, TC-035        | PASS   |
+| NFR-013 append-only                                     | migration triggers | TC-038                        | PASS   |
+| NFR-014 ledger matches balances                         | `ledger`           | TC-037                        | PASS   |
+| NFR-020/021 FX timeouts, retries, no request-time calls | `fx`               | TC-015, TC-018                | PASS   |
+| NFR-040 logs with request ID                            | `common`           | TC-044                        | PASS   |
+| NFR-042 health                                          | `health`           | test/api/platform.api.spec.ts | PASS   |
+| NFR-054 OpenAPI drift                                   | `test/api`         | TC-039                        | PASS   |
