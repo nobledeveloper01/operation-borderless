@@ -32,3 +32,8 @@ one clock decides, whatever the API process thinks the time is.
 **Consequences.** Pricing for quotes, swaps and transfers goes through one `PricingService`, so
 a quote can't promise a different amount from the one the movement produces. A quote does not
 reserve funds; the balance is checked when the movement runs.
+
+A quote is a free 30-second option: a client could ask for one before a rate update and use it
+only if the new rate is worse. With daily rates the window is a few seconds a day, and the
+money rate limit caps how many quotes one client can hold. A live-rates product would charge for
+quotes, shorten them, or widen the fee near a rate change.
