@@ -59,3 +59,22 @@ export async function ledgerMatchesBalances(
   );
   return rows[0]?.ok === true;
 }
+
+export function transfer(
+  app: NestExpressApplication,
+  sender: TestWallet,
+  body: {
+    fromWalletId?: string;
+    toWalletId: string;
+    fromCurrency: string;
+    toCurrency?: string;
+    amount: string;
+  },
+  key = newKey(),
+) {
+  return request(app.getHttpServer())
+    .post('/api/v1/transfers')
+    .set(bearer(sender.accessToken))
+    .set('Idempotency-Key', key)
+    .send({ fromWalletId: sender.walletId, ...body });
+}

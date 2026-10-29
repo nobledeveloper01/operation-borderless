@@ -19,6 +19,7 @@ import { HealthModule } from './health/health.module.js';
 import { IdempotencyModule } from './idempotency/idempotency.module.js';
 import { LedgerModule } from './ledger/ledger.module.js';
 import { SwapsModule } from './swaps/swaps.module.js';
+import { TransfersModule } from './transfers/transfers.module.js';
 import { WalletsModule } from './wallets/wallets.module.js';
 
 @Module({
@@ -59,6 +60,7 @@ import { WalletsModule } from './wallets/wallets.module.js';
     IdempotencyModule,
     DepositsModule,
     SwapsModule,
+    TransfersModule,
     HealthModule,
     WalletsModule,
   ],
