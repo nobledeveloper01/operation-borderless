@@ -1,13 +1,15 @@
 import type { Params } from 'nestjs-pino';
 import type { EnvironmentVariables } from '../../config/env.validation.js';
-import { requestId } from './request-id.js';
+import { randomUUID } from 'node:crypto';
+import type { IncomingMessage } from 'node:http';
 
 export function loggerOptions(config: EnvironmentVariables): Params {
   return {
     pinoHttp: {
       level: config.LOG_LEVEL,
-      genReqId: requestId,
-      // Pretty lines only for a person at a terminal; containers and CI get JSON.
+      // The request ID middleware runs first, so the log line uses the same ID the client sees.
+      genReqId: (req: IncomingMessage) => req.id ?? randomUUID(),
+      // Pretty lines are for a person at a terminal, while containers and CI get JSON.
       transport:
         config.NODE_ENV === 'development' && process.stdout.isTTY
           ? { target: 'pino-pretty', options: { singleLine: true } }

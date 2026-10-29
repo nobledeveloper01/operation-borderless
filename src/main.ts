@@ -10,6 +10,7 @@ if (existsSync('.env')) process.loadEnvFile('.env');
 
 const app = await NestFactory.create<NestExpressApplication>(AppModule, {
   bufferLogs: true,
+  bodyParser: false,
 });
 configureApp(app);
 app.enableShutdownHooks();

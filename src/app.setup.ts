@@ -7,6 +7,8 @@ import {
 } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
+import { noStoreMiddleware } from './common/middleware/no-store.middleware.js';
+import { requestIdMiddleware } from './common/middleware/request-id.middleware.js';
 import { EnvironmentVariables } from './config/env.validation.js';
 
 export const API_PREFIX = 'api/v1';
@@ -22,18 +24,21 @@ export function buildOpenApi(app: INestApplication): OpenAPIObject {
   return SwaggerModule.createDocument(app, config);
 }
 
-// Shared by main.ts and the tests so both run the same pipeline.
+// main.ts and the tests both call this, so the tests exercise exactly what production runs.
 export function configureApp(app: NestExpressApplication): void {
   const config = app.get(EnvironmentVariables);
 
   app.useLogger(app.get(Logger));
   app.disable('x-powered-by');
   app.set('trust proxy', config.TRUST_PROXY ? 1 : false);
+  // Order matters: the ID comes first so even a rejected body gets one in its error.
+  app.use(requestIdMiddleware);
+  app.use(noStoreMiddleware);
   app.useBodyParser('json', { limit: '16kb' });
   app.use(
     helmet({
       contentSecurityPolicy: {
-        // Swagger UI needs inline scripts and styles; everything else is JSON.
+        // Swagger UI needs inline scripts and styles to render; the API itself only sends JSON.
         directives: {
           'script-src': ["'self'", "'unsafe-inline'"],
           'style-src': ["'self'", "'unsafe-inline'"],

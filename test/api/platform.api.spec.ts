@@ -13,13 +13,25 @@ describe('platform', () => {
     await app.close();
   });
 
-  it('TC-046 answers liveness and readiness', async () => {
-    await request(app.getHttpServer())
-      .get('/health')
-      .expect(200, { status: 'ok' });
-    await request(app.getHttpServer())
+  it('TC-046 answers liveness and readiness in the success envelope', async () => {
+    const live = await request(app.getHttpServer()).get('/health').expect(200);
+    expect(live.body).toMatchObject({
+      success: true,
+      statusCode: 200,
+      message: 'The API is up',
+      data: { status: 'ok' },
+      requestId: live.headers['x-request-id'],
+    });
+    expect(Date.parse(String(live.body.timestamp))).not.toBeNaN();
+    const ready = await request(app.getHttpServer())
       .get('/health/ready')
-      .expect(200, { status: 'ok' });
+      .expect(200);
+    expect(ready.body.data).toEqual({ status: 'ok' });
+  });
+
+  it('marks every answer as not cacheable', async () => {
+    const res = await request(app.getHttpServer()).get('/health');
+    expect(res.headers['cache-control']).toBe('no-store');
   });
 
   it('returns a request ID, keeping a safe incoming one', async () => {
@@ -38,6 +50,7 @@ describe('platform', () => {
       .get('/api/v1/nope')
       .expect(404);
     expect(res.body).toMatchObject({
+      success: false,
       statusCode: 404,
       code: 'ROUTE_NOT_FOUND',
       path: '/api/v1/nope',

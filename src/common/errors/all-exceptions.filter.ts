@@ -22,6 +22,7 @@ interface Mapped {
 const PG_LOCK_TIMEOUT = '55P03';
 const PG_STATEMENT_TIMEOUT = '57014';
 
+// Every error leaves through here, so clients get one shape and never see internals.
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name);
@@ -40,6 +41,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
 
     const body: ErrorResponseDto = {
+      success: false,
       statusCode: mapped.status,
       error: STATUS_CODES[mapped.status] ?? 'Error',
       code: mapped.code,

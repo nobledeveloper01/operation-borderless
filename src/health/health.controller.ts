@@ -1,14 +1,12 @@
-import { Controller, Get, HttpCode, HttpStatus, Res } from '@nestjs/common';
-import {
-  ApiOkResponse,
-  ApiServiceUnavailableResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { Controller, Get, HttpStatus } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
-import type { Response } from 'express';
 import { DataSource } from 'typeorm';
+import { AppError } from '../common/errors/app-error.js';
+import { ApiEndpoint } from '../common/responses/api-endpoint.decorator.js';
 import { HealthDto } from './health.dto.js';
 
+// Load balancers poll these often, so they skip the rate limit.
 @ApiTags('Health')
 @SkipThrottle()
 @Controller('health')
@@ -16,25 +14,28 @@ export class HealthController {
   constructor(private readonly dataSource: DataSource) {}
 
   @Get()
-  @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: HealthDto, description: 'The process is up.' })
+  @ApiEndpoint({
+    summary: 'Is the process up?',
+    message: 'The API is up',
+    type: HealthDto,
+  })
   live(): HealthDto {
     return { status: 'ok' };
   }
 
   @Get('ready')
-  @ApiOkResponse({ type: HealthDto, description: 'The database answers.' })
-  @ApiServiceUnavailableResponse({
+  @ApiEndpoint({
+    summary: 'Can the API serve traffic?',
+    message: 'The API is ready',
     type: HealthDto,
-    description: 'The database does not answer.',
+    errors: [HttpStatus.SERVICE_UNAVAILABLE],
   })
-  async ready(@Res({ passthrough: true }) res: Response): Promise<HealthDto> {
+  async ready(): Promise<HealthDto> {
     try {
       await this.dataSource.query('SELECT 1');
-      return { status: 'ok' };
     } catch {
-      res.status(HttpStatus.SERVICE_UNAVAILABLE);
-      return { status: 'unavailable' };
+      throw new AppError('NOT_READY', 'The database is not answering.');
     }
+    return { status: 'ok' };
   }
 }

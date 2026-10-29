@@ -1,7 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { EnvironmentVariables, validateEnv } from './env.validation.js';
 
-// The validated environment, injected by its class so tests can override it.
+// Settings are checked once at startup and injected by class, which also lets tests swap them.
 @Global()
 @Module({
   providers: [
