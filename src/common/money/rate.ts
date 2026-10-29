@@ -1,20 +1,15 @@
-import {
-  divideHalfEven,
-  formatDecimal,
-  parseDecimal,
-  pow10,
-} from './decimal.js';
+import { formatDecimal, parseDecimal, pow10 } from './decimal.js';
 
 // Applied rates keep 10 decimal places, while raw provider rates keep 12.
 export const RATE_SCALE = 10;
 export const PROVIDER_RATE_SCALE = 12;
 
-// Both rates are quoted per 1 USD, so the rate from A to B is B divided by A.
+// Both rates are quoted per 1 USD, so the rate from A to B is B divided by A, rounded down so A to B and back can never gain.
 export function crossRate(fromPerUsd: string, toPerUsd: string): bigint {
   const from = parseDecimal(fromPerUsd, PROVIDER_RATE_SCALE, true);
   const to = parseDecimal(toPerUsd, PROVIDER_RATE_SCALE, true);
   if (from <= 0n || to <= 0n) throw new RangeError('Rates must be positive');
-  return divideHalfEven(to * pow10(RATE_SCALE), from);
+  return (to * pow10(RATE_SCALE)) / from;
 }
 
 // Rounds down, so a conversion can never hand out more value than it took in.

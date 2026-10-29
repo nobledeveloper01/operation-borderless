@@ -3,6 +3,9 @@ import { PROVIDER_RATE_SCALE } from '../../common/money/rate.js';
 import { FIAT_CODES, type Fiat, type ProviderRates } from './fx.types.js';
 
 export const MAX_JUMP = 0.2;
+// Inside this range every cross rate is at most 10^10 and at least 10^-10, so none rounds to zero.
+export const MIN_PER_USD = 0.001;
+export const MAX_PER_USD = 10_000_000;
 const FUTURE_TOLERANCE_MS = 5 * 60_000;
 
 export class InvalidRates extends Error {
@@ -25,6 +28,10 @@ export function checkedRates(
     ) {
       throw new InvalidRates(`Missing or impossible rate for ${code}`);
     }
+    if (value < MIN_PER_USD || value > MAX_PER_USD)
+      throw new InvalidRates(
+        `Rate for ${code} is outside ${MIN_PER_USD} to ${MAX_PER_USD} per USD`,
+      );
     const text = numberToDecimal(value, PROVIDER_RATE_SCALE);
     if (/^0\.0+$/.test(text))
       throw new InvalidRates(`Rate for ${code} is too small to use`);

@@ -52,6 +52,9 @@ describe('FX provider answers', () => {
       { ...base, rates: { ...rates, EUR: 'NaN' } },
       { ...base, rates: { ...rates, NGN: 1e300 } },
       { ...base, rates: { ...rates, EUR: 1e-20 } },
+      // Outside 0.001 to 10,000,000 per USD a cross rate could round to zero at 10 decimals.
+      { ...base, rates: { ...rates, EUR: 0.0009 } },
+      { ...base, rates: { ...rates, NGN: 10_000_001 } },
       { ...base, rates: { ...rates, USD: 2 } },
       { ...base, time_last_update_unix: 'yesterday' },
       { ...base, time_last_update_unix: now.getTime() / 1000 + 3600 },

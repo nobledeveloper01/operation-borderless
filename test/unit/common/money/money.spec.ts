@@ -63,10 +63,10 @@ describe('rates', () => {
     expect(divideHalfEven(11n, 3n)).toBe(4n);
   });
 
-  it('computes cross rates from USD-based rates', () => {
-    // 1346.236888 NGN and 11.639916 GHS per USD.
+  it('computes cross rates from USD-based rates, rounded down', () => {
+    // 1346.236888 NGN and 11.639916 GHS per USD: 0.00864626137... rounds down, not to ...614.
     expect(formatRate(crossRate('1346.236888', '11.639916'))).toBe(
-      '0.0086462614',
+      '0.0086462613',
     );
     expect(formatRate(crossRate('1', '1346.236888'))).toBe('1346.2368880000');
     expect(formatRate(crossRate('1346.236888', '1'))).toBe('0.0007428113');

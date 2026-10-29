@@ -63,7 +63,7 @@ describe('FX rates', () => {
     const rate = (from: string, to: string) =>
       data.pairs.find((p) => p.from === from && p.to === to)!.rate;
     expect(rate('USDx', 'cNGN')).toBe('1346.2368880000');
-    expect(rate('cNGN', 'cGHS')).toBe('0.0086462614');
+    expect(rate('cNGN', 'cGHS')).toBe('0.0086462613');
     expect(rate('cXAF', 'EURx')).toBe('0.0015245041');
     for (const p of data.pairs) {
       expect(

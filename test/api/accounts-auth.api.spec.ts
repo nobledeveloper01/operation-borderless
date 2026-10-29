@@ -3,6 +3,7 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import { SignJWT, UnsecuredJWT } from 'jose';
 import type pg from 'pg';
 import request from 'supertest';
+import { parseWalletKey } from '../../src/modules/auth/wallet-key-format.js';
 import { AccessTokens } from '../../src/modules/auth/access-tokens.js';
 import { connect } from '../support/db.js';
 import { createTestApp } from '../support/test-app.js';
@@ -561,7 +562,8 @@ describe('accounts and auth', () => {
         wallet.email,
         PASSWORD,
         wallet.refreshToken,
-        created.body.data.key.split('_').pop() as string,
+        // The secret is base64url and can itself contain an underscore, so it is parsed, not split.
+        parseWalletKey(created.body.data.key as string)!.secret,
       ]) {
         expect(text).not.toContain(secret);
         expect(text).not.toContain(Buffer.from(secret).toString('hex'));

@@ -397,7 +397,7 @@ receiver; anyone else gets `404`.
     {
       "from": "cNGN",
       "to": "cGHS",
-      "rate": "0.0086462614",
+      "rate": "0.0086462613",
       "refreshedAt": "2026-10-29T00:02:31.000Z"
     },
     "... 20 pairs in all ..."
