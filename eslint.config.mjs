@@ -33,6 +33,11 @@ export default tseslint.config(
     },
   },
   {
+    // Helper scripts are plain JavaScript outside the TypeScript project.
+    files: ['scripts/**/*.mjs'],
+    ...tseslint.configs.disableTypeChecked,
+  },
+  {
     files: ['test/**/*.ts'],
     // Supertest types every response body as any, so these rules only add noise in tests.
     rules: {

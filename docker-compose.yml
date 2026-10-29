@@ -29,6 +29,8 @@ services:
       DB_SSL: ${DB_SSL:-disable}
       CORS_ORIGINS: ${CORS_ORIGINS:-}
       RATE_LIMIT_PER_MINUTE: ${RATE_LIMIT_PER_MINUTE:-120}
+      AUTH_RATE_LIMIT_PER_MINUTE: ${AUTH_RATE_LIMIT_PER_MINUTE:-10}
+      MONEY_RATE_LIMIT_PER_MINUTE: ${MONEY_RATE_LIMIT_PER_MINUTE:-30}
       # Turn on for an offline demo: prices from a built-in table, marked fixed-table.
       FX_FIXED_TABLE: ${FX_FIXED_TABLE:-false}
       TRUST_PROXY: 'true'
