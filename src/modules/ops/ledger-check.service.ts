@@ -1,34 +1,49 @@
-import {
-  Injectable,
-  Logger,
-  type OnModuleDestroy,
-  type OnModuleInit,
-} from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import type { Redis } from 'ioredis';
 import { DataSource } from 'typeorm';
+import { EnvironmentVariables } from '../../common/config/env.validation.js';
+import { REDIS } from '../../common/redis/redis.js';
 import { formatAmount } from '../../common/money/amount.js';
 import { MetricsService } from '../../common/metrics/metrics.service.js';
 import type { LedgerCheckDto, PlatformBalanceDto } from './dto.js';
 
-const CHECK_EVERY_MS = 3_600_000;
 const MISMATCHES_SHOWN = 100;
 
+interface LastCheck {
+  checkedAt: number;
+  mismatchCount: number;
+}
+
 @Injectable()
-export class LedgerCheckService implements OnModuleInit, OnModuleDestroy {
+export class LedgerCheckService {
   private readonly logger = new Logger(LedgerCheckService.name);
-  private timer: NodeJS.Timeout | undefined;
+  private readonly lastKey: string;
 
   constructor(
     private readonly db: DataSource,
-    private readonly metrics: MetricsService,
-  ) {}
-
-  onModuleInit(): void {
-    this.timer = setInterval(() => void this.runQuietly(), CHECK_EVERY_MS);
-    this.timer.unref();
+    @Inject(REDIS) private readonly redis: Redis,
+    config: EnvironmentVariables,
+    metrics: MetricsService,
+  ) {
+    this.lastKey = `${config.QUEUE_PREFIX}:ledger:last-check`;
+    metrics.watchAsync(
+      'borderless_ledger_mismatches',
+      'Balances that differed from their ledger lines at the last check.',
+      async () => (await this.last())?.mismatchCount,
+    );
+    metrics.watchAsync(
+      'borderless_ledger_last_check_timestamp_seconds',
+      'When the last ledger check finished, as a Unix time.',
+      async () => {
+        const last = await this.last();
+        return last ? last.checkedAt / 1000 : undefined;
+      },
+    );
   }
 
-  onModuleDestroy(): void {
-    clearInterval(this.timer);
+  private async last(): Promise<LastCheck | undefined> {
+    const text = await this.redis.get(this.lastKey);
+    return text ? (JSON.parse(text) as LastCheck) : undefined;
   }
 
   // Reads everything from one snapshot, so a transfer committing mid-check can't look like a mismatch.
@@ -75,8 +90,10 @@ export class LedgerCheckService implements OnModuleInit, OnModuleDestroy {
     });
     const mismatchCount = result.rows[0]?.total ?? 0;
     const orphans = result.counts?.orphans ?? 0;
-    this.metrics.ledgerMismatches.set(mismatchCount);
-    this.metrics.ledgerCheckedAt.setToCurrentTime();
+    const last: LastCheck = { checkedAt: Date.now(), mismatchCount };
+    await this.redis
+      .set(this.lastKey, JSON.stringify(last))
+      .catch(() => undefined);
     return {
       ok: mismatchCount === 0 && orphans === 0 && result.platformDrift === 0,
       platformMatches: result.platformDrift === 0,
@@ -114,7 +131,7 @@ export class LedgerCheckService implements OnModuleInit, OnModuleDestroy {
     }));
   }
 
-  private async runQuietly(): Promise<void> {
+  async runScheduled(): Promise<void> {
     try {
       const result = await this.check();
       if (!result.ok)

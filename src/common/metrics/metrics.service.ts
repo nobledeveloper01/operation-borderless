@@ -68,18 +68,6 @@ export class MetricsService {
     registers: [this.registry],
   });
 
-  readonly ledgerMismatches = new Gauge({
-    name: 'borderless_ledger_mismatches',
-    help: 'Balances that differed from their ledger lines at the last check.',
-    registers: [this.registry],
-  });
-
-  readonly ledgerCheckedAt = new Gauge({
-    name: 'borderless_ledger_last_check_timestamp_seconds',
-    help: 'When the last ledger check finished, as a Unix time.',
-    registers: [this.registry],
-  });
-
   constructor() {
     collectDefaultMetrics({ register: this.registry, prefix: 'borderless_' });
   }
@@ -98,15 +86,21 @@ export class MetricsService {
     });
   }
 
-  // Like watch, for values that need a database read; a failed read leaves the gauge empty.
-  watchAsync(name: string, help: string, read: () => Promise<number>): void {
+  // Like watch, for values that need a database or Redis read; a failed or empty read leaves the gauge empty.
+  watchAsync(
+    name: string,
+    help: string,
+    read: () => Promise<number | undefined>,
+  ): void {
     new Gauge({
       name,
       help,
       registers: [this.registry],
       async collect() {
         try {
-          this.set(await read());
+          const value = await read();
+          if (value === undefined) this.reset();
+          else this.set(value);
         } catch {
           this.reset();
         }

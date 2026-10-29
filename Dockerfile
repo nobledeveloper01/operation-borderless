@@ -20,6 +20,7 @@ COPY --from=build --chown=node:node /app/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/dist ./dist
 COPY --chown=node:node package.json ./
 COPY --chown=node:node docker/entrypoint.sh ./entrypoint.sh
+COPY --chown=node:node docker/worker-health.mjs ./worker-health.mjs
 # The API writes its local signing key here, so the folder must belong to the runtime user.
 RUN mkdir -p /app/keys/jwt && chown -R node:node /app/keys && chmod 700 /app/keys/jwt
 USER node

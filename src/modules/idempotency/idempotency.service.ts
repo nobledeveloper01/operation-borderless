@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  type OnModuleDestroy,
-  type OnModuleInit,
-} from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { DataSource, type EntityManager } from 'typeorm';
 import { AppError } from '../../common/errors/app-error.js';
 import {
@@ -18,7 +13,6 @@ import { sameHash } from '../auth/secrets.js';
 import type { IdempotencyRequest } from './idempotency-key.decorator.js';
 
 export const KEY_TTL_HOURS = 24;
-const CLEANUP_EVERY_MS = 3_600_000;
 
 export interface IdempotentResult<T> {
   body: T;
@@ -26,23 +20,13 @@ export interface IdempotentResult<T> {
 }
 
 @Injectable()
-export class IdempotencyService implements OnModuleInit, OnModuleDestroy {
+export class IdempotencyService {
   private readonly logger = new Logger(IdempotencyService.name);
-  private timer: NodeJS.Timeout | undefined;
 
   constructor(
     private readonly db: DataSource,
     private readonly metrics: MetricsService,
   ) {}
-
-  onModuleInit(): void {
-    this.timer = setInterval(() => void this.removeExpired(), CLEANUP_EVERY_MS);
-    this.timer.unref();
-  }
-
-  onModuleDestroy(): void {
-    clearInterval(this.timer);
-  }
 
   // Claims the key in the same transaction as the money movement, so it is stored only if the movement commits.
   async run<T>(

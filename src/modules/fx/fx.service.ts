@@ -7,6 +7,8 @@ import {
 } from '@nestjs/common';
 import { CLOCK, type Clock } from '../../common/clock.js';
 import { MetricsService } from '../../common/metrics/metrics.service.js';
+import { createRedis, FOR_QUEUES } from '../../common/redis/redis.js';
+import type { Redis } from 'ioredis';
 import { AppError } from '../../common/errors/app-error.js';
 import { FetchFailure } from '../../common/http/fetch-json.js';
 import { crossRate, RATE_SCALE } from '../../common/money/rate.js';
@@ -27,13 +29,15 @@ export interface PricedRate {
   asOf: Date | null;
 }
 
+const RELOAD_EVERY_MS = 60_000;
+
 @Injectable()
 export class FxService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(FxService.name);
   private current: FxSnapshot | undefined;
   private refreshing: Promise<RefreshOutcome> | undefined;
-  private timer: NodeJS.Timeout | undefined;
-  private destroyed = false;
+  private reloadTimer: NodeJS.Timeout | undefined;
+  private updates: Redis | undefined;
 
   constructor(
     @Inject(FX_PROVIDERS) private readonly providers: FxProvider[],
@@ -58,15 +62,53 @@ export class FxService implements OnModuleInit, OnModuleDestroy {
     );
   }
 
-  // Startup never waits on a provider: it loads the last snapshot and refreshes in the background.
+  // Startup never waits on a provider: it loads the last snapshot, and the worker refreshes in the background.
   async onModuleInit(): Promise<void> {
     this.current = await this.snapshots.latest(this.config.FX_FIXED_TABLE);
-    if (this.config.FX_REFRESH_ENABLED) this.schedule(0);
+    if (this.config.APP_ROLE !== 'api') return;
+    this.reloadTimer = setInterval(() => void this.reload(), RELOAD_EVERY_MS);
+    this.reloadTimer.unref();
+    this.updates = createRedis(this.config.REDIS_URL, FOR_QUEUES, 'fx-updates');
+    this.updates.on('message', () => void this.reload());
+    await this.updates
+      .subscribe(`${this.config.QUEUE_PREFIX}:fx:updated`)
+      .catch((error: Error) =>
+        this.logger.warn(
+          { reason: error.message },
+          'Not listening for rate updates; reloading every minute',
+        ),
+      );
   }
 
   onModuleDestroy(): void {
-    this.destroyed = true;
-    clearTimeout(this.timer);
+    clearInterval(this.reloadTimer);
+    this.updates?.disconnect();
+  }
+
+  // Takes the newest stored snapshot if it is newer than the one in memory.
+  async reload(): Promise<void> {
+    try {
+      const latest = await this.snapshots.latest(this.config.FX_FIXED_TABLE);
+      const current = this.current;
+      if (
+        latest &&
+        (!current ||
+          (current.source === 'fixed-table' &&
+            latest.source !== 'fixed-table') ||
+          latest.providerUpdatedAt > current.providerUpdatedAt)
+      )
+        this.current = latest;
+    } catch (error) {
+      this.logger.warn(
+        { reason: (error as Error).message },
+        'Could not reload the rates',
+      );
+    }
+  }
+
+  // How long to wait before the next refresh, from how this one went and when the current rates go stale.
+  nextDelay(outcome: RefreshOutcome): number {
+    return nextRefreshDelay(outcome, this.now(), Math.random, this.staleAt());
   }
 
   latest(): FxSnapshot | undefined {
@@ -220,28 +262,6 @@ export class FxService implements OnModuleInit, OnModuleDestroy {
       saved.providerUpdatedAt >= current.providerUpdatedAt
     )
       this.current = saved;
-  }
-
-  private schedule(delayMs: number): void {
-    // A refresh that finishes after shutdown must not start a new timer.
-    if (this.destroyed) return;
-    clearTimeout(this.timer);
-    this.timer = setTimeout(() => {
-      void this.refresh()
-        .catch((error: unknown) => {
-          this.logger.error(
-            { reason: (error as Error).message },
-            'FX refresh crashed',
-          );
-          return { kind: 'failed' as const, rateLimited: false };
-        })
-        .then((outcome) =>
-          this.schedule(
-            nextRefreshDelay(outcome, this.now(), Math.random, this.staleAt()),
-          ),
-        );
-    }, delayMs);
-    this.timer.unref();
   }
 
   private staleAt(): Date | undefined {

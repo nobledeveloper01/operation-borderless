@@ -44,7 +44,8 @@ services:
 
   api:
     build: .
-    environment:
+    environment: &app-env
+      APP_ROLE: api
       NODE_ENV: ${NODE_ENV:-development}
       LOG_LEVEL: ${LOG_LEVEL:-info}
       DB_HOST: db
@@ -78,6 +79,25 @@ services:
       db:
         condition: service_healthy
       redis:
+        condition: service_healthy
+    networks: [internal]
+
+  # Same image in the worker role: queues and scheduled jobs, no HTTP. Scale with --scale worker=3.
+  worker:
+    build: .
+    environment:
+      <<: *app-env
+      APP_ROLE: worker
+    volumes:
+      - jwt-keys:/app/keys/jwt
+    healthcheck:
+      test: ['CMD', 'node', 'worker-health.mjs']
+      interval: 10s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+    depends_on:
+      api:
         condition: service_healthy
     networks: [internal]
 

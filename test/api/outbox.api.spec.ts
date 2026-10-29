@@ -3,9 +3,9 @@ import type pg from 'pg';
 import request from 'supertest';
 import { FxService } from '../../src/modules/fx/fx.service.js';
 import { NotificationsHandler } from '../../src/modules/outbox/notifications.handler.js';
-import { OutboxDispatcher } from '../../src/modules/outbox/outbox-dispatcher.js';
 import { LedgerService } from '../../src/modules/ledger/ledger.service.js';
 import { connect } from '../support/db.js';
+import { deliverOutbox } from '../support/outbox.js';
 import { FakeProvider, primaryRates } from '../support/fx.js';
 import { deposit, newKey, swap, transfer } from '../support/money.js';
 import { createTestApp } from '../support/test-app.js';
@@ -19,7 +19,6 @@ describe('outbox events and notifications', () => {
   const now = new Date();
   const primary = new FakeProvider('exchangerate-api');
   const secondary = new FakeProvider('currency-api');
-  const dispatcher = () => app.get(OutboxDispatcher);
 
   const notices = (w: TestWallet, query = '') =>
     request(app.getHttpServer())
@@ -75,8 +74,8 @@ describe('outbox events and notifications', () => {
       (await events(b.walletId)).rows.map((e) => [e.type, e.processed]),
     ).toEqual([['transfer.received', false]]);
 
-    await dispatcher().drain();
-    await dispatcher().drain();
+    await deliverOutbox(app);
+    await deliverOutbox(app);
     const theirs = (await notices(b).expect(200)).body.data as {
       kind: string;
       body: string;
@@ -131,7 +130,7 @@ describe('outbox events and notifications', () => {
     }).expect(201);
     const types = (await events(a.walletId)).rows.map((e) => e.type);
     expect(types.filter((t) => t === 'balance.low')).toHaveLength(1);
-    await dispatcher().drain();
+    await deliverOutbox(app);
     const low = (await notices(a, '?unread=true').expect(200)).body.data as {
       kind: string;
       body: string;
@@ -150,33 +149,23 @@ describe('outbox events and notifications', () => {
       .mockRejectedValue(new Error('handler down'));
     try {
       await deposit(app, w, 'EURx', '2').expect(201);
-      await dispatcher().drain();
-      const [first] = (await events(w.walletId)).rows;
-      expect(first).toMatchObject({
-        attempts: 1,
-        processed: false,
-        failed: false,
-      });
-      const { rows } = await db.query<{ wait: number }>(
-        `SELECT EXTRACT(EPOCH FROM available_at - now())::float AS wait FROM outbox_events WHERE wallet_id = $1`,
-        [w.walletId],
-      );
-      expect(rows[0]!.wait).toBeLessThanOrEqual(2.1);
-
-      // Make it due again each time and run past the last retry.
-      for (let i = 0; i < 10; i++) {
-        await db.query(
-          `UPDATE outbox_events SET available_at = now() WHERE wallet_id = $1`,
-          [w.walletId],
-        );
-        await dispatcher().drain();
-      }
+      // The queue retries on its own with jittered backoff (5 ms base in tests) and parks the event at the end.
+      await deliverOutbox(app);
       const [parked] = (await events(w.walletId)).rows;
       expect(parked).toMatchObject({
         attempts: 11,
         processed: false,
         failed: true,
       });
+      // Other test files' events share the database, so only this wallet's deliveries are counted.
+      expect(
+        fail.mock.calls.filter(([, event]) => event.wallet_id === w.walletId),
+      ).toHaveLength(11);
+      const { rows } = await db.query<{ last_error: string }>(
+        'SELECT last_error FROM outbox_events WHERE wallet_id = $1',
+        [w.walletId],
+      );
+      expect(rows[0]!.last_error).toBe('handler down');
       const metrics = await request(app.getHttpServer())
         .get('/api/v1/ops/metrics')
         .set(OPS)
@@ -202,13 +191,14 @@ describe('outbox events and notifications', () => {
     try {
       await deposit(app, a, 'cXAF', '5').expect(201);
       await deposit(app, b, 'cXAF', '5').expect(201);
-      await dispatcher().drain();
+      await deliverOutbox(app);
       expect((await events(b.walletId)).rows[0]).toMatchObject({
         processed: true,
       });
       expect((await events(a.walletId)).rows[0]).toMatchObject({
         processed: false,
-        attempts: 1,
+        failed: true,
+        attempts: 11,
       });
     } finally {
       fail.mockRestore();
@@ -219,7 +209,7 @@ describe('outbox events and notifications', () => {
     const a = await createWallet(app);
     const b = await createWallet(app);
     await deposit(app, a, 'USDx', '1').expect(201);
-    await dispatcher().drain();
+    await deliverOutbox(app);
     const [notice] = (await notices(a).expect(200)).body.data as {
       notificationId: string;
     }[];

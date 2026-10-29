@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  type OnModuleDestroy,
-  type OnModuleInit,
-} from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { DataSource, type EntityManager } from 'typeorm';
 import { EnvironmentVariables } from '../../common/config/env.validation.js';
 import type { Stablecoin } from '../../common/currencies/currency.js';
@@ -13,8 +8,6 @@ import { formatAmount } from '../../common/money/amount.js';
 import { parseRate } from '../../common/money/rate.js';
 import { type Price, PricingService } from '../pricing/pricing.service.js';
 import type { QuoteDto } from './dto.js';
-
-const CLEANUP_EVERY_MS = 3_600_000;
 
 interface QuoteRow {
   id: string;
@@ -39,24 +32,14 @@ export interface Movement {
 }
 
 @Injectable()
-export class QuotesService implements OnModuleInit, OnModuleDestroy {
+export class QuotesService {
   private readonly logger = new Logger(QuotesService.name);
-  private timer: NodeJS.Timeout | undefined;
 
   constructor(
     private readonly db: DataSource,
     private readonly pricing: PricingService,
     private readonly config: EnvironmentVariables,
   ) {}
-
-  onModuleInit(): void {
-    this.timer = setInterval(() => void this.removeExpired(), CLEANUP_EVERY_MS);
-    this.timer.unref();
-  }
-
-  onModuleDestroy(): void {
-    clearInterval(this.timer);
-  }
 
   // Prices now and holds that rate and fee for a short time; nothing moves and no funds are reserved.
   async create(accountId: string, movement: Movement): Promise<QuoteDto> {

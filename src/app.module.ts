@@ -24,6 +24,7 @@ import { FxModule } from './modules/fx/fx.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { IdempotencyModule } from './modules/idempotency/idempotency.module.js';
 import { LedgerModule } from './modules/ledger/ledger.module.js';
+import { JobsModule } from './modules/jobs/jobs.module.js';
 import { OpsModule } from './modules/ops/ops.module.js';
 import { OutboxModule } from './modules/outbox/outbox.module.js';
 import { PricingModule } from './modules/pricing/pricing.module.js';
@@ -89,6 +90,7 @@ import { WalletsModule } from './modules/wallets/wallets.module.js';
     HealthModule,
     WalletsModule,
     OpsModule,
+    JobsModule,
   ],
   providers: [
     // Guards run in this order, so the rate limit applies before any credential is checked.

@@ -57,7 +57,7 @@ const scaled = (
   },
 });
 
-// The real registry starts its own event-loop timer, which would muddle the timer checks below.
+// A stand-in for the metrics registry, which the refresh rules don't depend on.
 const metrics = {
   watch: () => undefined,
   fxRefreshes: { inc: () => undefined },
@@ -170,27 +170,20 @@ describe('FxService refresh rules', () => {
       rateLimited: true,
     });
   });
-
-  it('starts no new timer when shut down while a refresh is running', async () => {
-    vi.useFakeTimers();
-    try {
-      const fx = service({ FX_REFRESH_ENABLED: 'true' });
-      let release!: () => void;
-      primary.answer = () => primaryRates(now);
-      vi.spyOn(primary, 'fetchLatest').mockImplementation(
-        () =>
-          new Promise(
-            (resolve) => (release = () => resolve(primaryRates(now))),
-          ),
-      );
-      await fx.onModuleInit();
-      await vi.advanceTimersByTimeAsync(0);
-      fx.onModuleDestroy();
-      release();
-      await vi.advanceTimersByTimeAsync(0);
-      expect(vi.getTimerCount()).toBe(0);
-    } finally {
-      vi.useRealTimers();
-    }
+  it('reloads a newer stored snapshot and ignores an older one', async () => {
+    const fx = service();
+    await fx.onModuleInit();
+    await store.save(primaryRates(now, 2));
+    await fx.reload();
+    const older = fx.latest()!;
+    await store.save(primaryRates(now));
+    await fx.reload();
+    expect(fx.latest()!.providerUpdatedAt.getTime()).toBeGreaterThan(
+      older.providerUpdatedAt.getTime(),
+    );
+    const newest = fx.latest()!;
+    await store.save(primaryRates(now, 5));
+    await fx.reload();
+    expect(fx.latest()).toBe(newest);
   });
 });

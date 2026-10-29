@@ -131,7 +131,18 @@ export class EnvironmentVariables {
   @Max(1000)
   FEE_BPS = 50;
 
-  // Runs the in-process worker that delivers outbox events (tests turn it off and deliver by hand).
+  // Schedules the FX refresh, ledger check and cleanups on the worker (tests turn it off and call them directly).
+  @Transform(toBool)
+  @IsBoolean()
+  JOBS_ENABLED = true;
+
+  // First wait before redelivering a failed event; each retry waits longer, up to five minutes.
+  @Transform(toInt)
+  @IsInt()
+  @Min(1)
+  OUTBOX_RETRY_BASE_MS = 1_000;
+
+  // Relays due outbox events into the delivery queue every second (tests relay by hand).
   @Transform(toBool)
   @IsBoolean()
   OUTBOX_DISPATCH_ENABLED = true;

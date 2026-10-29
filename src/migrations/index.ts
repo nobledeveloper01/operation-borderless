@@ -4,6 +4,7 @@ import { KeepReplayKeyOrder1793290000000 } from './1793290000000-KeepReplayKeyOr
 import { AddFees1793300000000 } from './1793300000000-AddFees.js';
 import { AddQuotes1793310000000 } from './1793310000000-AddQuotes.js';
 import { AddOutbox1793320000000 } from './1793320000000-AddOutbox.js';
+import { AddOutboxQueuedAt1793330000000 } from './1793330000000-AddOutboxQueuedAt.js';
 
 // Listing migrations by hand means the app, the CLI and the tests can't drift apart.
 export const migrations = [
@@ -13,4 +14,5 @@ export const migrations = [
   AddFees1793300000000,
   AddQuotes1793310000000,
   AddOutbox1793320000000,
+  AddOutboxQueuedAt1793330000000,
 ];
