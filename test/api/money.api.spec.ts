@@ -111,6 +111,12 @@ describe('deposits and swaps', () => {
       expect(again.headers['idempotent-replayed']).toBe('true');
       expect(first.headers['idempotent-replayed']).toBeUndefined();
       expect(again.body.data).toEqual(first.body.data);
+      // Regression: ISSUE-002 — a replay returned the same answer with its keys reordered
+      // Found by /qa on 2026-10-29
+      // Report: .gstack/qa-reports/run-20261029T130229Z/qa-report-local-api-money-2026-10-29.md
+      expect(JSON.stringify(again.body.data)).toBe(
+        JSON.stringify(first.body.data),
+      );
       expect((await balancesOf(db, wallet.walletId)).cNGN).toBe('50000000000');
     });
 

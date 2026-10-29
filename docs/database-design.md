@@ -162,16 +162,16 @@ can be pruned (_proposed_, not built unless time allows).
 
 ### `idempotency_keys`
 
-| Column           | Type         | Rules                                    |
-| ---------------- | ------------ | ---------------------------------------- |
-| `account_id`     | uuid FK      |                                          |
-| `key`            | text         | PK is `(account_id, key)`                |
-| `request_hash`   | text         | sha256 of method + path + canonical body |
-| `status_code`    | int          |                                          |
-| `response_body`  | jsonb        |                                          |
-| `transaction_id` | uuid null FK |                                          |
-| `created_at`     | timestamptz  |                                          |
-| `expires_at`     | timestamptz  | `created_at + 24 h`; index for cleanup   |
+| Column           | Type         | Rules                                              |
+| ---------------- | ------------ | -------------------------------------------------- |
+| `account_id`     | uuid FK      |                                                    |
+| `key`            | text         | PK is `(account_id, key)`                          |
+| `request_hash`   | text         | sha256 of method + path + canonical body           |
+| `status_code`    | int          |                                                    |
+| `response_body`  | json         | kept as written, so a replay matches byte for byte |
+| `transaction_id` | uuid null FK |                                                    |
+| `created_at`     | timestamptz  |                                                    |
+| `expires_at`     | timestamptz  | `created_at + 24 h`; index for cleanup             |
 
 The row is inserted in the same transaction as the money movement, so it exists only if the
 operation committed.
