@@ -21,6 +21,7 @@
     "test": "vitest run",
     "test:unit": "vitest run --project unit",
     "test:int": "vitest run --project integration",
+    "demo": "node scripts/demo.mjs",
     "test:mutation": "stryker run",
     "openapi": "UPDATE_OPENAPI=1 vitest run test/api/openapi.api.spec.ts",
     "migration:run": "typeorm migration:run -d dist/common/database/data-source.js",

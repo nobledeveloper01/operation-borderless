@@ -157,14 +157,15 @@ operation-borderless/
 │   ├── modules/
 │   │   ├── accounts/  auth/  wallets/
 │   │   ├── deposits/  swaps/  transfers/  transactions/
-│   │   └── ledger/  idempotency/  fx/  health/
+│   │   ├── ledger/  idempotency/  fx/  pricing/  quotes/
+│   │   └── outbox/  ops/  health/
 │   └── migrations/
 ├── test/
 │   ├── unit/            mirrors src/: common/ and modules/
 │   ├── integration/     schema and services against real PostgreSQL
 │   ├── api/             Supertest through the full Nest app
 │   └── support/         Testcontainers setup, factories, fake FX provider
-├── scripts/             TLS smoke check and load test
+├── scripts/             TLS smoke check, load test and demo
 ├── docs/                these documents, plus openapi.json
 ├── Dockerfile, docker-compose.yml, docker/, .env.example
 ├── .github/workflows/ci.yml

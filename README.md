@@ -10,18 +10,18 @@ and Douala as easily as inside one wallet.
 
 ## Tech stack
 
-| Area        | Choice                                                                                                |
-| ----------- | ----------------------------------------------------------------------------------------------------- |
-| Language    | Node.js 24 LTS, TypeScript in strict mode                                                             |
-| Framework   | NestJS 12, ES modules                                                                                 |
-| Database    | PostgreSQL 17                                                                                         |
-| Data access | TypeORM 1.1 with hand-written migrations; raw SQL with `$n` parameters on the money path              |
-| FX rates    | ExchangeRate-API (primary) and Currency API (secondary), free daily feeds                             |
-| Auth        | Account sessions (argon2id passwords, ES256 JWT with rotating refresh tokens) and per-wallet API keys |
-| Encryption  | HTTPS through a Caddy proxy with HSTS; AES-256-GCM for email and phone at rest                        |
-| Tests       | Vitest and Supertest, against a real PostgreSQL started by Testcontainers                             |
-| Tooling     | Yarn 4, ESLint, Prettier, GitHub Actions                                                              |
-| Runtime     | Docker and docker compose                                                                             |
+| Area        | Choice                                                                                                           |
+| ----------- | ---------------------------------------------------------------------------------------------------------------- |
+| Language    | Node.js 24 LTS, TypeScript in strict mode                                                                        |
+| Framework   | NestJS 12, ES modules                                                                                            |
+| Database    | PostgreSQL 17                                                                                                    |
+| Data access | TypeORM 1.1 with hand-written migrations; raw SQL with `$n` parameters on the money path                         |
+| FX rates    | ExchangeRate-API (primary) and Currency API (secondary), free daily feeds                                        |
+| Auth        | Account sessions (argon2id passwords, ES256 JWT with rotating refresh tokens) and per-wallet API keys            |
+| Encryption  | HTTPS through a Caddy proxy with HSTS; AES-256-GCM for email and phone at rest                                   |
+| Tests       | Vitest and Supertest against a real PostgreSQL (Testcontainers), fast-check properties, Stryker mutation testing |
+| Tooling     | Yarn 4, ESLint, Prettier, GitHub Actions                                                                         |
+| Runtime     | Docker and docker compose                                                                                        |
 
 ## Why PostgreSQL
 
@@ -72,6 +72,11 @@ docker compose cp proxy:/data/caddy/pki/authorities/local/root.crt ./caddy-root.
 
 Ports are set with `HTTPS_PORT` and `HTTP_PORT`. Every setting is listed, with its meaning,
 in `.env.example`. The compose file works without a `.env`.
+
+With the stack up, `yarn demo` walks through everything in one go and prints what happens:
+two people sign up, a deposit is retried safely, a quote is honoured, money goes to a phone
+number, a swap, an overdraft refused, balances, history, delivered notices and the
+operator's ledger check.
 
 Live rates need internet access. To demo offline, run `FX_FIXED_TABLE=true docker compose up`:
 when both live sources fail, the API prices with a built-in table and marks every such answer
@@ -431,6 +436,10 @@ erDiagram
   wallets ||--o{ transactions : "from / to"
   fx_snapshots ||--o{ transactions : "priced by"
   idempotency_keys |o--o| transactions : "result of"
+  transactions ||--o{ platform_entries : "fee and rounding"
+  accounts ||--o{ fx_quotes : "asks for"
+  transactions ||--o{ outbox_events : "announces"
+  outbox_events ||--o| notifications : "becomes"
 ```
 
 | Table                                       | What it holds                                                                                                                                       |
@@ -443,8 +452,13 @@ erDiagram
 | `fx_snapshots`                              | Each provider answer that passed the checks, with the provider's update time.                                                                       |
 | `idempotency_keys`                          | The key, a hash of the request and the stored answer, per account, kept for 24 hours.                                                               |
 | `sessions`, `refresh_tokens`, `wallet_keys` | Sign-in state. Refresh tokens and wallet keys are stored only as SHA-256 hashes.                                                                    |
+| `platform_entries`                          | The platform account: one `fee` and one `rounding` row per conversion at most, in the source currency. Its balance is the sum.                      |
+| `fx_quotes`                                 | A held price for one account: currencies, amount, rate, fee rate, expiry and when it was used.                                                      |
+| `outbox_events`                             | Events written with each movement, with delivery attempts, the last error and when they were delivered or parked.                                   |
+| `notifications`                             | In-app notices, one per event at most, with when they were read.                                                                                    |
 
-`transactions` and `ledger_entries` are append-only: a trigger refuses `UPDATE` and `DELETE`.
+`transactions`, `ledger_entries` and `platform_entries` are append-only: a trigger refuses
+`UPDATE`, `DELETE` and `TRUNCATE`.
 
 ## Events and notifications
 
@@ -465,7 +479,7 @@ because they need an SMTP server or SMS provider
 
 ## Operations
 
-Two operator routes sit behind their own token (`X-Ops-Token`, from `OPS_TOKEN`). Wallet
+Three operator routes sit behind their own token (`X-Ops-Token`, from `OPS_TOKEN`). Wallet
 sessions and keys can't use them, and with no token set they answer `404`. The compose stack
 ships a local-only token:
 
@@ -480,9 +494,10 @@ curl -k https://localhost:8443/api/v1/ops/ledger-check \
   money movements, idempotent replays, database conflict retries, FX refresh outcomes and rate
   age, the last ledger check, and process CPU, memory and event-loop lag. No outside service
   is involved.
-- `ledger-check` compares every balance with the sum of its ledger lines in one consistent
-  snapshot and lists any that differ. It also runs every hour and logs an error if it finds
-  one.
+- `ledger-check` compares every balance with the sum of its ledger lines, and every fee with its
+  platform entry, in one consistent snapshot, and lists any that differ. It also runs every
+  hour and logs an error if it finds one.
+- `platform-account` shows the fees and rounding collected per currency.
 
 See [ADR-013](docs/decisions/ADR-013-ops-metrics-ledger-check.md).
 
@@ -545,7 +560,8 @@ Full detail is in [money handling](docs/money-handling.md). In short:
   nothing moves. Deposits and reads keep working, and `GET /fx/rates` shows the last rates
   with `isStale: true`.
 - If the primary fails or is stale, the secondary is used. Each answer is checked: all five
-  currencies present, positive finite numbers, and an update time that isn't in the future.
+  currencies present, each between 0.001 and 10,000,000 per USD, and an update time that isn't
+  in the future.
 - A rate that moves more than 20% from the current one, or the first rates when none are
   stored yet, is accepted only when the other source agrees within 2%. One broken feed can't
   reprice every wallet. If the other source is down at the very first start, a single answer
@@ -594,7 +610,9 @@ Full detail is in [money handling](docs/money-handling.md). In short:
   the same identifier, so `POST /wallets` answers `409` for it. A transfer to an email or phone
   also shows whether it has a wallet. Wallet creation is limited to 10 a minute per IP and money
   routes to 30, to slow down anyone checking lists of addresses.
-- **One API instance.** The FX refresh job and the in-memory rate limiter assume one process.
+- **One API instance.** The FX refresh job, the hourly ledger check and the in-memory rate
+  limiter assume one process. The outbox worker is safe with several, because it claims events
+  with `SKIP LOCKED`.
 - **Local only.** There is no hosted deployment; the brief doesn't ask for one.
 
 ## Left out on purpose
@@ -613,7 +631,9 @@ Full detail is in [money handling](docs/money-handling.md). In short:
 - Redis for the rate limiter and a lock for the FX job, so several API instances can run.
 - Email or SMS notices. They need an SMTP server or an SMS provider; the outbox already has the
   events, so each would be one more handler.
-- Metrics and alerts on stale rates and lock timeouts, and a load test on separate machines.
+- Alerting rules on the metrics (stale rates, parked events, ledger mismatches), and a load test
+  on separate machines.
+- Move the metrics to `@prometheus-io/client`, which has replaced the deprecated `prom-client`.
 
 ## Documents
 

@@ -81,29 +81,32 @@ test fails if the two drift.
 
 ## Endpoints
 
-| ID      | Method and path                                    | Purpose                                 | Success   |
-| ------- | -------------------------------------------------- | --------------------------------------- | --------- |
-| API-001 | `POST /wallets`                                    | Create a wallet                         | 201       |
-| API-002 | `GET /wallets/{walletId}`                          | Wallet with balances and USD total      | 200       |
-| API-003 | `GET /wallets/{walletId}/balances`                 | Balances and USD total                  | 200       |
-| API-004 | `POST /wallets/{walletId}/deposits`                | Simulated deposit                       | 201       |
-| API-005 | `POST /wallets/{walletId}/swaps`                   | Swap inside the wallet                  | 201       |
-| API-006 | `POST /transfers`                                  | Send to another wallet                  | 201       |
-| API-007 | `GET /wallets/{walletId}/transactions`             | History, paged and filtered             | 200       |
-| API-008 | `GET /transactions/{transactionId}`                | One transaction                         | 200       |
-| API-009 | `GET /fx/rates`                                    | All pair rates with refresh times       | 200       |
-| API-010 | `GET /health`, `GET /health/ready`                 | Liveness, readiness (outside `/api/v1`) | 200 / 503 |
-| API-013 | `POST /auth/login`                                 | Log in                                  | 200       |
-| API-014 | `POST /auth/refresh`                               | New token pair (rotation)               | 200       |
-| API-015 | `POST /auth/logout`, `POST /auth/logout-all`       | End this or every session               | 200       |
-| API-016 | `GET /auth/me`                                     | Account and wallet ID                   | 200       |
-| API-017 | `POST /wallets/{walletId}/keys`                    | Create a wallet key (shown once)        | 201       |
-| API-018 | `GET /wallets/{walletId}/keys`                     | List keys, no secrets                   | 200       |
-| API-019 | `DELETE /wallets/{walletId}/keys/{keyId}`          | Revoke a key                            | 200       |
-| API-020 | `GET /ops/metrics`                                 | Prometheus metrics (operator token)     | 200       |
-| API-021 | `GET /ops/ledger-check`                            | Balances versus ledger (operator token) | 200       |
-| API-011 | `POST /quotes`                                     | Quote that holds for 30 s (ADR-015)     | 201       |
-| API-012 | `POST /transfers` with `toEmail` / `toPhoneNumber` | Send to an email or phone (ADR-017)     | 201       |
+| ID      | Method and path                                                | Purpose                                 | Success   |
+| ------- | -------------------------------------------------------------- | --------------------------------------- | --------- |
+| API-001 | `POST /wallets`                                                | Create a wallet                         | 201       |
+| API-002 | `GET /wallets/{walletId}`                                      | Wallet with balances and USD total      | 200       |
+| API-003 | `GET /wallets/{walletId}/balances`                             | Balances and USD total                  | 200       |
+| API-004 | `POST /wallets/{walletId}/deposits`                            | Simulated deposit                       | 201       |
+| API-005 | `POST /wallets/{walletId}/swaps`                               | Swap inside the wallet                  | 201       |
+| API-006 | `POST /transfers`                                              | Send to another wallet                  | 201       |
+| API-007 | `GET /wallets/{walletId}/transactions`                         | History, paged and filtered             | 200       |
+| API-008 | `GET /transactions/{transactionId}`                            | One transaction                         | 200       |
+| API-009 | `GET /fx/rates`                                                | All pair rates with refresh times       | 200       |
+| API-010 | `GET /health`, `GET /health/ready`                             | Liveness, readiness (outside `/api/v1`) | 200 / 503 |
+| API-013 | `POST /auth/login`                                             | Log in                                  | 200       |
+| API-014 | `POST /auth/refresh`                                           | New token pair (rotation)               | 200       |
+| API-015 | `POST /auth/logout`, `POST /auth/logout-all`                   | End this or every session               | 200       |
+| API-016 | `GET /auth/me`                                                 | Account and wallet ID                   | 200       |
+| API-017 | `POST /wallets/{walletId}/keys`                                | Create a wallet key (shown once)        | 201       |
+| API-018 | `GET /wallets/{walletId}/keys`                                 | List keys, no secrets                   | 200       |
+| API-019 | `DELETE /wallets/{walletId}/keys/{keyId}`                      | Revoke a key                            | 200       |
+| API-020 | `GET /ops/metrics`                                             | Prometheus metrics (operator token)     | 200       |
+| API-021 | `GET /ops/ledger-check`                                        | Balances versus ledger (operator token) | 200       |
+| API-022 | `GET /wallets/{walletId}/notifications`                        | Notices from the outbox (ADR-016)       | 200       |
+| API-023 | `POST /wallets/{walletId}/notifications/{notificationId}/read` | Mark a notice read                      | 200       |
+| API-024 | `GET /ops/platform-account`                                    | Fees and rounding kept (operator token) | 200       |
+| API-011 | `POST /quotes`                                                 | Quote that holds for 30 s (ADR-015)     | 201       |
+| API-012 | `POST /transfers` with `toEmail` / `toPhoneNumber`             | Send to an email or phone (ADR-017)     | 201       |
 
 Rate limit (_proposed_): 120 requests per minute per IP overall, 30 per minute per IP on
 money writes, 10 per minute per IP on wallet creation and login.
