@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import type { EntityManager } from 'typeorm';
+import { AccountsService } from '../accounts/accounts.service.js';
 import { AppError } from '../../common/errors/app-error.js';
 import { parseAmount } from '../../common/money/amount.js';
 import { pricedFields } from '../pricing/pricing.service.js';
@@ -21,6 +23,7 @@ export class TransfersService {
     private readonly ledger: LedgerService,
     private readonly idempotency: IdempotencyService,
     private readonly quotes: QuotesService,
+    private readonly accounts: AccountsService,
   ) {}
 
   // Moves money to another wallet, converting at the current rate when the currencies differ.
@@ -29,14 +32,22 @@ export class TransfersService {
     dto: CreateTransferDto,
     request: IdempotencyRequest,
   ): Promise<IdempotentResult<MovementResultDto>> {
-    if (dto.fromWalletId === dto.toWalletId) {
+    const given = [dto.toWalletId, dto.toEmail, dto.toPhoneNumber].filter(
+      (v) => v !== undefined,
+    );
+    if (given.length !== 1) {
       throw new AppError(
-        'SAME_WALLET',
-        'A wallet cannot send to itself. Use a swap to change currency inside one wallet.',
+        'VALIDATION_FAILED',
+        'Give exactly one of toWalletId, toEmail or toPhoneNumber.',
       );
     }
+    if (dto.toWalletId !== undefined)
+      refuseSelf(dto.fromWalletId, dto.toWalletId);
     const toCurrency = dto.toCurrency ?? dto.fromCurrency;
     return this.idempotency.run(accountId, request, async (manager) => {
+      const toWalletId =
+        dto.toWalletId ?? (await this.receiverFor(manager, dto));
+      refuseSelf(dto.fromWalletId, toWalletId);
       const price = await this.quotes.priceMovement(
         manager,
         accountId,
@@ -52,7 +63,7 @@ export class TransfersService {
         {
           type: 'TRANSFER',
           fromWalletId: dto.fromWalletId,
-          toWalletId: dto.toWalletId,
+          toWalletId,
           fromCurrency: dto.fromCurrency,
           toCurrency,
           ...pricedFields(price),
@@ -64,7 +75,7 @@ export class TransfersService {
             delta: -price.amount,
           },
           {
-            walletId: dto.toWalletId,
+            walletId: toWalletId,
             currency: toCurrency,
             delta: price.received,
           },
@@ -77,5 +88,28 @@ export class TransfersService {
         type: posted.transaction.type,
       };
     });
+  }
+
+  // An unknown email or phone looks exactly like an unknown wallet ID.
+  private async receiverFor(
+    manager: EntityManager,
+    dto: CreateTransferDto,
+  ): Promise<string> {
+    const walletId = await this.accounts.walletIdFor(manager, {
+      email: dto.toEmail,
+      phoneNumber: dto.toPhoneNumber,
+    });
+    if (!walletId)
+      throw new AppError('WALLET_NOT_FOUND', 'No wallet with this ID.');
+    return walletId;
+  }
+}
+
+function refuseSelf(fromWalletId: string, toWalletId: string): void {
+  if (fromWalletId === toWalletId) {
+    throw new AppError(
+      'SAME_WALLET',
+      'A wallet cannot send to itself. Use a swap to change currency inside one wallet.',
+    );
   }
 }

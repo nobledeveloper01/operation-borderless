@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsIn, IsOptional } from 'class-validator';
 import { AmountField } from '../../common/validation/amount.js';
 import { UuidField } from '../../common/validation/id-param.js';
+import { EmailField, PhoneField } from '../accounts/identifier-fields.js';
 import {
   STABLECOINS,
   type Stablecoin,
@@ -13,8 +14,22 @@ export class CreateTransferDto {
   @UuidField('fromWalletId', 'Your wallet, which sends the money.')
   fromWalletId: string;
 
-  @UuidField('toWalletId', 'The wallet that receives the money.')
-  toWalletId: string;
+  @UuidField(
+    'toWalletId',
+    'The wallet that receives the money. Give exactly one of toWalletId, toEmail or toPhoneNumber.',
+    { required: false },
+  )
+  @IsOptional()
+  toWalletId?: string;
+
+  @EmailField('toEmail', 'Send to the wallet registered with this email.')
+  toEmail?: string;
+
+  @PhoneField(
+    'toPhoneNumber',
+    'Send to the wallet registered with this phone number.',
+  )
+  toPhoneNumber?: string;
 
   @ApiProperty({ enum: STABLECOINS, example: 'USDx' })
   @IsIn(STABLECOINS, coin)

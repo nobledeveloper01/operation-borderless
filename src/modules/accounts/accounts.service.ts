@@ -109,6 +109,22 @@ export class AccountsService {
     return null;
   }
 
+  // Finds the wallet behind an email or phone through the same lookup column that keeps them unique.
+  async walletIdFor(
+    manager: EntityManager,
+    ids: Identifiers,
+  ): Promise<string | undefined> {
+    const [column, value] = ids.email
+      ? ['email_lookup', ids.email]
+      : ['phone_lookup', ids.phoneNumber];
+    if (!value) return undefined;
+    const rows = await manager.query<{ id: string }[]>(
+      `SELECT w.id FROM accounts a JOIN wallets w ON w.account_id = a.id WHERE a.${column} = $1`,
+      [this.cipher.lookup(value)],
+    );
+    return rows[0]?.id;
+  }
+
   async profile(accountId: string): Promise<Profile> {
     const account = await this.db
       .getRepository(Account)

@@ -1,23 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
 import {
-  IsEmail,
-  IsOptional,
   IsString,
   Length,
-  Matches,
-  MaxLength,
   Validate,
   ValidatorConstraint,
   type ValidatorConstraintInterface,
   type ValidationArguments,
 } from 'class-validator';
-import { normaliseEmail, normalisePhone } from '../accounts/identifiers.js';
-
-const trimmedLower = ({ value }: { value: unknown }) =>
-  typeof value === 'string' ? normaliseEmail(value) : value;
-const toE164 = ({ value }: { value: unknown }) =>
-  typeof value === 'string' ? (normalisePhone(value) ?? value) : value;
+import { EmailField, PhoneField } from '../accounts/identifier-fields.js';
 
 @ValidatorConstraint({ name: 'hasIdentifier' })
 class HasIdentifier implements ValidatorConstraintInterface {
@@ -33,22 +23,10 @@ class HasIdentifier implements ValidatorConstraintInterface {
 
 // Both wallet creation and login identify a holder the same way, so they share this base.
 export class IdentifierDto {
-  @ApiPropertyOptional({ example: 'ada@example.com', maxLength: 254 })
-  @IsOptional()
-  @Transform(trimmedLower)
-  @IsEmail({}, { message: 'email must be a valid email address.' })
-  @MaxLength(254)
+  @EmailField('email')
   email?: string;
 
-  @ApiPropertyOptional({
-    example: '+2348012345678',
-    description: 'International format, or Nigerian local format.',
-  })
-  @IsOptional()
-  @Transform(toE164)
-  @Matches(/^\+[1-9]\d{7,14}$/, {
-    message: 'phoneNumber must be a valid phone number.',
-  })
+  @PhoneField('phoneNumber')
   phoneNumber?: string;
 }
 

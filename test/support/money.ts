@@ -70,7 +70,9 @@ export function transfer(
   sender: TestWallet,
   body: {
     fromWalletId?: string;
-    toWalletId: string;
+    toWalletId?: string;
+    toEmail?: string;
+    toPhoneNumber?: string;
     fromCurrency: string;
     toCurrency?: string;
     amount: string;

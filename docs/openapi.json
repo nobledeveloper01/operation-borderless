@@ -4625,8 +4625,19 @@
           },
           "toWalletId": {
             "type": "string",
-            "description": "The wallet that receives the money.",
+            "description": "The wallet that receives the money. Give exactly one of toWalletId, toEmail or toPhoneNumber.",
             "format": "uuid"
+          },
+          "toEmail": {
+            "type": "string",
+            "example": "ada@example.com",
+            "maxLength": 254,
+            "description": "Send to the wallet registered with this email."
+          },
+          "toPhoneNumber": {
+            "type": "string",
+            "example": "+2348012345678",
+            "description": "Send to the wallet registered with this phone number."
           },
           "fromCurrency": {
             "type": "string",
@@ -4665,7 +4676,6 @@
         },
         "required": [
           "fromWalletId",
-          "toWalletId",
           "fromCurrency",
           "amount"
         ]
