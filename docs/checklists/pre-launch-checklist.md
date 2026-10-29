@@ -68,12 +68,12 @@ so in the README), NOT APPLICABLE. Checked on 29 Oct 2026 against `main`.
 
 ## E. Privacy and legal
 
-| Item                                  | Applies | Status             | Reason                                                                                                                                      |
-| ------------------------------------- | ------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Data minimised (email/phone only)     | R       | PASS               | Only email or phone and a password hash per account                                                                                         |
-| FX provider terms and attribution     | R       | NEEDS VERIFICATION | Attribution shown in README and `GET /fx/rates`; terms at exchangerate-api.com/terms and the Currency API licence still to be re-read by me |
-| Policies, consent, cookies, marketing | N/A     | NOT APPLICABLE     | No public product or users                                                                                                                  |
-| Assessment PDF not committed          | M       | PASS               | Not tracked and never in history                                                                                                            |
+| Item                                  | Applies | Status         | Reason                                                                                                                                                                             |
+| ------------------------------------- | ------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Data minimised (email/phone only)     | R       | PASS           | Only email or phone and a password hash per account                                                                                                                                |
+| FX provider terms and attribution     | R       | PASS           | Read 29 Oct 2026: attribution shown; caching allowed; the no-redistribution clause conflicts with `GET /fx/rates`, accepted for the sandbox and listed in README known limitations |
+| Policies, consent, cookies, marketing | N/A     | NOT APPLICABLE | No public product or users                                                                                                                                                         |
+| Assessment PDF not committed          | M       | PASS           | Not tracked and never in history                                                                                                                                                   |
 
 ## G. Performance and reliability
 

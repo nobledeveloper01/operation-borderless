@@ -378,6 +378,9 @@ receiver; anyone else gets `404`.
 }
 ```
 
+Rates by [Exchange Rate API](https://www.exchangerate-api.com), with the
+[Currency API](https://github.com/fawazahmed0/exchange-api) (CC0) as the second source.
+
 Swagger UI lists every route with its request body, answers and errors.
 
 ## Data model
@@ -488,6 +491,12 @@ Full detail is in [money handling](docs/money-handling.md). In short:
 
 - **Rates are daily reference rates, not market prices.** The free sources publish once a day,
   so a swap at 23:00 uses that morning's rate.
+- **The primary rate source doesn't allow republishing its rates.** ExchangeRate-API's open
+  endpoint allows caching and currency conversion, but its terms forbid redistribution and
+  use in any service that offers programmatic access to rates, which `GET /fx/rates` does. I
+  kept it for this non-commercial sandbox because the brief asks for a rates endpoint. A real
+  launch needs a feed licensed for republishing, or only the secondary source, which is CC0.
+  Details are in [money handling](docs/money-handling.md#provider-choice).
 - **Rounding remainders are not booked anywhere.** Each conversion loses less than 0.000001 of
   the target currency. A real system would book it to a platform account.
 - **History uses offset paging.** A client walking every page while a slow write commits could

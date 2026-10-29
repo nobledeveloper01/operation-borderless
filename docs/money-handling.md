@@ -40,10 +40,27 @@ version; the README will summarise it.
 | ExchangeRate-API key plan / paid feeds                                            | Yes | Yes | Yes | Needed | Hourly or faster | Production option                         |
 
 Checked on 29 Oct 2026: both chosen sources returned NGN, GHS, XAF and EUR for that day;
-Frankfurter returned only EUR. The primary asks for attribution and says clients should
-request about once every 24 hours, or risk a 20-minute block. Its terms
-(`exchangerate-api.com/terms`) and the secondary's licence must be re-read before
-submission. The API and README show the attribution.
+Frankfurter returned only EUR.
+
+I read both sources' terms on 29 Oct 2026:
+
+- **ExchangeRate-API open endpoint** ([terms](https://www.exchangerate-api.com/terms),
+  [open access docs](https://www.exchangerate-api.com/docs/free)):
+  - attribution is required, with a link to exchangerate-api.com;
+  - caching is allowed, and so is personal or commercial currency conversion;
+  - clients should ask about once a day, and a rate-limited IP gets `429` for 20 minutes;
+  - redistribution is not allowed, and the data may not be used "in any product or service
+    that offers programmatic or automatic access to exchange rate data".
+
+  `GET /fx/rates` publishes rates, so it conflicts with that last clause. I kept the design
+  for this non-commercial sandbox, because the brief asks for a rates endpoint, and I list the
+  conflict as a known limitation. A production build needs a feed whose licence allows
+  republishing, or must publish only the CC0 source below.
+
+- **Currency API by fawazahmed0** ([repository](https://github.com/fawazahmed0/exchange-api)):
+  CC0-1.0 (public domain), no rate limits, no attribution needed.
+
+The API (`attribution` in `GET /fx/rates`) and the README show the attribution.
 
 These are **daily reference rates, not executable market prices**. That is stated in the
 README.
