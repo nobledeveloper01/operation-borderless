@@ -19,3 +19,4 @@ Each record says what I decided, why, and what it costs.
 | [013](ADR-013-ops-metrics-ledger-check.md)   | Metrics and a ledger check inside the API, behind an operator token         |
 | [014](ADR-014-fees-and-platform-account.md)  | A 0.5% conversion fee, booked with rounding to a platform account           |
 | [015](ADR-015-quotes.md)                     | Quotes that hold a price for 30 seconds and are spent once                  |
+| [016](ADR-016-outbox-and-notifications.md)   | A transactional outbox, delivered inside the API as in-app notices          |

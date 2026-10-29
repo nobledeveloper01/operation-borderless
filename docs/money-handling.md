@@ -171,6 +171,8 @@ given.
 
 ## What is not guaranteed
 
-- No outside side effects happen inside a money operation (deposits are simulated), so there
-  is no outbox or reconciliation. A real payout rail would need one.
+- No outside side effects happen inside a money operation (deposits are simulated). Events
+  leave through a transactional outbox ([ADR-016](decisions/ADR-016-outbox-and-notifications.md)),
+  so a notice is sent if and only if the movement committed. There is no reconciliation with an
+  outside rail, because there is no outside rail.
 - The part of a conversion below one millionth of the source currency is not booked anywhere.

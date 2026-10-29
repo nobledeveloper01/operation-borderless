@@ -437,6 +437,23 @@ erDiagram
 
 `transactions` and `ledger_entries` are append-only: a trigger refuses `UPDATE` and `DELETE`.
 
+## Events and notifications
+
+Every deposit, swap and transfer writes events in the same database transaction as the money:
+`deposit.completed`, `swap.completed`, `transfer.sent`, `transfer.received`, and `balance.low`
+when a debit takes a balance below 10 USD of value. A worker inside the API delivers them
+about once a second as in-app notices:
+
+```bash
+curl -k "https://localhost:8443/api/v1/wallets/$WALLET/notifications?unread=true" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+A failed delivery is retried with full-jitter backoff, up to 10 times, and then parked for an
+operator; each event shows up at most once as a notice. Email and SMS notices aren't built,
+because they need an SMTP server or SMS provider
+([ADR-016](docs/decisions/ADR-016-outbox-and-notifications.md)).
+
 ## Operations
 
 Two operator routes sit behind their own token (`X-Ops-Token`, from `OPS_TOKEN`). Wallet
@@ -583,7 +600,8 @@ Full detail is in [money handling](docs/money-handling.md). In short:
 - Cursor paging for history, so walking every page is exact.
 - A paid, intraday FX feed for real pricing, with the same two-source check.
 - Redis for the rate limiter and a lock for the FX job, so several API instances can run.
-- An outbox for events (transfer received, low balance) once there's anything to notify.
+- Email or SMS notices. They need an SMTP server or an SMS provider; the outbox already has the
+  events, so each would be one more handler.
 - Metrics and alerts on stale rates and lock timeouts, and a load test on separate machines.
 
 ## Documents
