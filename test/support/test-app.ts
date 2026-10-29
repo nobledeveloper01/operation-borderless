@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 import { inject } from 'vitest';
@@ -25,9 +26,11 @@ export async function createTestApp(
   env: Record<string, string> = {},
   options: TestAppOptions = {},
 ): Promise<NestExpressApplication> {
+  // Each app gets its own queue and key prefix unless a test shares one on purpose.
+  const prefix = `test-${randomUUID().slice(0, 8)}`;
   let builder = Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(EnvironmentVariables)
-    .useValue(validateEnv({ ...process.env, ...env }));
+    .useValue(validateEnv({ ...process.env, QUEUE_PREFIX: prefix, ...env }));
   if (options.fxProviders)
     builder = builder
       .overrideProvider(FX_PROVIDERS)

@@ -17,6 +17,7 @@ import {
 const env = (extra: Record<string, string> = {}) =>
   validateEnv({
     DB_PASSWORD: 'x',
+    REDIS_URL: 'redis://localhost:6379',
     PII_ENCRYPTION_KEYS: '1:bG9jYWwtcGlpLWVuY3J5cHRpb24ta2V5LXYxLTAwMDE=',
     PII_LOOKUP_KEY: 'bG9jYWwtcGlpLWxvb2t1cC1rZXktZm9yLWRldi0wMDA=',
     FX_REFRESH_ENABLED: 'false',

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from 'nestjs-pino';
 import { AllExceptionsFilter } from './common/errors/all-exceptions.filter.js';
@@ -10,6 +10,10 @@ import { SuccessInterceptor } from './common/responses/success.interceptor.js';
 import { AppConfigModule } from './common/config/config.module.js';
 import { CryptoModule } from './common/crypto/crypto.module.js';
 import { MetricsModule } from './common/metrics/metrics.module.js';
+import { RedisModule } from './common/redis/redis.module.js';
+import { AppThrottlerGuard } from './common/http/app-throttler.guard.js';
+import { RateLimitModule } from './common/http/rate-limit.module.js';
+import { RedisThrottlerStorage } from './common/http/redis-throttler.storage.js';
 import { EnvironmentVariables } from './common/config/env.validation.js';
 import { databaseOptions } from './common/database/database.options.js';
 import { ACCOUNT_ENTITIES } from './modules/accounts/entities.js';
@@ -34,29 +38,37 @@ import { WalletsModule } from './modules/wallets/wallets.module.js';
     AppConfigModule,
     CryptoModule,
     MetricsModule,
+    RedisModule,
     LoggerModule.forRootAsync({
       inject: [EnvironmentVariables],
       useFactory: loggerOptions,
     }),
     ThrottlerModule.forRootAsync({
-      inject: [EnvironmentVariables],
-      useFactory: (config: EnvironmentVariables) => [
-        { name: 'default', ttl: 60_000, limit: config.RATE_LIMIT_PER_MINUTE },
-        // A tighter limit only on sign-up, login and refresh, where guessing passwords happens.
-        {
-          name: 'auth',
-          ttl: 60_000,
-          limit: config.AUTH_RATE_LIMIT_PER_MINUTE,
-          skipIf: outsideGroup('auth'),
-        },
-        // Money writes get their own limit, so one caller can't flood deposits, swaps or transfers.
-        {
-          name: 'money',
-          ttl: 60_000,
-          limit: config.MONEY_RATE_LIMIT_PER_MINUTE,
-          skipIf: outsideGroup('money'),
-        },
-      ],
+      imports: [RateLimitModule],
+      inject: [EnvironmentVariables, RedisThrottlerStorage],
+      useFactory: (
+        config: EnvironmentVariables,
+        storage: RedisThrottlerStorage,
+      ) => ({
+        storage,
+        throttlers: [
+          { name: 'default', ttl: 60_000, limit: config.RATE_LIMIT_PER_MINUTE },
+          // A tighter limit only on sign-up, login and refresh, where guessing passwords happens.
+          {
+            name: 'auth',
+            ttl: 60_000,
+            limit: config.AUTH_RATE_LIMIT_PER_MINUTE,
+            skipIf: outsideGroup('auth'),
+          },
+          // Money writes get their own limit, so one caller can't flood deposits, swaps or transfers.
+          {
+            name: 'money',
+            ttl: 60_000,
+            limit: config.MONEY_RATE_LIMIT_PER_MINUTE,
+            skipIf: outsideGroup('money'),
+          },
+        ],
+      }),
     }),
     TypeOrmModule.forRootAsync({
       inject: [EnvironmentVariables],
@@ -80,7 +92,7 @@ import { WalletsModule } from './modules/wallets/wallets.module.js';
   ],
   providers: [
     // Guards run in this order, so the rate limit applies before any credential is checked.
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: AppThrottlerGuard },
     { provide: APP_GUARD, useExisting: AuthGuard },
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
     { provide: APP_INTERCEPTOR, useClass: SuccessInterceptor },

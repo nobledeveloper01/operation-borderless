@@ -2,6 +2,10 @@ import {
   PostgreSqlContainer,
   type StartedPostgreSqlContainer,
 } from '@testcontainers/postgresql';
+import {
+  RedisContainer,
+  type StartedRedisContainer,
+} from '@testcontainers/redis';
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -11,6 +15,7 @@ import { migrations } from '../../src/migrations/index.js';
 import { checkRouteCoverage } from './route-coverage.js';
 
 let container: StartedPostgreSqlContainer | undefined;
+let redis: StartedRedisContainer | undefined;
 const routeHits = mkdtempSync(join(tmpdir(), 'borderless-routes-'));
 
 declare module 'vitest' {
@@ -23,11 +28,14 @@ declare module 'vitest' {
       password: string;
     };
     routeHits: string;
+    redisUrl: string;
   }
 }
 
-// Starts a throwaway PostgreSQL and migrates it once, so no test ever touches a real database.
+// Starts a throwaway PostgreSQL and Redis and migrates the database once, so no test touches real ones.
 export async function setup(project: TestProject): Promise<void> {
+  redis = await new RedisContainer('redis:7.4-alpine').start();
+  project.provide('redisUrl', redis.getConnectionUrl());
   container = await new PostgreSqlContainer('postgres:17-alpine')
     .withDatabase('borderless_test')
     .withUsername('borderless')
@@ -58,6 +66,7 @@ export async function setup(project: TestProject): Promise<void> {
 // After a full run (yarn test), each documented route must have answered with success at least once.
 export async function teardown(): Promise<void> {
   await container?.stop();
+  await redis?.stop();
   if (process.env.ROUTE_COVERAGE !== 'check') return;
   checkRouteCoverage(
     routeHits,

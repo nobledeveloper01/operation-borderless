@@ -28,6 +28,7 @@ describe('yarn env:new', () => {
     expect(() => validateEnv(a)).not.toThrow();
     for (const key of [
       'DB_PASSWORD',
+      'REDIS_PASSWORD',
       'PII_ENCRYPTION_KEYS',
       'PII_LOOKUP_KEY',
       'OPS_TOKEN',

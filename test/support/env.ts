@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { inject } from 'vitest';
 
 const db = inject('db');
+const redisUrl = inject('redisUrl');
 Object.assign(process.env, {
   NODE_ENV: 'test',
   LOG_LEVEL: 'silent',
@@ -13,6 +14,7 @@ Object.assign(process.env, {
   DB_USER: db.user,
   DB_PASSWORD: db.password,
   DB_SSL: 'disable',
+  REDIS_URL: redisUrl,
   RATE_LIMIT_PER_MINUTE: '1000',
   AUTH_RATE_LIMIT_PER_MINUTE: '1000',
   MONEY_RATE_LIMIT_PER_MINUTE: '1000',

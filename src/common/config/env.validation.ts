@@ -61,6 +61,22 @@ export class EnvironmentVariables {
   @IsString()
   CORS_ORIGINS?: string;
 
+  // Redis for shared rate limits and the job queues, for example redis://:password@redis:6379.
+  @Matches(/^rediss?:\/\/\S+$/, {
+    message: 'REDIS_URL must start with redis:// or rediss://',
+  })
+  REDIS_URL: string;
+
+  // Keeps each environment's queues and rate-limit counts apart in a shared Redis.
+  @Matches(/^[a-z0-9-]{1,40}$/, {
+    message: 'QUEUE_PREFIX must be 1 to 40 lowercase letters, digits or dashes',
+  })
+  QUEUE_PREFIX = 'borderless';
+
+  // api serves HTTP, worker runs the queues and scheduled jobs, all does both in one process.
+  @IsIn(['all', 'api', 'worker'])
+  APP_ROLE: 'all' | 'api' | 'worker' = 'all';
+
   // Operators send this as X-Ops-Token to read metrics and run the ledger check; unset hides those routes.
   @Transform(({ value }: { value: unknown }) =>
     value === '' ? undefined : value,
@@ -222,6 +238,12 @@ export function validateEnv(
     parseFeeOverrides(env.FEE_BPS_BY_PAIR);
   } catch (error) {
     problems.push((error as Error).message);
+  }
+  if (
+    env.NODE_ENV === 'production' &&
+    env.REDIS_URL?.includes('local-redis-password')
+  ) {
+    problems.push('Production cannot use the local-only Redis password');
   }
   if (env.NODE_ENV === 'production' && env.OPS_TOKEN?.startsWith('local-')) {
     problems.push('Production cannot use the local-only OPS_TOKEN');

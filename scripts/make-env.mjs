@@ -16,6 +16,7 @@ const password = () =>
 
 const fresh = {
   DB_PASSWORD: password(),
+  REDIS_PASSWORD: password(),
   PII_ENCRYPTION_KEYS: `1:${secret(32)}`,
   PII_ACTIVE_KEY_VERSION: '1',
   PII_LOOKUP_KEY: secret(32),
@@ -51,7 +52,11 @@ const body = template
     written.add(key);
     return `${key}=${fresh[key]}`;
   })
-  .join('\n');
+  .join('\n')
+  .replace(
+    /^REDIS_URL=redis:\/\/:[^@]*@/m,
+    `REDIS_URL=redis://:${fresh.REDIS_PASSWORD}@`,
+  );
 const missing = Object.keys(fresh).filter((k) => !written.has(k));
 writeFileSync(out, body + missing.map((k) => `${k}=${fresh[k]}\n`).join(''), {
   mode: 0o600,

@@ -2,6 +2,7 @@ import { validateEnv } from '../../../../src/common/config/env.validation.js';
 
 const base = {
   DB_PASSWORD: 'x',
+  REDIS_URL: 'redis://localhost:6379',
   PII_ENCRYPTION_KEYS: '1:bG9jYWwtcGlpLWVuY3J5cHRpb24ta2V5LXYxLTAwMDE=',
   PII_LOOKUP_KEY: 'bG9jYWwtcGlpLWxvb2t1cC1rZXktZm9yLWRldi0wMDA=',
 };
@@ -56,6 +57,19 @@ describe('validateEnv', () => {
         OPS_TOKEN: 'local-ops-token-for-the-compose-stack-only',
       }),
     ).toThrow(/local-only OPS_TOKEN/);
+  });
+
+  it('refuses the local-only Redis password in production', () => {
+    expect(() =>
+      validateEnv({
+        ...base,
+        NODE_ENV: 'production',
+        REDIS_URL: 'redis://:local-redis-password@redis:6379',
+      }),
+    ).toThrow(/local-only Redis password/);
+    expect(() =>
+      validateEnv({ ...base, REDIS_URL: 'http://redis:6379' }),
+    ).toThrow(/REDIS_URL/);
   });
 
   it('TC-061 refuses the local-only keys in production', () => {
