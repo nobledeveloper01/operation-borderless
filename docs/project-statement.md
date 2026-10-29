@@ -74,7 +74,7 @@ Out of scope (brief: "no frontend"; no auth required):
 - a frontend or admin portal;
 - email or SMS verification, password reset, MFA and roles;
 - real blockchain, custody, KYC, real payment rails or withdrawals;
-- fees, spreads and limits beyond basic input caps;
+- spreads, and limits beyond basic input caps (a 0.5% conversion fee was added later, ADR-014);
 - deployment to a hosted environment (brief: "A deployed URL is not required").
 
 ## Constraints

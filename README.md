@@ -210,6 +210,9 @@ curl -k https://localhost:8443/api/v1/wallets/$WALLET/deposits \
     "rate": "1.0000000000",
     "rateSource": "none",
     "rateAsOf": null,
+    "feeBps": 0,
+    "feeAmount": "0.000000",
+    "roundingAmount": "0.000000",
     "createdAt": "2026-10-29T13:56:57.567Z"
   },
   "balances": [{ "currency": "USDx", "amount": "100.000000" }]
@@ -237,15 +240,18 @@ curl -k https://localhost:8443/api/v1/wallets/$WALLET/swaps \
     "fromCurrency": "USDx",
     "fromAmount": "10.000000",
     "toCurrency": "cNGN",
-    "toAmount": "13462.368880",
+    "toAmount": "13395.057035",
     "rate": "1346.2368880000",
     "rateSource": "exchangerate-api",
     "rateAsOf": "2026-10-29T00:02:31.000Z",
+    "feeBps": 50,
+    "feeAmount": "0.050000",
+    "roundingAmount": "0.000000",
     "...": "IDs and time"
   },
   "balances": [
     { "currency": "USDx", "amount": "90.000000" },
-    { "currency": "cNGN", "amount": "13462.368880" }
+    { "currency": "cNGN", "amount": "13395.057035" }
   ]
 }
 ```
@@ -271,9 +277,11 @@ balance:
     "fromCurrency": "USDx",
     "fromAmount": "25.000000",
     "toCurrency": "cGHS",
-    "toAmount": "290.997900",
+    "toAmount": "289.542910",
     "rate": "11.6399160000",
-    "...": "source, rate time, IDs and time"
+    "feeBps": 50,
+    "feeAmount": "0.125000",
+    "...": "source, rate time, rounding, IDs and time"
   },
   "balances": [{ "currency": "USDx", "amount": "65.000000" }]
 }
@@ -307,11 +315,11 @@ Leave out `toCurrency` to send the same currency. Asking for more than the balan
 {
   "walletId": "53a61348-34a2-44f2-9be9-3a87e7a81e88",
   "balances": [
-    { "currency": "cNGN", "amount": "13462.368880", "usdValue": "9.999999" },
+    { "currency": "cNGN", "amount": "13395.057035", "usdValue": "9.949999" },
     { "currency": "USDx", "amount": "65.000000", "usdValue": "65.000000" },
     "... the other three at 0 ..."
   ],
-  "totalUsd": "74.999999",
+  "totalUsd": "74.949999",
   "rates": {
     "source": "exchangerate-api",
     "asOf": "2026-10-29T00:02:31.000Z",
@@ -320,7 +328,8 @@ Leave out `toCurrency` to send the same currency. Asking for more than the balan
 }
 ```
 
-USD values round down per balance, which is why 10 USDx swapped to cNGN shows as 9.999999.
+USD values round down per balance. The 10 USDx swapped to cNGN shows as 9.949999: 0.05 went
+to the fee, and the conversion back rounds down.
 Without a fresh rate, `usdValue` and `totalUsd` are `null` and `unavailableReason` says why.
 
 ### History
@@ -334,14 +343,14 @@ Without a fresh rate, `usdValue` and `totalUsd` are `null` and `unavailableReaso
       "type": "TRANSFER",
       "direction": "OUT",
       "fromAmount": "25.000000",
-      "toAmount": "290.997900",
+      "toAmount": "289.542910",
       "...": ""
     },
     {
       "type": "SWAP",
       "direction": "INTERNAL",
       "fromAmount": "10.000000",
-      "toAmount": "13462.368880",
+      "toAmount": "13395.057035",
       "...": ""
     }
   ],
@@ -449,6 +458,10 @@ Full detail is in [money handling](docs/money-handling.md). In short:
   6 decimals, instead of rounding them.
 - A cross rate is computed exactly with integers, then rounded half-even to 10 decimals. That
   10-decimal rate is stored on the transaction and is what the client sees.
+- Swaps and cross-currency transfers pay a 0.5% fee, taken from the amount sent and rounded up
+  to the next millionth. Same-currency transfers and deposits are free. Fees and any whole
+  millionths left over by rounding go to a platform account
+  ([ADR-014](docs/decisions/ADR-014-fees-and-platform-account.md)).
 - Converted amounts round down, so a swap or transfer can never create money. A conversion
   worth less than 0.000001 is refused with `422 AMOUNT_TOO_SMALL`.
 - One operation is capped at 1,000,000,000 units, and a credit that would overflow a balance
@@ -508,7 +521,7 @@ Full detail is in [money handling](docs/money-handling.md). In short:
 - Each stablecoin is worth 1 unit of its fiat currency, so FX comes from fiat rates.
 - All five stablecoins use 6 decimal places.
 - Deposits are simulated: instant, and they always succeed.
-- There are no fees or spreads, and converted amounts round down.
+- Conversions pay a 0.5% fee by default, and converted amounts round down. There are no spreads.
 - Daily reference rates count as "current" rates for a sandbox.
 - A wallet can't transfer to itself; a swap does that job.
 - I added sign-in (accounts, sessions and wallet keys) although the brief doesn't ask for it.
@@ -525,8 +538,9 @@ Full detail is in [money handling](docs/money-handling.md). In short:
   kept it for this non-commercial sandbox because the brief asks for a rates endpoint. A real
   launch needs a feed licensed for republishing, or only the secondary source, which is CC0.
   Details are in [money handling](docs/money-handling.md#provider-choice).
-- **Rounding remainders are not booked anywhere.** Each conversion loses less than 0.000001 of
-  the target currency. A real system would book it to a platform account.
+- **The last fraction of a millionth isn't booked.** Fees and whole leftover millionths go to the
+  platform account, but the part of a conversion below one millionth of the source currency
+  is not recorded anywhere.
 - **History uses offset paging.** A client walking every page while a slow write commits could
   see one item twice or miss one.
 - **Idempotency compares the body value for value.** Key order and spacing don't matter, but a
@@ -546,7 +560,7 @@ Full detail is in [money handling](docs/money-handling.md). In short:
 - A frontend or admin portal (the brief says no frontend).
 - Email or SMS verification, password reset, MFA and roles.
 - Real payment rails, withdrawals, custody, KYC and any blockchain.
-- Fees, spreads, and daily or monthly limits.
+- Spreads, and daily or monthly limits.
 - The two could-have routes I designed but didn't build: `GET /fx/quote` (price preview with a
   30-second hold) and looking up a wallet by email or phone. I spent that time on the money
   tests instead.
@@ -556,7 +570,6 @@ Full detail is in [money handling](docs/money-handling.md). In short:
 - An FX quote endpoint that holds a rate for 30 seconds, so the client sees the exact amount
   before confirming.
 - Cursor paging for history, so walking every page is exact.
-- A platform account that collects rounding remainders, and fees and spreads per corridor.
 - A paid, intraday FX feed for real pricing, with the same two-source check.
 - Redis for the rate limiter and a lock for the FX job, so several API instances can run.
 - An outbox for events (transfer received, low balance) once there's anything to notify.

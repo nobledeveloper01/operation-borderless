@@ -45,7 +45,7 @@ start once hours 34–39 are green.
 | A-03 | Each stablecoin is worth 1 unit of its fiat currency; FX comes from fiat rates.                                  | Mock stablecoins                                            |
 | A-04 | All five stablecoins use 6 decimal places.                                                                       | Typical token precision; keeps small conversions meaningful |
 | A-05 | Per-operation cap of 1,000,000,000 units; no daily limits.                                                       | Guards against overflow and silly values                    |
-| A-06 | No fees or spreads; converted amounts round down.                                                                | Brief names none; rounding down never creates money         |
+| A-06 | No fees or spreads; converted amounts round down. Changed 29 Oct 2026: 0.5% fee on conversions (ADR-014).        | Brief names none; rounding down never creates money         |
 | A-07 | Deposits are instant and always succeed (no pending states).                                                     | Brief: "updates immediately"                                |
 | A-08 | "Real-time balances" means balances read from the database at request time.                                      | Brief p.2                                                   |
 | A-09 | "Never process the same request twice" is enforced with an `Idempotency-Key` header.                             | Standard practice; key required on all money writes         |

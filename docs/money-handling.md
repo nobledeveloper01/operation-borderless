@@ -21,11 +21,15 @@ version; the README will summarise it.
 - Cross rate `A → B = rate(B per USD) / rate(A per USD)`, computed exactly with `bigint`
   (no float and no decimal library), then rounded **half-even to 10 decimals**. That 10-decimal rate is the rate
   stored on the transaction and shown to the client.
-- Converted amount = `fromAmount × rate`, rounded **down** to 6 decimals. Rounding down means
-  the system never credits more than the value debited. The difference (under one millionth)
-  is not tracked; this is documented as a known limitation.
+- Fee = `fromAmount × FEE_BPS / 10,000`, rounded **up** to 6 decimals, in the source currency.
+  The default is 50 basis points (0.5%) on swaps and cross-currency transfers; same-currency
+  transfers and deposits are free ([ADR-014](decisions/ADR-014-fees-and-platform-account.md)).
+- Converted amount = `(fromAmount − fee) × rate`, rounded **down** to 6 decimals. Rounding down
+  means the system never credits more than the value debited.
+- Rounding = the whole source millionths left after the conversion, that is
+  `fromAmount − fee − ⌈toAmount ÷ rate⌉`. Fee and rounding both go to the platform account.
+  Only the part below one millionth of the source currency is not booked.
 - If the converted amount rounds to zero, the request is refused (`422 AMOUNT_TOO_SMALL`).
-- No fees or spreads (brief doesn't ask for them).
 - USD totals use the same rates and rounding, per balance, then sum.
 
 ## FX rates
@@ -169,4 +173,4 @@ given.
 
 - No outside side effects happen inside a money operation (deposits are simulated), so there
   is no outbox or reconciliation. A real payout rail would need one.
-- Rounding remainders (below 0.000001) are not booked to a platform account.
+- The part of a conversion below one millionth of the source currency is not booked anywhere.

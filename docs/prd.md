@@ -93,7 +93,7 @@ daily publication, the API shows the last rates as stale and refuses swaps and t
 | BR-10 | Amounts are positive, have at most 6 decimal places, and are capped per operation.                             | Inferred (A-04, A-05)                          |
 | BR-12 | Only the wallet's owner (session or wallet key) can read it or move its money; transfers can go to any wallet. | Beyond the brief                               |
 | BR-13 | Passwords are hashed with argon2id; tokens and keys are stored only as hashes.                                 | Beyond the brief                               |
-| BR-11 | No fees or spreads. Rounding of converted amounts is down, so no money is created.                             | Inferred (A-06)                                |
+| BR-11 | Conversions pay a 0.5% fee (configurable per corridor); converted amounts round down, so no money is created.  | Changed 29 Oct 2026 (ADR-014)                  |
 
 ## Features and MoSCoW
 
@@ -112,7 +112,7 @@ running lint, type check and tests, OpenAPI drift test.
 **Could (only if time is left):** quote endpoint (US-12), wallet lookup (US-13), Postman
 collection in addition to OpenAPI.
 
-**Won't (this assessment):** email/SMS verification, password reset, MFA, roles, frontend, fees, withdrawals, KYC, real chains,
+**Won't (this assessment):** email/SMS verification, password reset, MFA, roles, frontend, withdrawals, KYC, real chains,
 webhooks, Redis or a queue, deployment.
 
 ## MVP
