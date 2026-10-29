@@ -8,6 +8,7 @@ import {
 import type { NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
+import { bodyErrorsMiddleware } from './common/middleware/body-errors.middleware.js';
 import { noStoreMiddleware } from './common/middleware/no-store.middleware.js';
 import { requestIdMiddleware } from './common/middleware/request-id.middleware.js';
 import { EnvironmentVariables } from './config/env.validation.js';
@@ -44,6 +45,7 @@ export function configureApp(app: NestExpressApplication): void {
   app.use(requestIdMiddleware);
   app.use(noStoreMiddleware);
   app.useBodyParser('json', { limit: '16kb' });
+  app.use(bodyErrorsMiddleware);
   // The API only sends JSON, so it gets helmet's strict policy; Swagger UI needs inline scripts, but only under /docs.
   const strict = helmet({
     contentSecurityPolicy: {

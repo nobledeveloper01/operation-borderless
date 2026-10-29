@@ -71,6 +71,10 @@ describe('platform', () => {
       .send('{bad');
     expect(broken.status).toBe(400);
     expect(broken.body.code).toBe('VALIDATION_FAILED');
+    // Regression: ISSUE-001 — a malformed body echoed the JSON parser's own message
+    // Found by /qa on 2026-10-29
+    // Report: .gstack/qa-reports/run-20261029T130229Z/qa-report-local-api-money-2026-10-29.md
+    expect(broken.body.message).toBe('The request body is not valid JSON.');
   });
 
   it('keeps a strict CSP on the API and relaxes it only for Swagger UI', async () => {
