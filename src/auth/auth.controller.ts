@@ -29,7 +29,7 @@ export class AuthController {
     message: 'Logged in',
     type: LoginResultDto,
     access: 'public',
-    authRateLimit: true,
+    rateLimit: 'auth',
     errors: [HttpStatus.BAD_REQUEST, HttpStatus.UNAUTHORIZED],
   })
   login(@Body() dto: LoginDto): Promise<LoginResultDto> {
@@ -44,7 +44,7 @@ export class AuthController {
     message: 'Session refreshed',
     type: SessionTokensDto,
     access: 'public',
-    authRateLimit: true,
+    rateLimit: 'auth',
     errors: [HttpStatus.BAD_REQUEST, HttpStatus.UNAUTHORIZED],
   })
   refresh(@Body() dto: RefreshDto): Promise<SessionTokensDto> {

@@ -15,6 +15,7 @@ Object.assign(process.env, {
   DB_SSL: 'disable',
   RATE_LIMIT_PER_MINUTE: '1000',
   AUTH_RATE_LIMIT_PER_MINUTE: '1000',
+  MONEY_RATE_LIMIT_PER_MINUTE: '1000',
   JWT_KEYS_DIR: mkdtempSync(join(tmpdir(), 'borderless-jwt-')),
   JWT_ACTIVE_KID: 'test-1',
   // Tests never call a real FX provider; they inject fakes and refresh by hand.

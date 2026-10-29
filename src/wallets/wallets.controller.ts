@@ -22,7 +22,7 @@ export class WalletsController {
     status: HttpStatus.CREATED,
     type: CreatedWalletDto,
     access: 'public',
-    authRateLimit: true,
+    rateLimit: 'auth',
     errors: [HttpStatus.BAD_REQUEST, HttpStatus.CONFLICT],
   })
   create(@Body() dto: CreateWalletDto): Promise<CreatedWalletDto> {

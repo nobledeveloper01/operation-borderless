@@ -6,17 +6,15 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiHeader,
   ApiExtraModels,
   ApiOperation,
   ApiResponse,
   ApiSecurity,
   getSchemaPath,
 } from '@nestjs/swagger';
-import {
-  type Access,
-  AuthRateLimited,
-  RouteAccess,
-} from '../../auth/access.decorators.js';
+import { type Access, RouteAccess } from '../../auth/access.decorators.js';
+import { RateLimited, type RateLimitGroup } from '../http/rate-limit-groups.js';
 import { ErrorResponseDto } from '../errors/error-response.dto.js';
 import { ResponseMessage } from './response-message.decorator.js';
 import { SuccessResponseDto } from './success-response.dto.js';
@@ -30,8 +28,22 @@ export interface EndpointOptions {
   errors?: HttpStatus[];
   description?: string;
   access?: Access;
-  authRateLimit?: boolean;
+  rateLimit?: RateLimitGroup;
+  // Money writes need an Idempotency-Key header; this documents it and its errors once.
+  idempotent?: boolean;
 }
+
+const IDEMPOTENCY_HEADER_DOC = {
+  name: 'Idempotency-Key',
+  required: true,
+  description:
+    '8 to 128 characters of A-Z, a-z, 0-9, _ or -. A retry with the same key and body returns the first answer; the same key with another body is refused.',
+  schema: {
+    type: 'string',
+    pattern: '^[A-Za-z0-9_-]{8,128}$',
+    example: '7b0c3e9a-4d1f-4c62-9a55-2f9e1b7c0d11',
+  },
+};
 
 // Any route can hit these, so no controller has to list them again.
 const COMMON_ERRORS = [
@@ -54,8 +66,16 @@ export function ApiEndpoint(options: EndpointOptions) {
       : access === 'session'
         ? [HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN]
         : [HttpStatus.UNAUTHORIZED];
+  const idempotencyErrors = options.idempotent
+    ? [HttpStatus.BAD_REQUEST, HttpStatus.UNPROCESSABLE_ENTITY]
+    : [];
   const errors = [
-    ...new Set([...(options.errors ?? []), ...accessErrors, ...COMMON_ERRORS]),
+    ...new Set([
+      ...(options.errors ?? []),
+      ...idempotencyErrors,
+      ...accessErrors,
+      ...COMMON_ERRORS,
+    ]),
   ];
   const security =
     access === 'public'
@@ -66,7 +86,8 @@ export function ApiEndpoint(options: EndpointOptions) {
 
   return applyDecorators(
     RouteAccess(access),
-    ...(options.authRateLimit ? [AuthRateLimited()] : []),
+    ...(options.rateLimit ? [RateLimited(options.rateLimit)] : []),
+    ...(options.idempotent ? [ApiHeader(IDEMPOTENCY_HEADER_DOC)] : []),
     ...security,
     HttpCode(status),
     ResponseMessage(options.message),

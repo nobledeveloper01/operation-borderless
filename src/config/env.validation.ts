@@ -90,6 +90,11 @@ export class EnvironmentVariables {
   @Min(1)
   AUTH_RATE_LIMIT_PER_MINUTE = 10;
 
+  @Transform(toInt)
+  @IsInt()
+  @Min(1)
+  MONEY_RATE_LIMIT_PER_MINUTE = 30;
+
   @IsString()
   JWT_KEYS_DIR = './keys/jwt';
 

@@ -5,16 +5,20 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from 'nestjs-pino';
 import { AllExceptionsFilter } from './common/errors/all-exceptions.filter.js';
 import { loggerOptions } from './common/http/logger.options.js';
+import { outsideGroup } from './common/http/rate-limit-groups.js';
 import { SuccessInterceptor } from './common/responses/success.interceptor.js';
 import { AppConfigModule } from './config/config.module.js';
 import { CryptoModule } from './crypto/crypto.module.js';
 import { EnvironmentVariables } from './config/env.validation.js';
 import { databaseOptions } from './database/database.options.js';
-import { AUTH_RATE_LIMITED } from './auth/access.decorators.js';
 import { AuthGuard } from './auth/auth.guard.js';
 import { AuthModule } from './auth/auth.module.js';
+import { DepositsModule } from './deposits/deposits.module.js';
 import { FxModule } from './fx/fx.module.js';
 import { HealthModule } from './health/health.module.js';
+import { IdempotencyModule } from './idempotency/idempotency.module.js';
+import { LedgerModule } from './ledger/ledger.module.js';
+import { SwapsModule } from './swaps/swaps.module.js';
 import { WalletsModule } from './wallets/wallets.module.js';
 
 @Module({
@@ -34,9 +38,14 @@ import { WalletsModule } from './wallets/wallets.module.js';
           name: 'auth',
           ttl: 60_000,
           limit: config.AUTH_RATE_LIMIT_PER_MINUTE,
-          skipIf: (context) =>
-            Reflect.getMetadata(AUTH_RATE_LIMITED, context.getHandler()) !==
-            true,
+          skipIf: outsideGroup('auth'),
+        },
+        // Money writes get their own limit, so one caller can't flood deposits, swaps or transfers.
+        {
+          name: 'money',
+          ttl: 60_000,
+          limit: config.MONEY_RATE_LIMIT_PER_MINUTE,
+          skipIf: outsideGroup('money'),
         },
       ],
     }),
@@ -46,6 +55,10 @@ import { WalletsModule } from './wallets/wallets.module.js';
     }),
     AuthModule,
     FxModule,
+    LedgerModule,
+    IdempotencyModule,
+    DepositsModule,
+    SwapsModule,
     HealthModule,
     WalletsModule,
   ],
