@@ -40,9 +40,12 @@ document store would have meant rebuilding these guarantees by hand. More detail
 [ADR-002](docs/decisions/ADR-002-postgresql.md) and the
 [database design](docs/database-design.md).
 
-There is no Redis or queue. Rates are cached in memory and refreshed by a timer, and every
-money write is one short database transaction, so nothing needed one yet
-([ADR-005](docs/decisions/ADR-005-no-redis.md)).
+There is no Redis or queue; the brief allows them only "where it earns its place". Rates are
+cached in memory and refreshed by a timer, every money write is one short database
+transaction, and events leave through an outbox table. With 1,000 clients at once, one API
+process served 500 to 2,400 requests a second with no errors and the books balanced. Redis
+would earn its place once there are several API instances, for a shared rate limit and one
+FX refresh job ([ADR-005](docs/decisions/ADR-005-no-redis.md), [load test](docs/load-test.md)).
 
 ## Setup and run
 

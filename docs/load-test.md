@@ -37,6 +37,38 @@ docker compose up -d api
 "Errors" means anything other than `200` or `201`. A second run before I moved the code into
 `src/modules` gave numbers within 10% of these.
 
+## 1,000 clients at once
+
+The same script with 1,000 parallel clients (`node scripts/load-test.mjs 15 1000`):
+
+| Scenario                                  | Requests | Per second | p50 ms | p95 ms | p99 ms | Errors |
+| ----------------------------------------- | -------: | ---------: | -----: | -----: | -----: | -----: |
+| `GET` balances (with USD values)          |   25,131 |      1,675 |    546 |  1,005 |  1,901 |      0 |
+| `GET` history, 20 items                   |   24,850 |      1,657 |    631 |    796 |    837 |      0 |
+| `GET /fx/rates`                           |   36,114 |      2,408 |    394 |    760 |    846 |      0 |
+| `POST` deposits                           |   16,813 |      1,121 |    936 |  1,142 |  1,178 |      0 |
+| `POST` transfers between random wallets   |   13,662 |        911 |  1,141 |  1,486 |  1,671 |      0 |
+| `POST` transfers, all from one hot wallet |    7,654 |        510 |  2,117 |  2,447 |  2,501 |      0 |
+
+Throughput stays about where it was at 32 clients; what grows is the wait. One API process
+with a pool of 10 database connections serves requests as fast as it can, and the rest queue.
+Nothing failed, the money was unchanged and the ledger check was clean afterwards.
+
+The first run at 1,000 clients found two bugs in the proxy setup, both fixed:
+
+1. **502s from closed connections.** Node closes an idle keep-alive connection after 5 s, and
+   Caddy sometimes sent a request on one just as Node closed it ("connection reset by peer").
+   The API now keeps idle connections for 65 s and Caddy drops them after 30 s, so the proxy
+   always closes first.
+2. **502s from running out of ports.** Caddy kept only 32 idle connections to the API, so at
+   1,000 clients it opened and closed thousands and ran out of local ports ("cannot assign
+   requested address"); 6,895 requests failed in one run. It now keeps up to 2,048 idle
+   connections.
+
+During that run the outbox fell behind: about 58,700 events waited to be delivered at the
+end, and they were all delivered within about 20 seconds afterwards. Events are late under
+that much load, never lost.
+
 ## Money checks after the run
 
 - The USDx held by the 40 wallets was the same before and after the transfer scenarios
