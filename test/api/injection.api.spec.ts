@@ -56,12 +56,36 @@ describe('injection', () => {
         .set('Idempotency-Key', attack)
         .send({ currency: 'cNGN', amount: '1' })
         .expect(400);
-      await request(server())
-        .post(`/api/v1/wallets/${a.walletId}/keys`)
-        .set(auth)
-        .send({ name: attack })
-        .expect((res) => expect([201, 400]).toContain(res.status));
     }
+
+    // These pass validation, so they reach SQL and must come back exactly as sent.
+    const keyName = 'a -- DROP TABLE balances.';
+    await request(server())
+      .post(`/api/v1/wallets/${a.walletId}/keys`)
+      .set(auth)
+      .send({ name: keyName })
+      .expect(201);
+    const keys = await request(server())
+      .get(`/api/v1/wallets/${a.walletId}/keys`)
+      .set(auth)
+      .expect(200);
+    expect((keys.body.data as { name: string }[]).map((k) => k.name)).toContain(
+      keyName,
+    );
+    const quotedEmail = `o'r1-${Date.now()}@example.com`;
+    const quoted = await request(server())
+      .post('/api/v1/wallets')
+      .send({ email: quotedEmail, password: 'correct horse battery staple' })
+      .expect(201);
+    const read = await request(server())
+      .get(`/api/v1/wallets/${quoted.body.data.walletId}`)
+      .set('Authorization', `Bearer ${quoted.body.data.session.accessToken}`)
+      .expect(200);
+    expect(read.body.data.email).toBe(quotedEmail);
+    await request(server())
+      .post('/api/v1/auth/login')
+      .send({ email: quotedEmail, password: 'correct horse battery staple' })
+      .expect(200);
 
     // A password made of SQL is just a password.
     const sqlPassword = `${ATTACKS[1]} padded to length`;
@@ -78,6 +102,10 @@ describe('injection', () => {
       `SELECT count(*)::int AS n FROM information_schema.tables WHERE table_name IN ('accounts', 'balances')`,
     );
     expect(tables.rows[0]?.n).toBe(2);
+    const accounts = await db.query<{ n: number }>(
+      'SELECT count(*)::int AS n FROM accounts',
+    );
+    expect(accounts.rows[0]?.n).toBeGreaterThanOrEqual(3);
     const balance = await request(server())
       .get(`/api/v1/wallets/${a.walletId}/balances`)
       .set(auth)

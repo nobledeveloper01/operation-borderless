@@ -102,7 +102,8 @@ yarn typecheck
 ./scripts/smoke-tls.sh
 ```
 
-CI runs the first three, `yarn test`, the build and a Docker image build on every push.
+CI runs the first three, `yarn test`, the build and a Docker image build on every push to
+`main` and every pull request.
 `smoke-tls.sh` checks a running compose stack: HTTPS, HSTS, the HTTP redirect, and that
 only TLS 1.2 and 1.3 are accepted.
 
@@ -156,7 +157,12 @@ holder in:
     "unavailableReason": null
   },
   "createdAt": "2026-10-29T13:56:57.501Z",
-  "session": { "tokenType": "Bearer", "accessToken": "…", "refreshToken": "…" }
+  "session": {
+    "tokenType": "Bearer",
+    "accessToken": "…",
+    "refreshToken": "…",
+    "...": "expiry times"
+  }
 }
 ```
 
@@ -195,10 +201,13 @@ curl -k https://localhost:8443/api/v1/wallets/$WALLET/deposits \
     "status": "COMPLETED",
     "fromWalletId": null,
     "toWalletId": "53a61348-34a2-44f2-9be9-3a87e7a81e88",
+    "fromCurrency": null,
+    "fromAmount": null,
     "toCurrency": "USDx",
     "toAmount": "100.000000",
     "rate": "1.0000000000",
     "rateSource": "none",
+    "rateAsOf": null,
     "createdAt": "2026-10-29T13:56:57.567Z"
   },
   "balances": [{ "currency": "USDx", "amount": "100.000000" }]
@@ -454,7 +463,8 @@ Full detail is in [money handling](docs/money-handling.md). In short:
   currencies present, positive finite numbers, and an update time that isn't in the future.
 - A rate that moves more than 20% from the current one, or the first rates when none are
   stored yet, is accepted only when the other source agrees within 2%. One broken feed can't
-  reprice every wallet.
+  reprice every wallet. If the other source is down at the very first start, a single answer
+  that passes the checks is used.
 - Fetches have a 3-second timeout, limited retries with jitter, a 1 MB body cap and no
   redirects. A `429` from the primary means waiting 30 minutes before asking again.
 - Every transaction stores the rate, its source and the provider's time, so any conversion
@@ -482,8 +492,9 @@ Full detail is in [money handling](docs/money-handling.md). In short:
   the target currency. A real system would book it to a platform account.
 - **History uses offset paging.** A client walking every page while a slow write commits could
   see one item twice or miss one.
-- **Idempotency matches the body byte for byte.** A retry that rewrites the body (for example
-  `"20.0"` instead of `"20"`) gets `422 IDEMPOTENCY_KEY_REUSED`, not a replay.
+- **Idempotency compares the body value for value.** Key order and spacing don't matter, but a
+  retry that rewrites a value (for example `"20.0"` instead of `"20"`) gets
+  `422 IDEMPOTENCY_KEY_REUSED`, not a replay.
 - **No message-level encryption.** TLS protects every body in transit; signed or encrypted
   bodies (JWS or JWE) add nothing for this API today. The reasons and when I'd add them are
   in [ADR-009](docs/decisions/ADR-009-encryption.md).

@@ -11,7 +11,7 @@ const env = validateEnv({
 });
 
 describe('logger options', () => {
-  it('redacts credentials and personal data and drops query strings', () => {
+  it('keeps only id, method and path from a request and redacts body secrets', () => {
     const lines: string[] = [];
     const sink = new Writable({
       write(chunk: Buffer, _encoding, done) {
@@ -59,5 +59,32 @@ describe('logger options', () => {
       expect([secret, line.includes(secret)]).toEqual([secret, false]);
     }
     expect(line).toContain('/api/v1/auth/login');
+  });
+
+  it('redacts credential headers even without the request serializer', () => {
+    const lines: string[] = [];
+    const sink = new Writable({
+      write(chunk: Buffer, _encoding, done) {
+        lines.push(chunk.toString());
+        done();
+      },
+    });
+    const http = loggerOptions(env).pinoHttp as {
+      redact: { paths: string[]; censor: string };
+    };
+    pino({ redact: http.redact }, sink).info({
+      req: {
+        headers: {
+          authorization: 'Bearer secret-token',
+          'x-wallet-key': 'bwk_k_x',
+          cookie: 'sid=abc',
+        },
+      },
+    });
+    const line = lines.join('');
+    for (const secret of ['secret-token', 'bwk_k_x', 'sid=abc']) {
+      expect([secret, line.includes(secret)]).toEqual([secret, false]);
+    }
+    expect(line).toContain('[redacted]');
   });
 });
