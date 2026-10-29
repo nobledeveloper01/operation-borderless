@@ -26,6 +26,21 @@ describe('validateEnv', () => {
     );
   });
 
+  it('only lets the API fetch rates from https addresses', () => {
+    for (const url of [
+      'http://open.er-api.com/v6/latest/USD',
+      'file:///etc/passwd',
+      'ftp://x.example',
+    ]) {
+      expect(() => validateEnv({ ...base, FX_PRIMARY_URL: url })).toThrow(
+        /FX_PRIMARY_URL/,
+      );
+      expect(() => validateEnv({ ...base, FX_SECONDARY_URL: url })).toThrow(
+        /FX_SECONDARY_URL/,
+      );
+    }
+  });
+
   it('TC-061 refuses the local-only keys in production', () => {
     expect(() =>
       validateEnv({

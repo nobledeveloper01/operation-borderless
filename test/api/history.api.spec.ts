@@ -145,7 +145,7 @@ describe('transaction history', () => {
     expect(exponent.body.message).toBe('limit must be a whole number.');
   });
 
-  it('TC-029 TC-033 shows a transaction to its sender and receiver only', async () => {
+  it('TC-029 TC-033 TC-057 shows a transaction to its sender and receiver only', async () => {
     const a = await createWallet(app);
     const b = await createWallet(app);
     const stranger = await createWallet(app);

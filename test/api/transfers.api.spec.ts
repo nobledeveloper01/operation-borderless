@@ -84,7 +84,7 @@ describe('transfers', () => {
     expect((await balancesOf(db, b.walletId)).cGHS).toBe('233798320');
   });
 
-  it('TC-026 refuses an overdraft, a self-transfer, an unknown receiver and sending from someone else', async () => {
+  it('TC-026 TC-057 refuses an overdraft, a self-transfer, an unknown receiver and sending from someone else', async () => {
     const a = await createWallet(app);
     const b = await createWallet(app);
     await deposit(app, a, 'cNGN', '10').expect(201);
