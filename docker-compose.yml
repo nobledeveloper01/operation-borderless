@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: ${DB_USER:-borderless}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-borderless-local}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
       interval: 5s
       timeout: 3s
       retries: 20
@@ -29,7 +29,7 @@ services:
       DB_SSL: ${DB_SSL:-disable}
       CORS_ORIGINS: ${CORS_ORIGINS:-}
       RATE_LIMIT_PER_MINUTE: ${RATE_LIMIT_PER_MINUTE:-120}
-      TRUST_PROXY: "true"
+      TRUST_PROXY: 'true'
     depends_on:
       db:
         condition: service_healthy
@@ -40,8 +40,8 @@ services:
     environment:
       HTTPS_PORT: ${HTTPS_PORT:-8443}
     ports:
-      - "${HTTPS_PORT:-8443}:443"
-      - "${HTTP_PORT:-8080}:80"
+      - '${HTTPS_PORT:-8443}:443'
+      - '${HTTP_PORT:-8080}:80'
     volumes:
       - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
