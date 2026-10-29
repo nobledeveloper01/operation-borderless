@@ -12,11 +12,10 @@ version; the README will summarise it.
 - The API accepts amounts as strings matching `^\d{1,15}(\.\d{1,6})?$` and returns them with
   exactly 6 decimals. More than 6 decimals is refused, not rounded.
 - Cap per operation (_proposed_): 1,000,000,000 units of the currency. The largest balance a
-  `bigint` holds at this scale is about 9.2 trillion units, far above any test.
+  `bigint` holds at this scale is about 9.2 trillion units. A credit that would take a balance
+  past that is refused with `422 BALANCE_LIMIT`, checked under the row lock.
 
-## FX maths A credit that would take a
-
-balance past that limit is refused with `422 BALANCE_LIMIT`, checked under the row lock.
+## FX maths
 
 - Provider rates are stored as strings with up to 12 decimals, per 1 USD.
 - Cross rate `A → B = rate(B per USD) / rate(A per USD)`, computed exactly with `bigint`
