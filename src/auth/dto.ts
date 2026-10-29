@@ -52,6 +52,23 @@ export class IdentifierDto {
   phoneNumber?: string;
 }
 
+@ValidatorConstraint({ name: 'notIdentifier' })
+class NotIdentifier implements ValidatorConstraintInterface {
+  validate(value: unknown, args: ValidationArguments): boolean {
+    const dto = args.object as { email?: string; phoneNumber?: string };
+    const password =
+      typeof value === 'string' ? value.trim().toLowerCase() : '';
+    const phoneDigits = dto.phoneNumber?.replace(/\D/g, '');
+    return (
+      password !== dto.email && password.replace(/\D/g, '') !== phoneDigits
+    );
+  }
+
+  defaultMessage(): string {
+    return 'password must not be your email or phone number.';
+  }
+}
+
 export class CreateWalletDto extends IdentifierDto {
   @ApiProperty({
     example: 'correct horse battery staple',
@@ -61,6 +78,7 @@ export class CreateWalletDto extends IdentifierDto {
   @IsString()
   @Length(12, 128, { message: 'password must be 12 to 128 characters long.' })
   @Validate(HasIdentifier)
+  @Validate(NotIdentifier)
   password: string;
 }
 
@@ -122,4 +140,15 @@ export class MeDto {
 
   @ApiPropertyOptional({ nullable: true, type: String })
   phoneNumber: string | null;
+}
+
+export class LogoutAllDto {
+  @ApiProperty({ example: 2, description: 'Sessions that were still open.' })
+  sessionsEnded: number;
+
+  @ApiProperty({
+    example: 1,
+    description: 'Wallet keys that were still active.',
+  })
+  keysRevoked: number;
 }

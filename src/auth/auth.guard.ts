@@ -76,7 +76,7 @@ export class AuthGuard implements CanActivate {
     >(
       `SELECT s.revoked_at, w.id AS wallet_id
          FROM sessions s JOIN wallets w ON w.account_id = s.account_id
-        WHERE s.id = $1 AND s.account_id = $2`,
+        WHERE s.id = $1 AND s.account_id = $2 AND s.expires_at > now()`,
       [claims.sessionId, claims.accountId],
     );
     const row = rows[0];

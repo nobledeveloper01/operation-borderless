@@ -114,6 +114,12 @@ export class EnvironmentVariables {
   @Transform(toInt)
   @IsInt()
   @Min(1)
+  @Max(365)
+  SESSION_MAX_DAYS = 90;
+
+  @Transform(toInt)
+  @IsInt()
+  @Min(1)
   LOGIN_MAX_FAILURES = 5;
 
   @Transform(toInt)

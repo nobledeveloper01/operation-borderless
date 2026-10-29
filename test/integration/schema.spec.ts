@@ -34,7 +34,9 @@ describe('schema', () => {
     await ds.initialize();
     try {
       await ds.runMigrations({ transaction: 'each' });
-      await ds.undoLastMigration({ transaction: 'each' });
+      for (let i = 0; i < ds.migrations.length; i++) {
+        await ds.undoLastMigration({ transaction: 'each' });
+      }
       const after = await ds.query<{ n: string }[]>(
         `SELECT count(*) AS n FROM pg_tables WHERE schemaname = 'public' AND tablename <> 'migrations'`,
       );

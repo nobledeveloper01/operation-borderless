@@ -6,6 +6,7 @@ import { AuthService } from './auth.service.js';
 import {
   LoginDto,
   LoginResultDto,
+  LogoutAllDto,
   MeDto,
   RefreshDto,
   SessionTokensDto,
@@ -63,13 +64,13 @@ export class AuthController {
 
   @Post('logout-all')
   @ApiEndpoint({
-    summary: 'End every session on this account',
+    summary: 'End every session and revoke every wallet key on this account',
     message: 'Logged out everywhere',
+    type: LogoutAllDto,
     access: 'session',
   })
-  async logoutAll(@Caller() caller: Principal): Promise<null> {
-    await this.sessions.revokeAll(caller.accountId);
-    return null;
+  logoutAll(@Caller() caller: Principal): Promise<LogoutAllDto> {
+    return this.sessions.revokeAll(caller.accountId);
   }
 
   @Get('me')
@@ -77,6 +78,7 @@ export class AuthController {
     summary: 'Who am I signed in as?',
     message: 'Signed in',
     type: MeDto,
+    access: 'session',
   })
   async me(@Caller() caller: Principal): Promise<MeDto> {
     const profile = await this.accounts.profile(caller.accountId);

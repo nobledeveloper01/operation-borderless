@@ -85,6 +85,9 @@ export class Session {
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
+  @Column('timestamptz')
+  expiresAt: Date;
+
   @Column({ type: 'timestamptz', nullable: true })
   revokedAt: Date | null;
 

@@ -4,6 +4,7 @@ import { EnvironmentVariables } from '../config/env.validation.js';
 import { AppError } from '../common/errors/app-error.js';
 import { AccessTokens } from './access-tokens.js';
 import type { SessionTokensDto } from './dto.js';
+import { returned } from '../database/returned.js';
 import { randomToken, sha256 } from './secrets.js';
 
 type RevokeReason = 'LOGOUT' | 'LOGOUT_ALL' | 'REFRESH_REUSE';
@@ -15,6 +16,7 @@ interface RefreshRow {
   expires_at: Date;
   used_at: Date | null;
   revoked_at: Date | null;
+  session_expires_at: Date;
 }
 
 const REFRESH_REFUSED = 'This refresh token is not valid. Log in again.';
@@ -32,27 +34,35 @@ export class SessionsService {
     manager: EntityManager,
     accountId: string,
   ): Promise<SessionTokensDto> {
-    const rows = await manager.query<{ id: string }[]>(
-      'INSERT INTO sessions (account_id) VALUES ($1) RETURNING id',
-      [accountId],
+    const rows = await manager.query<{ id: string; expires_at: Date }[]>(
+      'INSERT INTO sessions (account_id, expires_at) VALUES ($1, now() + make_interval(days => $2)) RETURNING id, expires_at',
+      [accountId, this.config.SESSION_MAX_DAYS],
     );
-    const sessionId = rows[0]!.id;
-    return this.issuePair(manager, accountId, sessionId);
+    const session = rows[0]!;
+    return this.issuePair(manager, accountId, session.id, session.expires_at);
   }
 
   // Swaps a refresh token for a new pair; a token used twice means it leaked, so the whole session ends.
   async rotate(refreshToken: string): Promise<SessionTokensDto> {
     const outcome = await this.db.transaction(async (manager) => {
       const rows = await manager.query<RefreshRow[]>(
-        `SELECT rt.id, rt.session_id, s.account_id, rt.expires_at, rt.used_at, s.revoked_at
+        `SELECT rt.id, rt.session_id, s.account_id, rt.expires_at, rt.used_at, s.revoked_at,
+                s.expires_at AS session_expires_at
            FROM refresh_tokens rt JOIN sessions s ON s.id = rt.session_id
           WHERE rt.token_hash = $1
           FOR UPDATE OF rt, s`,
         [sha256(refreshToken)],
       );
       const row = rows[0];
-      if (!row || row.revoked_at || row.expires_at <= new Date())
+      const now = new Date();
+      if (
+        !row ||
+        row.revoked_at ||
+        row.expires_at <= now ||
+        row.session_expires_at <= now
+      ) {
         return { refused: true as const };
+      }
       if (row.used_at) {
         await this.revokeWith(
           manager,
@@ -68,7 +78,12 @@ export class SessionsService {
       );
       return {
         refused: false as const,
-        pair: await this.issuePair(manager, row.account_id, row.session_id),
+        pair: await this.issuePair(
+          manager,
+          row.account_id,
+          row.session_id,
+          row.session_expires_at,
+        ),
       };
     });
     if (outcome.refused) throw new AppError('UNAUTHENTICATED', REFRESH_REFUSED);
@@ -79,13 +94,27 @@ export class SessionsService {
     await this.revokeWith(this.db.manager, 'id = $1', [sessionId], 'LOGOUT');
   }
 
-  async revokeAll(accountId: string): Promise<void> {
-    await this.revokeWith(
-      this.db.manager,
-      'account_id = $1',
-      [accountId],
-      'LOGOUT_ALL',
-    );
+  // Logging out everywhere also kills wallet keys, so a hijacked session can't leave a key behind.
+  async revokeAll(
+    accountId: string,
+  ): Promise<{ sessionsEnded: number; keysRevoked: number }> {
+    return this.db.transaction(async (manager) => {
+      const sessionsEnded = await this.revokeWith(
+        manager,
+        'account_id = $1',
+        [accountId],
+        'LOGOUT_ALL',
+      );
+      const keys = returned<{ id: string }>(
+        await manager.query(
+          `UPDATE wallet_keys SET revoked_at = now()
+            WHERE revoked_at IS NULL AND wallet_id IN (SELECT id FROM wallets WHERE account_id = $1)
+            RETURNING id`,
+          [accountId],
+        ),
+      );
+      return { sessionsEnded, keysRevoked: keys.length };
+    });
   }
 
   private async revokeWith(
@@ -93,21 +122,28 @@ export class SessionsService {
     where: string,
     params: unknown[],
     reason: RevokeReason,
-  ) {
-    await manager.query(
-      `UPDATE sessions SET revoked_at = now(), revoked_reason = $${params.length + 1} WHERE ${where} AND revoked_at IS NULL`,
-      [...params, reason],
+  ): Promise<number> {
+    const rows = returned<{ id: string }>(
+      await manager.query(
+        `UPDATE sessions SET revoked_at = now(), revoked_reason = $${params.length + 1}
+          WHERE ${where} AND revoked_at IS NULL RETURNING id`,
+        [...params, reason],
+      ),
     );
+    return rows.length;
   }
 
+  // A refresh token never outlives its session, so the 90-day cap holds however often the client refreshes.
   private async issuePair(
     manager: EntityManager,
     accountId: string,
     sessionId: string,
+    sessionExpiresAt: Date,
   ): Promise<SessionTokensDto> {
     const refreshToken = randomToken(32);
+    const rolling = Date.now() + this.config.REFRESH_TOKEN_DAYS * 86_400_000;
     const refreshExpiresAt = new Date(
-      Date.now() + this.config.REFRESH_TOKEN_DAYS * 86_400_000,
+      Math.min(rolling, sessionExpiresAt.getTime()),
     );
     await manager.query(
       'INSERT INTO refresh_tokens (session_id, token_hash, expires_at) VALUES ($1, $2, $3)',

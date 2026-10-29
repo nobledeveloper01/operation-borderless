@@ -57,13 +57,14 @@ associated data, so a ciphertext copied to another row or column fails to decryp
 
 ### `sessions`
 
-| Column           | Type             | Rules                                   |
-| ---------------- | ---------------- | --------------------------------------- |
-| `id`             | uuid PK          | the `sid` claim                         |
-| `account_id`     | uuid FK          | indexed                                 |
-| `created_at`     | timestamptz      |                                         |
-| `revoked_at`     | timestamptz null | set by logout or refresh reuse          |
-| `revoked_reason` | text null        | `LOGOUT`, `LOGOUT_ALL`, `REFRESH_REUSE` |
+| Column           | Type             | Rules                                              |
+| ---------------- | ---------------- | -------------------------------------------------- |
+| `id`             | uuid PK          | the `sid` claim                                    |
+| `account_id`     | uuid FK          | indexed                                            |
+| `created_at`     | timestamptz      |                                                    |
+| `revoked_at`     | timestamptz null | set by logout or refresh reuse                     |
+| `revoked_reason` | text null        | `LOGOUT`, `LOGOUT_ALL`, `REFRESH_REUSE`            |
+| `expires_at`     | timestamptz      | Login time + 90 days; after it the session is dead |
 
 ### `refresh_tokens`
 

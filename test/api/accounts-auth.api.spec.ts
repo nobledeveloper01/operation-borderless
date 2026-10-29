@@ -81,6 +81,21 @@ describe('accounts and auth', () => {
       }
     });
 
+    it('refuses a password that is the email or phone number', async () => {
+      const email = uniqueEmail();
+      const res = await http()
+        .post('/api/v1/wallets')
+        .send({ email, password: email.toUpperCase() })
+        .expect(400);
+      expect(res.body.message).toBe(
+        'password must not be your email or phone number.',
+      );
+      await http()
+        .post('/api/v1/wallets')
+        .send({ phoneNumber: '+2348031234567', password: '+234 803 123 4567' })
+        .expect(400);
+    });
+
     it('TC-041 refuses fields the client may not set', async () => {
       const res = await http()
         .post('/api/v1/wallets')
@@ -250,6 +265,74 @@ describe('accounts and auth', () => {
     });
   });
 
+  describe('session limits', () => {
+    const sessionOf = async (walletId: string) =>
+      (
+        await db.query<{ id: string; expires_at: Date }>(
+          `SELECT s.id, s.expires_at FROM sessions s JOIN wallets w ON w.account_id = s.account_id
+            WHERE w.id = $1 ORDER BY s.created_at DESC LIMIT 1`,
+          [walletId],
+        )
+      ).rows[0]!;
+
+    it('ends a session at its absolute lifetime, however often it was refreshed', async () => {
+      const wallet = await createWallet(app);
+      const session = await sessionOf(wallet.walletId);
+      const days = (session.expires_at.getTime() - Date.now()) / 86_400_000;
+      expect(days).toBeGreaterThan(89.9);
+      expect(days).toBeLessThanOrEqual(90);
+
+      await db.query(
+        `UPDATE sessions SET created_at = now() - interval '91 days', expires_at = now() - interval '1 second' WHERE id = $1`,
+        [session.id],
+      );
+      await http()
+        .post('/api/v1/auth/refresh')
+        .send({ refreshToken: wallet.refreshToken })
+        .expect(401);
+      const me = await http()
+        .get('/api/v1/auth/me')
+        .set(bearer(wallet.accessToken))
+        .expect(401);
+      expect(me.body.code).toBe('SESSION_REVOKED');
+    });
+
+    it('never hands out a refresh token that outlives its session', async () => {
+      const wallet = await createWallet(app);
+      const session = await sessionOf(wallet.walletId);
+      await db.query(
+        `UPDATE sessions SET expires_at = now() + interval '1 day' WHERE id = $1`,
+        [session.id],
+      );
+      const next = await http()
+        .post('/api/v1/auth/refresh')
+        .send({ refreshToken: wallet.refreshToken })
+        .expect(200);
+      const capped = (await sessionOf(wallet.walletId)).expires_at.getTime();
+      expect(
+        Date.parse(next.body.data.refreshTokenExpiresAt),
+      ).toBeLessThanOrEqual(capped);
+    });
+
+    it('revokes every wallet key on logout-all', async () => {
+      const wallet = await createWallet(app);
+      const created = await http()
+        .post(`/api/v1/wallets/${wallet.walletId}/keys`)
+        .set(bearer(wallet.accessToken))
+        .send({ name: 'survivor' })
+        .expect(201);
+      const out = await http()
+        .post('/api/v1/auth/logout-all')
+        .set(bearer(wallet.accessToken))
+        .expect(200);
+      expect(out.body.data).toEqual({ sessionsEnded: 1, keysRevoked: 1 });
+      await http()
+        .get(`/api/v1/wallets/${wallet.walletId}`)
+        .set('X-Wallet-Key', created.body.data.key)
+        .expect(401);
+    });
+  });
+
   describe('wallet keys', () => {
     it('TC-053 shows a key once, hides it in lists, caps keys at five and keeps key management session-only', async () => {
       const wallet = await createWallet(app);
@@ -287,6 +370,11 @@ describe('accounts and auth', () => {
         .set('X-Wallet-Key', created.body.data.key)
         .expect(403);
       expect(withKey.body.code).toBe('SESSION_REQUIRED');
+      // The holder's email and phone are only for a signed-in session, not for scripts holding a key.
+      await http()
+        .get('/api/v1/auth/me')
+        .set('X-Wallet-Key', created.body.data.key)
+        .expect(403);
     });
 
     it('TC-054 lets a key act only on its own wallet until it is revoked', async () => {

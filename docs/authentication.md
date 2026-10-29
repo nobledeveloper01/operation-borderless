@@ -7,10 +7,10 @@ identifier still gives one wallet.
 
 Two ways to call the API:
 
-| Method          | Header                                 | For                                      | Lifetime                       |
-| --------------- | -------------------------------------- | ---------------------------------------- | ------------------------------ |
-| Account session | `Authorization: Bearer <access token>` | Apps acting for a signed-in holder       | Access 15 min, refresh 30 days |
-| Wallet key      | `X-Wallet-Key: <key>`                  | Scripts and servers acting on one wallet | Until revoked                  |
+| Method          | Header                                 | For                                      | Lifetime                                                |
+| --------------- | -------------------------------------- | ---------------------------------------- | ------------------------------------------------------- |
+| Account session | `Authorization: Bearer <access token>` | Apps acting for a signed-in holder       | Access 15 min, refresh 30 days, session at most 90 days |
+| Wallet key      | `X-Wallet-Key: <key>`                  | Scripts and servers acting on one wallet | Until revoked                                           |
 
 Both lead to the same check: the caller must own the wallet it acts on.
 
@@ -39,12 +39,15 @@ Both lead to the same check: the caller must own the wallet it acts on.
   key, switch `JWT_ACTIVE_KID`, and remove the old key after 15 minutes. In development the
   container makes a key on first start; in production the app refuses to start without one.
 - **Refresh token:** 32 random bytes (base64url), opaque, shown once. Only its SHA-256 hash is
-  stored, with its session, expiry (30 days) and `used_at`.
+  stored, with its session, expiry (30 days, never past the session's end) and `used_at`.
+- **Session lifetime:** every session ends 90 days after login (`SESSION_MAX_DAYS`), however
+  often it is refreshed. After that the holder logs in again.
 - **Rotation:** `POST /auth/refresh` marks the token used and returns a new pair in the same
   session. Presenting a token that was already used means it leaked: the whole session is
   revoked and the call gets `401`.
 - **Logout:** `POST /auth/logout` revokes the current session. `POST /auth/logout-all`
-  revokes every session of the account.
+  revokes every session of the account and every wallet key, so a hijacked session can't
+  leave a key behind. It answers with how many of each it ended.
 - **Immediate revocation:** the auth guard checks on every request that the token's `sid`
   is not revoked (one indexed read). So logout takes effect at once, not after 15 minutes.
 
@@ -63,7 +66,8 @@ Both lead to the same check: the caller must own the wallet it acts on.
 
 - `/auth/login` and `POST /wallets`: 10 requests per minute per IP.
 - After 5 wrong passwords an account is locked for 15 minutes. Successful login resets the
-  count.
+  count. Each attempt is claimed in one atomic database update before the password is
+  checked, so parallel guesses can't slip past the lock.
 - Login failures (unknown identifier, wrong password, locked account) all answer `401` with
   the same message, and an unknown identifier still runs one argon2 hash so timing doesn't
   give it away.
