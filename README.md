@@ -104,6 +104,12 @@ yarn typecheck
 
 CI runs the first three, `yarn test`, the build and a Docker image build on every push to
 `main` and every pull request.
+Property-based tests (fast-check) generate thousands of amounts, rates and random sequences of
+movements and check the money rules on each. `yarn test:mutation` (Stryker) breaks the money
+and retry code on purpose, one small change at a time, and checks a test notices; it runs in
+CI and fails below 90%, and the score is 96%. Both found real bugs, now fixed
+([ADR-018](docs/decisions/ADR-018-property-and-mutation-testing.md)).
+
 `smoke-tls.sh` checks a running compose stack: HTTPS, HSTS, the HTTP redirect, and that
 only TLS 1.2 and 1.3 are accepted. `scripts/load-test.mjs` runs reads, deposits and transfers
 in parallel and then checks that no money moved by mistake; the results and how to run it are
@@ -490,8 +496,9 @@ Full detail is in [money handling](docs/money-handling.md). In short:
   as `BigInt` in TypeScript; they never pass through a JavaScript `number`.
 - The API takes amounts as decimal strings (`"10.5"`) and refuses JSON numbers and more than
   6 decimals, instead of rounding them.
-- A cross rate is computed exactly with integers, then rounded half-even to 10 decimals. That
-  10-decimal rate is stored on the transaction and is what the client sees.
+- A cross rate is computed exactly with integers, then rounded down to 10 decimals, so going
+  there and back can never gain. That 10-decimal rate is stored on the transaction and is what
+  the client sees.
 - Swaps and cross-currency transfers pay a 0.5% fee, taken from the amount sent and rounded up
   to the next millionth. Same-currency transfers and deposits are free. Fees and any whole
   millionths left over by rounding go to a platform account

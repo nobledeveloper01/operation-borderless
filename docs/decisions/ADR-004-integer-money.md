@@ -4,7 +4,7 @@
 
 **Decision.** Amounts are `bigint` with 6 decimals in the database and `BigInt` in code. The
 API takes and returns decimal strings. FX maths is exact `bigint` arithmetic
-(rates scaled by 10^10, half-even rounding for rates); converted amounts round down to 6
+(rates scaled by 10^10, rounded down since ADR-018); converted amounts round down to 6
 decimals.
 
 **Alternatives.** `numeric` columns with a decimal library (also exact, but easier to leak

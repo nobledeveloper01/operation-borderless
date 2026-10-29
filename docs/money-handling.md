@@ -18,9 +18,12 @@ version; the README will summarise it.
 ## FX maths
 
 - Provider rates are stored as strings with up to 12 decimals, per 1 USD.
+- Each per-USD rate must be between 0.001 and 10,000,000, so every cross rate is between
+  10^-10 and 10^10 and none rounds to zero.
 - Cross rate `A → B = rate(B per USD) / rate(A per USD)`, computed exactly with `bigint`
-  (no float and no decimal library), then rounded **half-even to 10 decimals**. That 10-decimal rate is the rate
-  stored on the transaction and shown to the client.
+  (no float and no decimal library), then rounded **down to 10 decimals**, so converting there
+  and back can never gain ([ADR-018](decisions/ADR-018-property-and-mutation-testing.md)). That
+  10-decimal rate is the rate stored on the transaction and shown to the client.
 - Fee = `fromAmount × FEE_BPS / 10,000`, rounded **up** to 6 decimals, in the source currency.
   The default is 50 basis points (0.5%) on swaps and cross-currency transfers; same-currency
   transfers and deposits are free ([ADR-014](decisions/ADR-014-fees-and-platform-account.md)).
