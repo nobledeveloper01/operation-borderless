@@ -56,7 +56,7 @@ Brief → requirement → component/API → test → evidence → status. Status
 | Public repo in 48 h                                                                                                                                                 | DEL-001          | `nobledeveloper01/operation-borderless`           | Repo URL, visibility             | PASS    |
 | Clear commit history, conventional commits                                                                                                                          | DEL-002          | Conventional commit messages                      | `git log`                        | PASS    |
 | `yarn test` passes                                                                                                                                                  | DEL-004, NFR-052 | Full suite                                        | Test run output                  | PASS    |
-| OpenAPI or Postman committed                                                                                                                                        | DEL-005          | `docs/openapi.json`, `/docs`                      | TC-039                           | PLANNED |
+| OpenAPI or Postman committed                                                                                                                                        | DEL-005          | `docs/openapi.json`, `/docs`                      | TC-039                           | PASS    |
 | README: name, stack, DB why, run, tests, endpoints with examples, data model, precision, idempotency, concurrency, FX failures, assumptions, limitations, more time | DEL-006          | README sections, one per item                     | README review                    | PLANNED |
 | Say what was left out and why                                                                                                                                       | DEL-007          | README "Left out"                                 | README review                    | PLANNED |
 
@@ -72,4 +72,4 @@ Brief → requirement → component/API → test → evidence → status. Status
 | NFR-020/021 FX timeouts, retries, no request-time calls | `fx`               | TC-015, TC-018         | PASS    |
 | NFR-040 logs with request ID                            | `common`           | TC-044                 | PASS    |
 | NFR-042 health                                          | `health`           | TC-046                 | PLANNED |
-| NFR-054 OpenAPI drift                                   | `test/api`         | TC-039                 | PLANNED |
+| NFR-054 OpenAPI drift                                   | `test/api`         | TC-039                 | PASS    |

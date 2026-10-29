@@ -98,14 +98,14 @@ At the design stage every applicable item is NEEDS VERIFICATION.
 
 ## J. Testing and QA
 
-| Item                                   | Applies   | Status             | Evidence needed           |
-| -------------------------------------- | --------- | ------------------ | ------------------------- |
-| `yarn test` runs full suite and passes | M         | NEEDS VERIFICATION | Clean-checkout run output |
-| Unit, integration, API tests           | M         | NEEDS VERIFICATION | Test report               |
-| Concurrency and idempotency tests      | M         | NEEDS VERIFICATION | TC-020, TC-023, TC-027    |
-| FX failure tests                       | M         | NEEDS VERIFICATION | TC-015–018                |
-| Contract test (OpenAPI)                | R         | NEEDS VERIFICATION | TC-039                    |
-| Lint, format, type check               | M (tools) | NEEDS VERIFICATION | Command output            |
+| Item                                   | Applies   | Status             | Evidence needed                      |
+| -------------------------------------- | --------- | ------------------ | ------------------------------------ |
+| `yarn test` runs full suite and passes | M         | NEEDS VERIFICATION | Clean-checkout run output            |
+| Unit, integration, API tests           | M         | NEEDS VERIFICATION | Test report                          |
+| Concurrency and idempotency tests      | M         | NEEDS VERIFICATION | TC-020, TC-023, TC-027               |
+| FX failure tests                       | M         | NEEDS VERIFICATION | TC-015–018                           |
+| Contract test (OpenAPI)                | R         | PASS               | TC-039, test/api/openapi.api.spec.ts |
+| Lint, format, type check               | M (tools) | NEEDS VERIFICATION | Command output                       |
 
 ## K. Infrastructure
 
@@ -124,7 +124,7 @@ At the design stage every applicable item is NEEDS VERIFICATION.
 | Item                                 | Applies | Status             | Evidence needed               |
 | ------------------------------------ | ------- | ------------------ | ----------------------------- |
 | README: every item on brief p.3      | M       | NEEDS VERIFICATION | README review against DEL-006 |
-| OpenAPI committed and matches code   | M       | NEEDS VERIFICATION | TC-039                        |
+| OpenAPI committed and matches code   | M       | PASS               | `docs/openapi.json`, TC-039   |
 | Known limitations and left-out items | M       | NEEDS VERIFICATION | README section                |
 | Public repo, clear history           | M       | NEEDS VERIFICATION | `gh repo view`, `git log`     |
 | Submission email drafted             | M       | NEEDS VERIFICATION | Draft shown to the candidate  |

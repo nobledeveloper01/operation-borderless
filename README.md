@@ -55,6 +55,10 @@ yarn typecheck
 ./scripts/smoke-tls.sh
 ```
 
+The OpenAPI document is committed at [`docs/openapi.json`](docs/openapi.json). It is generated
+from the code, and a test fails if the two differ. After changing a route, run `yarn openapi`
+to rewrite it.
+
 `smoke-tls.sh` checks the running compose stack: HTTPS, HSTS, the HTTP redirect, and that
 only TLS 1.2 and 1.3 are accepted.
 
