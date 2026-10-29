@@ -1,0 +1,81 @@
+import type { NestExpressApplication } from '@nestjs/platform-express';
+import request from 'supertest';
+import { createTestApp } from '../support/test-app.js';
+
+describe('platform', () => {
+  let app: NestExpressApplication;
+
+  beforeAll(async () => {
+    app = await createTestApp();
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('TC-046 answers liveness and readiness', async () => {
+    await request(app.getHttpServer())
+      .get('/health')
+      .expect(200, { status: 'ok' });
+    await request(app.getHttpServer())
+      .get('/health/ready')
+      .expect(200, { status: 'ok' });
+  });
+
+  it('returns a request ID, keeping a safe incoming one', async () => {
+    const own = await request(app.getHttpServer())
+      .get('/health')
+      .set('X-Request-Id', 'client-req-0001');
+    expect(own.headers['x-request-id']).toBe('client-req-0001');
+    const unsafe = await request(app.getHttpServer())
+      .get('/health')
+      .set('X-Request-Id', '<script>');
+    expect(unsafe.headers['x-request-id']).toMatch(/^[0-9a-f-]{36}$/);
+  });
+
+  it('answers unknown routes with the shared error body', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/api/v1/nope')
+      .expect(404);
+    expect(res.body).toMatchObject({
+      statusCode: 404,
+      code: 'ROUTE_NOT_FOUND',
+      path: '/api/v1/nope',
+    });
+    expect(res.body.requestId).toBe(res.headers['x-request-id']);
+  });
+
+  it('TC-042 refuses bodies over 16 KB and broken JSON', async () => {
+    const big = await request(app.getHttpServer())
+      .post('/api/v1/nope')
+      .set('Content-Type', 'application/json')
+      .send(JSON.stringify({ pad: 'x'.repeat(20_000) }));
+    expect(big.status).toBe(413);
+    expect(big.body.code).toBe('PAYLOAD_TOO_LARGE');
+    const broken = await request(app.getHttpServer())
+      .post('/api/v1/nope')
+      .set('Content-Type', 'application/json')
+      .send('{bad');
+    expect(broken.status).toBe(400);
+    expect(broken.body.code).toBe('VALIDATION_FAILED');
+  });
+
+  it('TC-045 sends security headers and no CORS headers by default', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/health')
+      .set('Origin', 'https://evil.example');
+    expect(res.headers['x-content-type-options']).toBe('nosniff');
+    expect(res.headers['x-powered-by']).toBeUndefined();
+    expect(res.headers['access-control-allow-origin']).toBeUndefined();
+  });
+
+  // Guards only run on matched routes; this moves to the wallet tests once those routes exist.
+  it.todo('TC-043 limits request rate');
+
+  it('serves the OpenAPI document', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/docs-json')
+      .expect(200);
+    expect(res.body.info.title).toBe('Borderless API');
+  });
+});
