@@ -1,0 +1,58 @@
+name: borderless
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-borderless}
+      POSTGRES_USER: ${DB_USER:-borderless}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-borderless-local}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks: [internal]
+
+  api:
+    build: .
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-borderless}
+      DB_USER: ${DB_USER:-borderless}
+      DB_PASSWORD: ${DB_PASSWORD:-borderless-local}
+      DB_SSL: ${DB_SSL:-disable}
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+      RATE_LIMIT_PER_MINUTE: ${RATE_LIMIT_PER_MINUTE:-120}
+      TRUST_PROXY: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [internal]
+
+  proxy:
+    image: caddy:2.10-alpine
+    environment:
+      HTTPS_PORT: ${HTTPS_PORT:-8443}
+    ports:
+      - "${HTTPS_PORT:-8443}:443"
+      - "${HTTP_PORT:-8080}:80"
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [internal]
+
+volumes:
+  db-data:
+  caddy-data:
+
+networks:
+  internal:

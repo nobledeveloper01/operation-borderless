@@ -1,0 +1,21 @@
+{
+	auto_https disable_redirects
+	admin off
+}
+
+http:// {
+	redir https://{host}:{$HTTPS_PORT}{uri} permanent
+}
+
+https:// {
+	tls internal {
+		on_demand
+		protocols tls1.2 tls1.3
+	}
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+	reverse_proxy api:3000
+}
