@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import type { Redis } from 'ioredis';
 import { CLOCK, type Clock } from '../../common/clock.js';
@@ -8,6 +9,9 @@ import { FxService } from '../fx/fx.service.js';
 const LOCK_MS = 120_000;
 
 // Checked every minute by one worker; it refreshes only when the schedule in Redis says it's due.
+// Deletes the lock only if this run still owns it, so a slow run can't free another run's lock.
+const RELEASE = `if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) end return 0`;
+
 @Injectable()
 export class FxRefreshJob {
   private readonly nextAtKey: string;
@@ -29,7 +33,8 @@ export class FxRefreshJob {
     const dueAt = Number((await this.redis.get(this.nextAtKey)) ?? 0);
     if (dueAt > this.now().getTime()) return 'not-due';
     // The lock stops two workers that both saw "due" from calling the providers twice.
-    if (!(await this.redis.set(this.lockKey, '1', 'PX', LOCK_MS, 'NX')))
+    const owner = randomUUID();
+    if (!(await this.redis.set(this.lockKey, owner, 'PX', LOCK_MS, 'NX')))
       return 'busy';
     try {
       const outcome = await this.fx.refresh();
@@ -40,7 +45,7 @@ export class FxRefreshJob {
         await this.redis.publish(this.channel, String(nextAt));
       return 'refreshed';
     } finally {
-      await this.redis.del(this.lockKey);
+      await this.redis.eval(RELEASE, 1, this.lockKey, owner);
     }
   }
 }

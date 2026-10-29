@@ -28,10 +28,11 @@ The outbox table stays the record of truth: a job lost from Redis is queued agai
 minutes, and the event ID as job ID means it is never queued twice.
 
 **When Redis is down** (you chose this): reads and health checks keep working without a limit;
-deposits, swaps, transfers, quotes, sign-up, login and refresh answer `503 SERVICE_BUSY` until
-it is back, so nobody can flood money routes while the limit can't be counted. Jobs and notices
+deposits, swaps, transfers, quotes, sign-up, login, refresh and creating a wallet key answer
+`503 SERVICE_BUSY` until it is back, so nobody can flood money routes while the limit can't be counted. Jobs and notices
 wait and then catch up. The API starts without Redis, and commands fail within half a second
-instead of queueing behind it.
+instead of queueing behind it. Revoking a key and logging out stay open on purpose, so a leaked
+key can still be cut off during an outage.
 
 **Measured.** With 1,000 clients, two API instances and two workers served reads about twice as
 fast as one process (balances 3,499 a second against 1,675). Money writes were about a third
@@ -43,8 +44,24 @@ database, not with API instances ([load test](../load-test.md)).
 **Proved by tests.** Two app instances share one rate limit; a Redis outage pauses money and
 sign-in routes but not reads; two workers keep one scheduler per job and run a job once; racing
 FX refreshes call the provider once; an API instance reloads rates when a worker publishes; two
-instances relaying and delivering at once deliver every event exactly once.
+instances relaying and delivering at once deliver every event exactly once; an API-role
+instance starts with Redis down; an event the queue gives up on early is parked at once, and one
+whose failure was never recorded is parked when the relay finds its failed job.
+
+**Found in review and fixed.** The rates subscription was awaited on a client that queues
+commands while Redis is away, so an API-role instance never finished starting; it now runs in
+the background. BullMQ fails a job outright after repeated stalls, and a failed job with the
+same ID made the relay's requeue a silent no-op, so an event could stay undelivered for good;
+the worker now treats that failure as final, and the relay parks an event whose job failed and
+requeues one whose job is done or gone. The FX lock carries a random owner token and is deleted
+only by its owner. Queue counts for metrics are skipped while the shared client is down, and
+queues and workers finish connecting (at most 2 seconds) before closing, because BullMQ drops
+its error listeners on close and an unfinished setup then failed unhandled.
 
 **Consequences.** One more service to run and secure (`REDIS_PASSWORD`, never published outside
 the compose network). Metrics stay per process; queue lengths and the last ledger check are read
-from Redis, so the API's `/ops/metrics` shows them whichever worker did the work.
+from Redis, so the API's `/ops/metrics` shows them whichever worker did the work. One database
+belongs to one environment: two environments sharing a database with different `QUEUE_PREFIX`
+values would claim each other's events (the tests, which do share one, take back their own).
+BullMQ brings in `cron-parser` 4, which npm marks deprecated; it is not a vulnerability, and the
+schedulers use fixed intervals, not cron.

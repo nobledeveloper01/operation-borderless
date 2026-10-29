@@ -106,4 +106,41 @@ describe('rate limits in Redis', () => {
       }
     });
   });
+  it('starts an API-role instance while Redis is down', async () => {
+    const api = await createTestApp({
+      REDIS_URL: 'redis://127.0.0.1:1',
+      APP_ROLE: 'api',
+    });
+    try {
+      await request(api.getHttpServer()).get('/health/ready').expect(200);
+    } finally {
+      await api.close();
+    }
+  });
+
+  it('pauses wallet-key creation but still lets a key be revoked while Redis is down', async () => {
+    const up = await createTestApp();
+    const down = await createTestApp({ REDIS_URL: 'redis://127.0.0.1:1' });
+    try {
+      const w = await createWallet(up);
+      const created = await request(up.getHttpServer())
+        .post(`/api/v1/wallets/${w.walletId}/keys`)
+        .set(bearer(w.accessToken))
+        .send({ name: 'before-outage' })
+        .expect(201);
+      const keyId = created.body.data.keyId as string;
+      const mint = await request(down.getHttpServer())
+        .post(`/api/v1/wallets/${w.walletId}/keys`)
+        .set(bearer(w.accessToken))
+        .send({ name: 'during-outage' });
+      expect([mint.status, mint.body.code]).toEqual([503, 'SERVICE_BUSY']);
+      await request(down.getHttpServer())
+        .delete(`/api/v1/wallets/${w.walletId}/keys/${keyId}`)
+        .set(bearer(w.accessToken))
+        .expect(200);
+    } finally {
+      await down.close();
+      await up.close();
+    }
+  });
 });

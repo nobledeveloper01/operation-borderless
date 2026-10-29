@@ -65,12 +65,13 @@ export class FxService implements OnModuleInit, OnModuleDestroy {
   // Startup never waits on a provider: it loads the last snapshot, and the worker refreshes in the background.
   async onModuleInit(): Promise<void> {
     this.current = await this.snapshots.latest(this.config.FX_FIXED_TABLE);
-    if (this.config.APP_ROLE !== 'api') return;
+    if (this.config.APP_ROLE === 'worker') return;
     this.reloadTimer = setInterval(() => void this.reload(), RELOAD_EVERY_MS);
     this.reloadTimer.unref();
     this.updates = createRedis(this.config.REDIS_URL, FOR_QUEUES, 'fx-updates');
     this.updates.on('message', () => void this.reload());
-    await this.updates
+    // Not awaited: this client queues commands while Redis is away, so waiting here would hold up startup.
+    void this.updates
       .subscribe(`${this.config.QUEUE_PREFIX}:fx:updated`)
       .catch((error: Error) =>
         this.logger.warn(

@@ -11,6 +11,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { assertOwnsWallet } from '../auth/ownership.js';
 import { Caller, type Principal } from '../auth/principal.js';
 import { AppError } from '../../common/errors/app-error.js';
+import { RateLimited } from '../../common/http/rate-limit-groups.js';
 import { ApiEndpoint } from '../../common/responses/api-endpoint.decorator.js';
 import { IdParam } from '../../common/validation/id-param.js';
 import {
@@ -29,6 +30,7 @@ export class WalletKeysController {
   constructor(private readonly keys: WalletKeysService) {}
 
   @Post()
+  @RateLimited('auth')
   @ApiEndpoint({
     summary: 'Create a wallet key for scripts and servers',
     message: 'Wallet key created',

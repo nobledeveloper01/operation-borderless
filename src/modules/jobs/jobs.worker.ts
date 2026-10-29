@@ -4,7 +4,7 @@ import {
   type OnApplicationShutdown,
   type OnModuleInit,
 } from '@nestjs/common';
-import { type Job, Worker } from 'bullmq';
+import { type Job, UnrecoverableError, Worker } from 'bullmq';
 import { EnvironmentVariables } from '../../common/config/env.validation.js';
 import { fullJitterDelay, OUTBOX_RETRY } from '../../common/retry/retry.js';
 import { createRedis, FOR_QUEUES } from '../../common/redis/redis.js';
@@ -145,7 +145,9 @@ export class JobsWorker implements OnModuleInit, OnApplicationShutdown {
           job.data.eventId,
           job.attemptsMade,
           error,
-          job.attemptsMade >= (job.opts.attempts ?? 1),
+          job.attemptsMade >= (job.opts.attempts ?? 1) ||
+            error instanceof UnrecoverableError ||
+            error.name === 'UnrecoverableError',
         );
     });
     for (const worker of this.workers)
@@ -179,6 +181,10 @@ export class JobsWorker implements OnModuleInit, OnApplicationShutdown {
 
   async onApplicationShutdown(): Promise<void> {
     clearInterval(this.heartbeat);
+    // Same reason as in Queues: let each worker finish connecting before it closes.
+    await closeQuietly(
+      Promise.all(this.workers.map((w) => w.waitUntilReady())),
+    );
     await closeQuietly(Promise.all(this.workers.map((w) => w.close())));
   }
 }

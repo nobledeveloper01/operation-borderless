@@ -2,7 +2,10 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import type pg from 'pg';
 import request from 'supertest';
 import { FxService } from '../../src/modules/fx/fx.service.js';
+import { UnrecoverableError } from 'bullmq';
 import { NotificationsHandler } from '../../src/modules/outbox/notifications.handler.js';
+import { OutboxDelivery } from '../../src/modules/outbox/outbox-delivery.js';
+import { OutboxRelay } from '../../src/modules/outbox/outbox-relay.js';
 import { LedgerService } from '../../src/modules/ledger/ledger.service.js';
 import { connect } from '../support/db.js';
 import { deliverOutbox } from '../support/outbox.js';
@@ -144,9 +147,14 @@ describe('outbox events and notifications', () => {
   it('retries a failing delivery with backoff, then parks it for an operator', async () => {
     const w = await createWallet(app);
     const handler = app.get(NotificationsHandler);
+    const real = handler.handle.bind(handler);
     const fail = vi
       .spyOn(handler, 'handle')
-      .mockRejectedValue(new Error('handler down'));
+      .mockImplementation((m, event) =>
+        event.wallet_id === w.walletId
+          ? Promise.reject(new Error('handler down'))
+          : real(m, event),
+      );
     try {
       await deposit(app, w, 'EURx', '2').expect(201);
       // The queue retries on its own with jittered backoff (5 ms base in tests) and parks the event at the end.
@@ -245,5 +253,67 @@ describe('outbox events and notifications', () => {
     );
     expect(JSON.stringify(rows)).not.toContain(w.email);
     expect(app.get(LedgerService)).toBeDefined();
+  });
+  it('parks an event at once when the queue gives up on it early', async () => {
+    const w = await createWallet(app);
+    const handler = app.get(NotificationsHandler);
+    const real = handler.handle.bind(handler);
+    // BullMQ fails a job outright, without retries, on an UnrecoverableError, as it does after repeated stalls.
+    const fail = vi
+      .spyOn(handler, 'handle')
+      .mockImplementation((m, event) =>
+        event.wallet_id === w.walletId
+          ? Promise.reject(new UnrecoverableError('worker died twice'))
+          : real(m, event),
+      );
+    try {
+      await deposit(app, w, 'cXAF', '3').expect(201);
+      await deliverOutbox(app);
+      const [event] = (await events(w.walletId)).rows;
+      expect(event).toMatchObject({
+        processed: false,
+        failed: true,
+        attempts: 1,
+      });
+    } finally {
+      fail.mockRestore();
+    }
+  });
+
+  it('parks an event whose queue job failed but whose failure was never recorded', async () => {
+    const w = await createWallet(app);
+    const handler = app.get(NotificationsHandler);
+    const delivery = app.get(OutboxDelivery);
+    const real = handler.handle.bind(handler);
+    const fail = vi
+      .spyOn(handler, 'handle')
+      .mockImplementation((m, event) =>
+        event.wallet_id === w.walletId
+          ? Promise.reject(new UnrecoverableError('gone'))
+          : real(m, event),
+      );
+    // The database write after the last try fails, so the table never hears about it.
+    const record = vi.spyOn(delivery, 'recordFailure').mockResolvedValue();
+    try {
+      await deposit(app, w, 'cGHS', '3').expect(201);
+      await deliverOutbox(app);
+      expect((await events(w.walletId)).rows[0]).toMatchObject({
+        processed: false,
+        failed: false,
+      });
+      record.mockRestore();
+      await db.query(
+        `UPDATE outbox_events SET queued_at = now() - interval '10 minutes' WHERE wallet_id = $1`,
+        [w.walletId],
+      );
+      await app.get(OutboxRelay).relayDue();
+      expect((await events(w.walletId)).rows[0]).toMatchObject({
+        processed: false,
+        failed: true,
+      });
+    } finally {
+      fail.mockRestore();
+      record.mockRestore();
+    }
   });
 });

@@ -45,6 +45,10 @@ export class Queues implements OnApplicationShutdown {
   }
 
   async onApplicationShutdown(): Promise<void> {
+    // BullMQ drops its error listeners on close, so a setup still running would fail unhandled.
+    await closeQuietly(
+      Promise.all([this.jobs.waitUntilReady(), this.outbox.waitUntilReady()]),
+    );
     await closeQuietly(Promise.all([this.jobs.close(), this.outbox.close()]));
     this.connection.disconnect();
   }

@@ -133,7 +133,10 @@ describe('queues and scheduled jobs across instances', () => {
       a.get(OutboxRelay).relayDue(),
       b.get(OutboxRelay).relayDue(),
     ]);
-    await Promise.all([deliverOutbox(a), deliverOutbox(b)]);
+    await Promise.all([
+      deliverOutbox(a, w.walletId),
+      deliverOutbox(b, w.walletId),
+    ]);
     const { rows } = await db.query<{
       events: number;
       delivered: number;

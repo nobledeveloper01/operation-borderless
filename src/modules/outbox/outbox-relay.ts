@@ -1,8 +1,10 @@
 import { setTimeout as sleep } from 'node:timers/promises';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import type { Redis } from 'ioredis';
 import { DataSource } from 'typeorm';
 import { returned } from '../../common/database/returned.js';
 import { MetricsService } from '../../common/metrics/metrics.service.js';
+import { REDIS } from '../../common/redis/redis.js';
 import { OUTBOX_RETRY } from '../../common/retry/retry.js';
 import { Queues } from '../jobs/queues.js';
 
@@ -14,6 +16,7 @@ export class OutboxRelay {
   constructor(
     private readonly db: DataSource,
     private readonly queues: Queues,
+    @Inject(REDIS) private readonly redis: Redis,
     metrics: MetricsService,
   ) {
     metrics.watchAsync(
@@ -31,6 +34,8 @@ export class OutboxRelay {
       'Delivery jobs waiting or delayed in the queue.',
       // A scrape never waits more than half a second on Redis.
       async () => {
+        // While the shared fast-fail client is down, the queue's own client would only pile commands up.
+        if (this.redis.status !== 'ready') return undefined;
         const c = await Promise.race([
           this.queues.outbox.getJobCounts('waiting', 'delayed', 'prioritized'),
           sleep(500, undefined, { ref: false }),
@@ -58,13 +63,14 @@ export class OutboxRelay {
         ),
       );
       if (events.length === 0) return total;
+      const fresh = await this.settleStale(events.map((e) => e.id));
       // The event ID is the job ID, so the same event is never in the queue twice.
       await this.queues.outbox.addBulk(
-        events.map((e) => ({
+        fresh.map((id) => ({
           name: 'deliver',
-          data: { eventId: e.id },
+          data: { eventId: id },
           opts: {
-            jobId: e.id,
+            jobId: id,
             attempts: OUTBOX_RETRY.retries + 1,
             backoff: { type: 'custom' },
           },
@@ -73,6 +79,31 @@ export class OutboxRelay {
       total += events.length;
       if (events.length < BATCH) return total;
     }
+  }
+
+  // A requeued event whose job already failed is parked; one whose job is done or gone is queued again.
+  private async settleStale(ids: string[]): Promise<string[]> {
+    const fresh: string[] = [];
+    for (const id of ids) {
+      const job = await this.queues.outbox.getJob(id);
+      if (!job) {
+        fresh.push(id);
+        continue;
+      }
+      const state = await job.getState();
+      if (state === 'failed') {
+        await this.db.query(
+          `UPDATE outbox_events
+              SET failed_at = now(), attempts = GREATEST(attempts, $2), last_error = COALESCE(last_error, $3)
+            WHERE id = $1 AND processed_at IS NULL AND failed_at IS NULL`,
+          [id, job.attemptsMade, job.failedReason ?? 'Delivery job failed'],
+        );
+      } else if (state === 'completed' || state === 'unknown') {
+        await job.remove().catch(() => undefined);
+        fresh.push(id);
+      }
+    }
+    return fresh;
   }
 
   private async count(where: string): Promise<number> {
