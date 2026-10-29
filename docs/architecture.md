@@ -6,7 +6,7 @@ A NestJS modular monolith with one PostgreSQL database. One app keeps a whole mo
 movement inside one database transaction; separate services would put network calls between
 the steps. No cache or queue: PostgreSQL row locks and unique constraints give the guarantees
 the design needs, the FX snapshot lives in the database, and the two background jobs (rate refresh,
-key cleanup) run in-process with `@nestjs/schedule`. The brief allows Redis or a queue only
+key cleanup) run in-process on plain timers. The brief allows Redis or a queue only
 where it earns its place; here it would add a second source of truth for rates and nothing
 to process ([ADR-001](decisions/ADR-001-modular-monolith.md),
 [ADR-005](decisions/ADR-005-no-redis.md)).

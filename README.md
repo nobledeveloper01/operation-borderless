@@ -451,8 +451,11 @@ Full detail is in [money handling](docs/money-handling.md). In short:
 - The fixed lock order means two opposite transfers (A to B and B to A) can't deadlock. A test
   fires them in parallel, and another fires ten transfers at one balance that can only afford
   some of them.
-- A 3-second lock timeout answers `503 SERVICE_BUSY` instead of hanging. So does a deadlock or
-  serialization failure, which the lock order should prevent, so a retry is always safe.
+- A deadlock or serialization failure, which the lock order should prevent, is retried by the
+  server up to twice with full-jitter exponential backoff (20 ms base, 200 ms cap). The whole
+  transaction reruns, idempotency claim included, so money still moves once. If it keeps
+  failing, or a lock isn't free within 3 seconds, the answer is `503 SERVICE_BUSY` and a retry
+  is safe ([ADR-012](docs/decisions/ADR-012-retry-policies.md)).
 - `CHECK (amount >= 0)` in the database is the last guard if the code is ever wrong.
 
 ### FX rate failures
