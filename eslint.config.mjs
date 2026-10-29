@@ -34,7 +34,7 @@ export default tseslint.config(
   },
   {
     // Helper scripts are plain JavaScript outside the TypeScript project.
-    files: ['scripts/**/*.mjs'],
+    files: ['scripts/**/*.mjs', 'stryker.config.mjs'],
     ...tseslint.configs.disableTypeChecked,
   },
   {
