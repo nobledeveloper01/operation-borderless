@@ -47,10 +47,10 @@ Brief → requirement → component/API → test → evidence → status. Status
 | Brief | Req | How it is met | Evidence | Status |
 | --- | --- | --- | --- | --- |
 | Node LTS + TS strict | NFR-001 | Node 24, `tsconfig` strict | `yarn typecheck` | PLANNED |
-| Express or NestJS | NFR-002 | NestJS 11 | `package.json` | PLANNED |
+| Express or NestJS | NFR-002 | NestJS 12 | `package.json` | PLANNED |
 | Database + justification | NFR-003 | PostgreSQL 17, database-design.md, README section | README | PLANNED |
 | Cache/queue only if earned | NFR-004 | None used, architecture.md | README | PLANNED |
-| Jest/Vitest + Supertest | NFR-005 | Jest + Supertest | `test/api` | PLANNED |
+| Jest/Vitest + Supertest | NFR-005 | Vitest + Supertest | `test/api` | PLANNED |
 | Yarn, ESLint, Prettier | NFR-006 | Yarn 4, config files | `yarn lint`, `yarn format:check` | PLANNED |
 | Docker compose one command | NFR-007, DEL-003 | `docker compose up` runs db, migrations, api | Clean-checkout run | PLANNED |
 | Public repo in 48 h | DEL-001 | `nobledeveloper01/operation-borderless` | Repo URL, visibility | PLANNED |

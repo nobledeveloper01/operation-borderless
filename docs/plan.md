@@ -10,7 +10,7 @@
 | History with paging and filters; transaction by ID; rates with refresh times | Rate limiting, `helmet`, size limits |
 | | Accounts, sessions and wallet keys (not required by the brief) |
 | | HTTPS proxy, database TLS, field encryption, ES256 (ADR-009) |
-| Node LTS, TS strict, NestJS, SQL DB, Jest + Supertest, Yarn, ESLint, Prettier | GitHub Actions CI |
+| Node LTS, TS strict, NestJS, SQL DB, Vitest + Supertest, Yarn, ESLint, Prettier | GitHub Actions CI |
 | Docker compose one command; migrations automatic | OpenAPI drift test |
 | `yarn test` passes; OpenAPI committed; README items; public repo | Quote and lookup endpoints (Could) |
 
@@ -71,7 +71,7 @@ Dependencies: Docker, internet for live rates (optional), GitHub.
 
 | ID | Decision | Recommendation |
 | --- | --- | --- |
-| D-01 | Framework and test runner | NestJS 11 + Jest (CommonJS) — mature, Jest is native, least setup risk |
+| D-01 | Framework and test runner | NestJS 12 (current major, ES modules) + Vitest, the NestJS 12 default; ESLint instead of the default Oxlint because the brief names ESLint |
 | D-02 | Database and data access | PostgreSQL 17 + TypeORM with hand-checked migrations (see database-design.md) |
 | D-03 | FX freshness | Daily-reference standard: rates usable up to 26 h after publication, then swaps and transfers refused (503); secondary live source as fallback |
 | D-04 | Idempotency key required on deposits, swaps and transfers | Yes, required (`400` if missing) |

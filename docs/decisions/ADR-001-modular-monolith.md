@@ -3,7 +3,8 @@
 **Context.** The brief asks for one REST API with five capabilities, built in 48 hours, run
 with one `docker compose up`.
 
-**Decision.** One NestJS app with a module per capability (wallets, fx, ledger, deposits,
+**Decision.** One NestJS 12 app (ES modules, TypeScript strict; Vitest for tests and ESLint
+for linting, as the brief names ESLint) with a module per capability (wallets, fx, ledger, deposits,
 swaps, transfers, transactions, idempotency, health).
 
 **Alternatives.** Express (less structure, more wiring by hand); microservices (network

@@ -13,13 +13,13 @@ instructions are added with the code.
 | Area | Choice |
 | --- | --- |
 | Language | Node.js 24 LTS, TypeScript in strict mode |
-| Framework | NestJS 11 |
+| Framework | NestJS 12, ES modules |
 | Database | PostgreSQL 17 (why: [database design](docs/database-design.md#why-postgresql)) |
 | Data access | TypeORM with hand-checked migrations |
 | FX rates | ExchangeRate-API (primary) and Currency API (secondary), daily; stale rates refused |
 | Auth | Account sessions (argon2id passwords, ES256 JWT with rotating refresh tokens) and per-wallet API keys |
 | Encryption | HTTPS via a Caddy proxy with HSTS; AES-256-GCM for email and phone at rest; optional database TLS |
-| Tests | Jest and Supertest, against a real PostgreSQL started by Testcontainers |
+| Tests | Vitest and Supertest, against a real PostgreSQL started by Testcontainers |
 | Tooling | Yarn 4, ESLint, Prettier |
 | Runtime | Docker and docker compose |
 

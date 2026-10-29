@@ -2,7 +2,8 @@
 
 ## Tools
 
-- **Jest** with `ts-jest`, **Supertest** for HTTP (brief p.2).
+- **Vitest** (the NestJS 12 default; the brief allows Jest or Vitest), **Supertest** for HTTP
+  (brief p.2).
 - **Testcontainers** (`@testcontainers/postgresql`) starts a throwaway PostgreSQL 17 for
   integration and API tests, runs the migrations, and removes it after. So `yarn test` needs
   only Docker running, and never touches a real database.

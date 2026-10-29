@@ -3,7 +3,7 @@
 **Context.** We need migrations, row locks inside transactions, and a few raw SQL statements
 (`ON CONFLICT`, ordered `FOR UPDATE`).
 
-**Decision.** TypeORM 0.3 via `@nestjs/typeorm`, `synchronize` off, migrations written and
+**Decision.** TypeORM 1.1 via `@nestjs/typeorm`, `synchronize` off, migrations written and
 reviewed by hand. Raw SQL with `$n` parameters where it is clearer.
 
 **Alternatives.** Prisma (good migrations, but row locks need raw SQL and interactive

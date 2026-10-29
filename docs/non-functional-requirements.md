@@ -12,7 +12,7 @@ own targets; the brief sets none.
 | NFR-002 | Express or NestJS (we use NestJS) | Mandatory |
 | NFR-003 | SQL or NoSQL database, choice justified in the README | Mandatory |
 | NFR-004 | Redis, BullMQ or RabbitMQ only where they earn their place (we use none) | Mandatory |
-| NFR-005 | Jest or Vitest plus Supertest (we use Jest) | Mandatory |
+| NFR-005 | Jest or Vitest plus Supertest (we use Vitest) | Mandatory |
 | NFR-006 | Yarn, ESLint, Prettier | Mandatory |
 | NFR-007 | Docker and docker compose start the API and its dependencies with one command | Mandatory |
 | NFR-008 | No frontend | Mandatory |
