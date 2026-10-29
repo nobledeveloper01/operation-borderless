@@ -92,8 +92,12 @@ Each test name starts with its test case ID, for example
 | TC-055 | FR-026 | No credentials on every wallet route → 401 |
 | TC-056 | FR-026 | Caller B on A's balances, history, deposits, swaps → 404 |
 | TC-057 | FR-026 | Transfer from a wallet the caller doesn't own → 404; receiver can read the transfer, a third wallet can't |
-| TC-058 | FR-027 | Expired, wrong secret, `alg: none`, wrong `iss`/`aud`, garbage → 401 |
+| TC-058 | FR-027 | Expired, wrong key, unknown `kid`, `alg: none`, HS256, wrong `iss`/`aud`, garbage → 401; old `kid` still verifies during rotation |
 | TC-059 | BR-13 | Database holds no plain passwords, refresh tokens or key secrets |
+| TC-060 | NFR-060 | Through the compose proxy: HTTP redirects to HTTPS, HSTS present, TLS 1.1 refused (smoke script, not in `yarn test`) |
+| TC-061 | NFR-061 | Production config with `DB_SSL=disable` or no signing key refuses to start |
+| TC-062 | NFR-062 | Database holds no plain email or phone; login by email still works; duplicate email still 409 |
+| TC-063 | NFR-062 | Ciphertext copied to another account fails to decrypt; tampered tag fails; old key version still decrypts after rotation |
 
 ## Rules
 

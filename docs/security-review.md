@@ -17,7 +17,10 @@ yet; the Test column says what proves each control, and the
 | --- | --- | --- | --- |
 | Anyone moves money from any wallet | Yes | Session or wallet key required; ownership check on every wallet route; others get `404` | TC-055–057 |
 | Stolen password / brute force | Yes | argon2id; 10/min per IP on login; lock after 5 failures; same `401` for every failure | TC-048, TC-049 |
-| Forged or tampered token | Yes | HS256 pinned, `alg: none` refused, `iss`/`aud`/`exp` checked, secret ≥ 32 bytes checked at startup | TC-058 |
+| Forged or tampered token | Yes | ES256 only, `alg: none` and HS256 refused, unknown `kid` refused, `iss`/`aud`/`exp` checked | TC-058 |
+| Traffic read or changed in transit | Yes | HTTPS through Caddy (TLS 1.2+, 1.3 preferred), HTTP → HTTPS redirect, HSTS; API port not published; database TLS `verify-full` in production | TC-060, TC-061 |
+| Database dump or backup leaked | Yes | Email and phone encrypted with AES-256-GCM (versioned keys, associated data); lookups by HMAC index; secrets hashed | TC-062, TC-063 |
+| Signing or encryption key leaked | Yes | Keys outside the repo (git-ignored files and env), rotation by `kid` and key version, production start refused without keys | Config test |
 | Stolen refresh token | Yes | Rotation; reuse revokes the session; stored only as SHA-256 | TC-051 |
 | Stolen access token after logout | Yes | Session checked on every request | TC-052 |
 | Leaked wallet key | Yes | Shown once, stored as SHA-256, scoped to one wallet, revocable | TC-054 |
@@ -39,6 +42,14 @@ yet; the Test column says what proves each control, and the
 | Vulnerable dependencies | Yes | `yarn npm audit` before submission; few dependencies | Checklist |
 | CSRF, XSS, file upload, webhooks, cookies | No | Tokens go in headers (no cookies), no HTML output, no uploads, no webhooks | N/A |
 
+## Encryption
+
+What we encrypt, what we don't, and why: [ADR-009](decisions/ADR-009-encryption.md). In
+short: TLS for every body in transit, field encryption for personal data at rest, ES256 for
+tokens. Message-level body encryption (JWE) and signed responses (JWS) are not built now,
+because TLS already covers this API's threats and both would break Swagger and `curl` for
+reviewers. They are noted for partner integrations later.
+
 ## Accepted risks
 
 1. **No email/SMS verification or password reset.** Identifiers are trusted as given.
@@ -48,5 +59,5 @@ yet; the Test column says what proves each control, and the
 
 ## Production work (not built)
 
-Identifier verification, password reset, MFA, asymmetric JWT keys with rotation, least-privilege DB role, TLS at a proxy,
+Identifier verification, password reset, MFA, opt-in JWE for partner integrations, a secret manager for keys, encrypted disks or a managed database, least-privilege DB role, TLS at a proxy,
 secret manager, audit of who changed what, alerting on FX failures and lock timeouts.

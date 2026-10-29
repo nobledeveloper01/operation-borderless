@@ -19,7 +19,11 @@ At the design stage every applicable item is NEEDS VERIFICATION.
 | Mass-assignment protection | R | NEEDS VERIFICATION | TC-041 |
 | BOLA/IDOR (other wallets answer 404) | R | NEEDS VERIFICATION | TC-056, TC-057 |
 | AuthN on every wallet route | R | NEEDS VERIFICATION | TC-055 |
-| JWT config (pinned alg, iss, aud, exp, secret length) | R | NEEDS VERIFICATION | TC-058, config test |
+| JWT config (ES256 only, known `kid`, iss, aud, exp) | R | NEEDS VERIFICATION | TC-058, config test |
+| HTTPS, HTTP redirect, HSTS through the proxy | R | NEEDS VERIFICATION | TC-060 |
+| Database TLS enforced in production config | R | NEEDS VERIFICATION | TC-061 |
+| Personal data encrypted at rest | R | NEEDS VERIFICATION | TC-062, TC-063 |
+| Message-level body encryption (JWE) / response signing (JWS) | N/A | NOT APPLICABLE | Decided against for now; TLS covers it (ADR-009) |
 | Brute-force protection on login | R | NEEDS VERIFICATION | TC-048, TC-049 |
 | Rate limiting | R | NEEDS VERIFICATION | TC-043 |
 | Request size and query limits | R | NEEDS VERIFICATION | TC-042 |
@@ -112,7 +116,8 @@ At the design stage every applicable item is NEEDS VERIFICATION.
 | Container runs as non-root | R | NEEDS VERIFICATION | Dockerfile |
 | Health checks leak nothing | R | NEEDS VERIFICATION | TC-046 |
 | CI runs lint, types, tests | R | NEEDS VERIFICATION | Green Actions run |
-| HTTPS, domain, monitoring, alerts | N/A | NOT APPLICABLE | Brief p.3: no deployed URL required |
+| HTTPS locally through Caddy | R | NEEDS VERIFICATION | TC-060 |
+| Public domain, monitoring, alerts, disk encryption | N/A | NOT APPLICABLE | Brief p.3: no deployed URL required; documented for production |
 
 ## M. Documentation and release
 

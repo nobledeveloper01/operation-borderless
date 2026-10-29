@@ -37,6 +37,10 @@ Brief → requirement → component/API → test → evidence → status. Status
 | FR-026 ownership | auth guard + services | TC-055–057 | PLANNED |
 | FR-027 token checks | auth guard | TC-058 | PLANNED |
 | BR-13 secrets stored as hashes | `auth` | TC-059 | PLANNED |
+| NFR-060 HTTPS, HSTS | `proxy` (Caddy) | TC-060 | PLANNED |
+| NFR-061 database TLS | `database`, `config` | TC-061 | PLANNED |
+| NFR-062 field encryption | `crypto`, `auth` | TC-062, TC-063 | PLANNED |
+| NFR-063 ES256 with rotation | `auth` | TC-058 | PLANNED |
 
 ## Stack and deliverables (brief p.1–3)
 

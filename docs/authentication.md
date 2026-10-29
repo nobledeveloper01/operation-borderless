@@ -16,6 +16,8 @@ Both lead to the same check: the caller must own the wallet it acts on.
 
 ## Accounts
 
+- Email and phone are stored encrypted, with an HMAC lookup index for uniqueness and login
+  ([ADR-009](decisions/ADR-009-encryption.md)).
 - An account is the wallet holder. Its identifier is the email and/or mobile number, the
   same one the brief uses to create the wallet. One account has one wallet.
 - `POST /wallets` stays the create route. It now also takes a `password` and creates the
@@ -28,10 +30,14 @@ Both lead to the same check: the caller must own the wallet it acts on.
 ## Sessions (JWT)
 
 - `POST /auth/login` with identifier + password → access token + refresh token.
-- **Access token:** JWT, HS256, signed with `JWT_SECRET` (at least 32 random bytes, checked
-  at startup). Claims: `sub` (account ID), `sid` (session ID), `iss`, `aud`, `iat`, `exp`
-  (15 minutes). Verification pins the algorithm and checks signature, `exp`, `iss` and `aud`.
-  Claims are never trusted before verification.
+- **Access token:** JWT signed with **ES256** (ECDSA P-256). Claims: `sub` (account ID),
+  `sid` (session ID), `iss`, `aud`, `iat`, `exp` (15 minutes); header `kid` names the
+  signing key. Verification accepts only ES256, only a `kid` from the trusted key set, and
+  checks signature, `exp`, `iss` and `aud`. Claims are never trusted before verification.
+- **Signing keys:** private keys are PEM files in `JWT_KEYS_DIR` (`<kid>.pem`, git-ignored);
+  `JWT_ACTIVE_KID` signs new tokens and every key in the folder can verify. To rotate, add a
+  key, switch `JWT_ACTIVE_KID`, and remove the old key after 15 minutes. In development the
+  container makes a key on first start; in production the app refuses to start without one.
 - **Refresh token:** 32 random bytes (base64url), opaque, shown once. Only its SHA-256 hash is
   stored, with its session, expiry (30 days) and `used_at`.
 - **Rotation:** `POST /auth/refresh` marks the token used and returns a new pair in the same

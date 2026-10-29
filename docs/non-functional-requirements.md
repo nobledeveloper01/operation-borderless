@@ -46,11 +46,22 @@ own targets; the brief sets none.
 ## Security
 
 See [security-review.md](security-review.md) and [authentication.md](authentication.md).
-Summary: argon2id passwords, 15-minute JWTs with rotating refresh tokens, wallet keys stored
+Summary: HTTPS through a TLS proxy with HSTS, AES-256-GCM encryption of email and phone at
+rest, argon2id passwords, 15-minute ES256 JWTs with rotating refresh tokens, wallet keys stored
 as hashes, ownership checks on every wallet route, strict validation with unknown
 fields refused, parameterised SQL only, rate limiting, `helmet`, request size limit 16 KB,
 no stack traces or SQL text in responses, email and phone redacted from logs, no secrets in
 the repo.
+
+## Encryption
+
+| ID | Requirement | Type |
+| --- | --- | --- |
+| NFR-060 | HTTPS only through the proxy: TLS 1.2+, HTTP → HTTPS, HSTS; API port not published. | Recommended |
+| NFR-061 | Database TLS settable; `verify-full` required in production. | Recommended |
+| NFR-062 | Email and phone encrypted at rest (AES-256-GCM, versioned keys), unique by HMAC index. | Recommended |
+| NFR-063 | Access tokens signed with ES256 and a `kid`; keys rotate without logging users out. | Recommended |
+| NFR-064 | No message-level body encryption (JWE) or response signing (JWS) for now. | Decision ([ADR-009](decisions/ADR-009-encryption.md)) |
 
 ## Observability
 

@@ -15,7 +15,7 @@ to process ([ADR-001](decisions/ADR-001-modular-monolith.md),
 
 ```mermaid
 flowchart LR
-  client[API client] -->|HTTPS JSON| api[Borderless API<br/>NestJS]
+  client[API client] -->|HTTPS JSON| proxy[Caddy TLS proxy] --> api[Borderless API<br/>NestJS]
   api -->|SQL| db[(PostgreSQL 17)]
   api -->|HTTPS, after each daily update| fx[ExchangeRate-API<br/>primary]
   api -.->|HTTPS, if primary fails| fx2[Currency API<br/>secondary]
@@ -35,7 +35,8 @@ untrusted (every response validated before use); the database is trusted.
 | `common` | Error filter and error codes, request ID middleware, validation pipe, money helpers (`Money`, parse/format), pagination DTOs. |
 | `currencies` | The five supported stablecoins, their fiat pegs and decimals. Pure code, no table. |
 | `fx` | `FxProvider` interface, primary and secondary adapters, snapshot store, refresh scheduler, `FxService.rate(from, to)`, `GET /fx/rates`. |
-| `auth` | Accounts, argon2id passwords, login, JWT access tokens, refresh rotation, logout, wallet keys, the auth guard and the ownership check. |
+| `crypto` | AES-256-GCM field encryption with key versions, HMAC blind index, key loading and checks. |
+| `auth` | Accounts, argon2id passwords, login, ES256 JWT access tokens, refresh rotation, logout, wallet keys, the auth guard and the ownership check. |
 | `wallets` | Create and read wallets and balances, USD total. |
 | `ledger` | `LedgerService`: the only code that changes balances. Locks rows, checks funds, writes transaction + ledger lines. |
 | `deposits`, `swaps`, `transfers` | Thin controllers and services that validate, price, and call `LedgerService` inside an idempotent transaction. |
@@ -115,12 +116,22 @@ flowchart TD
 
 ## Deployment topology
 
-`docker compose up` starts two services:
+`docker compose up` starts three services:
 
 | Service | Image | Notes |
 | --- | --- | --- |
-| `db` | `postgres:17-alpine` | Health check `pg_isready`; data in a named volume. |
-| `api` | Built from `Dockerfile` (Node 24, multi-stage, non-root) | Waits for `db` healthy, runs migrations, then starts. Port 3000. |
+| `proxy` | `caddy:2-alpine` | The only published ports: 443 (HTTPS) and 80 (redirects to 443). TLS 1.2+, internal CA locally, HSTS header. Forwards to `api:3000`. |
+| `db` | `postgres:17-alpine` | Not published. Health check `pg_isready`; data in a named volume. |
+| `api` | Built from `Dockerfile` (Node 24, multi-stage, non-root) | Not published. Waits for `db` healthy, makes dev keys if missing (development only), runs migrations, then starts. Trusts `X-Forwarded-For` only from the proxy. |
+
+```mermaid
+flowchart LR
+  c[Client] -->|HTTPS 443| p[Caddy]
+  p -->|HTTP, private network| a[API]
+  a -->|SQL, TLS optional locally| d[(PostgreSQL)]
+```
+
+Tests don't go through Caddy: they start the Nest app in-process with Supertest.
 
 ## Repository layout (planned)
 
@@ -129,7 +140,7 @@ operation-borderless/
 ├── src/
 │   ├── main.ts, app.module.ts, app.setup.ts
 │   ├── config/  database/  common/  currencies/
-│   ├── auth/  fx/  wallets/  ledger/  idempotency/
+│   ├── crypto/  auth/  fx/  wallets/  ledger/  idempotency/
 │   ├── deposits/  swaps/  transfers/  transactions/  health/
 │   └── migrations/
 ├── test/
@@ -138,7 +149,7 @@ operation-borderless/
 │   ├── api/             Supertest through the full Nest app
 │   └── support/         Testcontainers setup, factories, fake FX provider
 ├── docs/                these documents, plus openapi.json
-├── Dockerfile, docker-compose.yml, .env.example
+├── Dockerfile, docker-compose.yml, Caddyfile, .env.example
 ├── .github/workflows/ci.yml
 └── package.json, yarn.lock, tsconfig.json, eslint and prettier config
 ```

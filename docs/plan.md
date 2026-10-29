@@ -9,6 +9,7 @@
 | Live FX with fallback; no negative balances; no double processing | Structured logs with request IDs |
 | History with paging and filters; transaction by ID; rates with refresh times | Rate limiting, `helmet`, size limits |
 | | Accounts, sessions and wallet keys (not required by the brief) |
+| | HTTPS proxy, database TLS, field encryption, ES256 (ADR-009) |
 | Node LTS, TS strict, NestJS, SQL DB, Jest + Supertest, Yarn, ESLint, Prettier | GitHub Actions CI |
 | Docker compose one command; migrations automatic | OpenAPI drift test |
 | `yarn test` passes; OpenAPI committed; README items; public repo | Quote and lookup endpoints (Could) |
@@ -18,21 +19,22 @@
 | Hours | Work | Done when | Risk if late |
 | --- | --- | --- | --- |
 | 0–3 | Read brief, requirements, design docs, this plan; create repo | Docs pushed; plan approved | Everything shifts |
-| 3–6 | Scaffold NestJS, Yarn 4, ESLint, Prettier, strict TS, Docker, compose, config validation, error filter, logging, Testcontainers harness, CI | `docker compose up` serves `/health`; empty test suite passes in Docker and CI | Tests and Docker found broken late |
-| 6–9 | Migrations (all tables, checks, triggers); money helpers with unit tests; currencies | Migrations up/down; TC-010 unit parts pass | Schema rework later |
-| 9–15 | Accounts and wallets: create with password, login, lockout, JWT guard, refresh rotation, logout, ownership check | TC-001–006, TC-047–052, TC-055, TC-058 pass | Every later route depends on the guard |
-| 15–17 | Wallet keys | TC-053, TC-054 pass | — |
-| 17–21 | FX: two adapters, validation, retries, snapshot store, 26 h rule, refresh schedule, `GET /fx/rates`, USD totals | TC-007, 008, 015–018, 034 pass | Swaps blocked |
-| 21–26 | Ledger service, idempotency, deposits, swaps | TC-009–014, 019–024 pass | Core money missing |
-| 26–29 | Transfers | TC-025–028, 035, 036 pass | — |
-| 29–32 | History, transaction by ID, paging, filters | TC-029–033 pass | — |
-| 32–37 | Concurrency, ledger, auth, security and contract tests; fix defects | TC-020, 023, 027, 035, 037–046, 056, 057, 059 pass | Hidden race or access bugs |
-| 37–41 | Swagger polish (both auth schemes), `docs/openapi.json`, README (every brief item), update docs and traceability | README covers every item on brief p.3 | Deliverable gap |
-| 41–45 | Clean-checkout run, `yarn npm audit`, secret scan, provider terms re-read, final report | No mandatory item without passing evidence | Submission blocked |
-| 45–48 | Buffer; confirm repo public; draft submission email | Email drafted for the candidate to send | Missed deadline |
+| 3–7 | Scaffold NestJS, Yarn 4, ESLint, Prettier, strict TS, Docker, compose with Caddy (HTTPS, HSTS), DB TLS setting, config validation, error filter, logging, Testcontainers harness, CI | `docker compose up` serves `https://localhost/health`; empty test suite passes in Docker and CI | Tests and Docker found broken late |
+| 7–10 | Migrations (all tables, checks, triggers); money helpers and field encryption helpers with unit tests; currencies | Migrations up/down; TC-010 unit parts, TC-063 pass | Schema rework later |
+| 10–18 | Accounts and wallets with encrypted identifiers; login, lockout, ES256 guard with `kid`, refresh rotation, logout, ownership check | TC-001–006, TC-047–052, TC-055, TC-058, TC-062 pass | Every later route depends on the guard |
+| 18–20 | Wallet keys | TC-053, TC-054 pass | — |
+| 20–24 | FX: two adapters, validation, retries, snapshot store, 26 h rule, refresh schedule, `GET /fx/rates`, USD totals | TC-007, 008, 015–018, 034 pass | Swaps blocked |
+| 24–29 | Ledger service, idempotency, deposits, swaps | TC-009–014, 019–024 pass | Core money missing |
+| 29–32 | Transfers | TC-025–028, 035, 036 pass | — |
+| 32–34 | History, transaction by ID, paging, filters | TC-029–033 pass | — |
+| 34–39 | Concurrency, ledger, auth, encryption, security and contract tests; fix defects | TC-020, 023, 027, 035, 037–046, 056, 057, 059–061 pass | Hidden race or access bugs |
+| 39–43 | Swagger polish (both auth schemes), `docs/openapi.json`, README (every brief item, how to trust the local certificate), update docs and traceability | README covers every item on brief p.3 | Deliverable gap |
+| 43–46 | Clean-checkout run, `yarn npm audit`, secret scan, provider terms re-read, final report | No mandatory item without passing evidence | Submission blocked |
+| 46–48 | Buffer; confirm repo public; draft submission email | Email drafted for the candidate to send | Missed deadline |
 
-Auth adds about 8 hours; it comes out of the could-have items. Could-have items (quote,
-lookup, seed script, Postman) only start once hours 32–37 are green.
+Auth adds about 8 hours and encryption about 5.5; they come out of the could-have items and
+the buffer, which is now 2 hours. Could-have items (quote, lookup, seed script, Postman) only
+start once hours 34–39 are green.
 
 ## Assumptions
 
@@ -59,6 +61,7 @@ lookup, seed script, Postman) only start once hours 32–37 are green.
 | Primary blocks us for calling too often | Low | Call about once a day, after its published next-update time |
 | Testcontainers fails on reviewer's machine (no Docker) | Medium | README says Docker is required; also `docker compose run --rm test` |
 | Yarn 4 / Corepack friction | Low | `packageManager` pinned; Dockerfile enables Corepack |
+| Encryption and auth eat the buffer | Medium | Fixed order: money features and their tests before any polish; cut the could-haves first |
 | Scope creep | Medium | Could-haves gated on green tests |
 | GitHub Actions unavailable | Low | Tests run locally and in Docker; CI is a Should |
 
@@ -78,7 +81,8 @@ Dependencies: Docker, internet for live rates (optional), GitHub.
 | D-08 | FX providers | ExchangeRate-API open endpoint (primary), Currency API by fawazahmed0 (secondary), no keys |
 | D-09 | Could-haves (quote, lookup) | Only after mandatory items are green |
 | D-10 | Commit style | Conventional commits, small and frequent |
-| D-11 | Auth | Account sessions (argon2id, 15-min JWT, rotating refresh) plus wallet keys; owner-only routes |
+| D-11 | Auth | Account sessions (argon2id, 15-min ES256 JWT, rotating refresh) plus wallet keys; owner-only routes |
+| D-13 | Encryption | HTTPS via Caddy with HSTS, database TLS setting, AES-256-GCM email and phone with HMAC lookup, ES256 tokens; no JWE or JWS now (ADR-009) |
 | D-12 | Account vs wallet | One account per identifier, one wallet per account, created together by `POST /wallets` |
 
 ## Submission

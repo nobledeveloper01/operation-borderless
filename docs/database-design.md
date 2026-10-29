@@ -39,16 +39,21 @@ erDiagram
 | Column | Type | Rules |
 | --- | --- | --- |
 | `id` | uuid PK | |
-| `email` | text null | Normalised. Unique where not null. |
-| `phone_number` | text null | E.164. Unique where not null. |
+| `email_encrypted` | bytea null | AES-256-GCM of the normalised email: key version, IV, ciphertext, tag |
+| `email_lookup` | bytea null | HMAC-SHA256 of the normalised email. Unique where not null. |
+| `phone_encrypted` | bytea null | Same, for the E.164 number |
+| `phone_lookup` | bytea null | HMAC-SHA256 of the E.164 number. Unique where not null. |
+| `pii_key_version` | smallint | Key version used, for rotation |
 | `password_hash` | text | argon2id encoded string |
 | `failed_logins` | int | default 0 |
 | `locked_until` | timestamptz null | |
 | `created_at` | timestamptz | |
 
-`CHECK (email IS NOT NULL OR phone_number IS NOT NULL)`. The identifiers live here, so the
-"one wallet per email or number" rule is these unique indexes plus `wallets.account_id`
-being unique.
+`CHECK (email_lookup IS NOT NULL OR phone_lookup IS NOT NULL)`. The identifiers live here,
+so the "one wallet per email or number" rule is the unique lookup indexes plus
+`wallets.account_id` being unique. The encryption uses the account ID and field name as
+associated data, so a ciphertext copied to another row or column fails to decrypt
+([ADR-009](decisions/ADR-009-encryption.md)).
 
 ### `sessions`
 
@@ -189,6 +194,8 @@ No seed is required to use the API. `yarn seed` (Could) creates two demo wallets
 deposits for the README walkthrough. The optional fixed FX table is code, not seed data.
 
 ## Connections and timeouts
+
+- TLS to PostgreSQL via `DB_SSL` (`disable` locally; `verify-full` required in production).
 
 - Pool size 10 (*proposed*). `statement_timeout` 5 s and `lock_timeout` 3 s on each
   connection; a timeout becomes `503 SERVICE_BUSY`.

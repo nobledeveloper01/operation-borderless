@@ -3,8 +3,8 @@
 **Context.** The brief doesn't require full authentication (p.2), but without it anyone with
 a wallet ID can move that wallet's money.
 
-**Decision.** Add accounts (identifier + argon2id password, created by `POST /wallets`), JWT
-access tokens (15 min) with rotating refresh tokens and reuse detection, and per-wallet API
+**Decision.** Add accounts (identifier + argon2id password, created by `POST /wallets`), ES256-signed JWT
+access tokens (15 min, `kid` for key rotation) with rotating refresh tokens and reuse detection, and per-wallet API
 keys (`X-Wallet-Key`). Every wallet route checks ownership; other wallets answer `404`.
 
 **Alternatives.** No auth (matches the brief, leaves the gap open); wallet keys only (simple,
