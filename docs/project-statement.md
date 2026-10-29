@@ -35,8 +35,8 @@ which rate it used and when that rate was fetched.
 A NestJS modular monolith on PostgreSQL. Balances are integers in the smallest unit. Every
 money operation runs in one database transaction, locks the balance rows it changes, writes a
 transaction record and ledger lines, and stores its idempotency key in the same transaction.
-FX rates come from a free live provider, with a stored snapshot and a fixed rate table as
-fallbacks. Everything starts with `docker compose up`.
+FX rates come from two free live daily sources; a rate more than 26 hours past its
+publication never moves money. Everything starts with `docker compose up`.
 
 ## Objectives
 
@@ -50,7 +50,7 @@ fallbacks. Everything starts with `docker compose up`.
 
 | Actor | Role |
 | --- | --- |
-| API client | Any program calling the API on behalf of a wallet holder. There is no login (brief, p.2). |
+| API client | Any program calling the API on behalf of a wallet holder, with a session token or a wallet key. |
 | FX provider | External source of live rates. |
 | Reviewer | Tonic engineers who run the project and read the code, tests and README. |
 | Candidate | Builds and submits the project. |
@@ -64,13 +64,15 @@ In scope:
 - simulated deposits, swaps and transfers;
 - transaction history with pagination and filters, and lookup by ID;
 - current rates for every pair with their refresh time;
+- accounts with password login, rotating sessions and wallet API keys, with ownership checks
+  on every wallet route (added beyond the brief, see [authentication.md](authentication.md));
 - idempotency, concurrency control and FX failure handling;
 - OpenAPI spec, Docker setup, automated tests, README and design documents.
 
 Out of scope (brief: "no frontend"; no auth required):
 
 - a frontend or admin portal;
-- user accounts, passwords and login;
+- email or SMS verification, password reset, MFA and roles;
 - real blockchain, custody, KYC, real payment rails or withdrawals;
 - fees, spreads and limits beyond basic input caps;
 - deployment to a hosted environment (brief: "A deployed URL is not required").
@@ -85,7 +87,8 @@ Out of scope (brief: "no frontend"; no auth required):
 ## Dependencies
 
 - Docker on the reviewer's machine.
-- Internet access for live rates. Without it the API still runs on fallback rates.
+- Internet access for live rates. Without it, swaps and transfers are refused unless the
+  fixed table is turned on for a demo.
 - GitHub for the public repository.
 
 ## Assumptions
@@ -96,7 +99,7 @@ Listed with their decision status in [plan.md](plan.md#assumptions).
 
 | Risk | Effect | Response |
 | --- | --- | --- |
-| FX provider down, slow or changed | Swaps and transfers can't price | Timeout, bounded retry, stored snapshot, fixed table, `503` if nothing usable |
+| FX provider down, slow or changed | Swaps and transfers can't price | Timeout, bounded retry, second live source, `503` once rates are over 26 h old |
 | Floating-point money errors | Wrong balances | Integer minor units, BigInt and decimal.js only |
 | Double processing on retries | Money created or lost | Idempotency key stored in the money transaction |
 | Races between parallel requests | Negative balances or lost updates | Row locks in a fixed order and a `CHECK (amount >= 0)` |

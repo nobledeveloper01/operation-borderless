@@ -6,7 +6,8 @@ yet; the Test column says what proves each control, and the
 
 ## Context
 
-- No authentication, by the brief (p.2). The API is a sandbox with simulated money.
+- The brief doesn't require authentication (p.2); we add accounts, sessions and wallet keys
+  ([authentication.md](authentication.md)). The API is a sandbox with simulated money.
 - Personal data: email and phone number.
 - Outside call: one fixed FX URL, set by config, never by request input.
 
@@ -14,7 +15,12 @@ yet; the Test column says what proves each control, and the
 
 | Threat | Applies? | Planned control | Test |
 | --- | --- | --- | --- |
-| Anyone moves money from any wallet (no auth) | Yes, accepted | Random UUID wallet IDs; documented limitation; production would add API keys or OAuth plus ownership checks | — |
+| Anyone moves money from any wallet | Yes | Session or wallet key required; ownership check on every wallet route; others get `404` | TC-055–057 |
+| Stolen password / brute force | Yes | argon2id; 10/min per IP on login; lock after 5 failures; same `401` for every failure | TC-048, TC-049 |
+| Forged or tampered token | Yes | HS256 pinned, `alg: none` refused, `iss`/`aud`/`exp` checked, secret ≥ 32 bytes checked at startup | TC-058 |
+| Stolen refresh token | Yes | Rotation; reuse revokes the session; stored only as SHA-256 | TC-051 |
+| Stolen access token after logout | Yes | Session checked on every request | TC-052 |
+| Leaked wallet key | Yes | Shown once, stored as SHA-256, scoped to one wallet, revocable | TC-054 |
 | Wallet enumeration by email/phone | Yes | Create returns `409` with a generic message; lookup endpoint is Could-have and rate limited if built | TC-005 |
 | SQL injection | Yes | TypeORM parameters only; raw SQL uses `$n` placeholders; no string-built SQL | Lint rule + review; TC-040 |
 | Mass assignment | Yes | DTOs with `whitelist` + `forbidNonWhitelisted`; balances, status, rate never accepted from the client | TC-041 |
@@ -31,17 +37,16 @@ yet; the Test column says what proves each control, and the
 | CORS abuse | Low | CORS off by default (no browser client); `CORS_ORIGINS` allowlist if set | TC-045 |
 | Security headers | Low (JSON API) | `helmet` defaults; Swagger UI gets a relaxed CSP only on `/docs` | TC-045 |
 | Vulnerable dependencies | Yes | `yarn npm audit` before submission; few dependencies | Checklist |
-| CSRF, XSS, file upload, webhooks, cookies | No | No browser sessions, no HTML output, no uploads, no webhooks | N/A |
+| CSRF, XSS, file upload, webhooks, cookies | No | Tokens go in headers (no cookies), no HTML output, no uploads, no webhooks | N/A |
 
 ## Accepted risks
 
-1. **No authentication or ownership.** The brief excludes it. Stated in the README with what
-   we would add.
+1. **No email/SMS verification or password reset.** Identifiers are trusted as given.
 2. **Reference rates, not market prices.** Stated in the README and in `GET /fx/rates`.
 3. **Rounding remainder** under one millionth per conversion is not booked.
 4. **Swagger UI is public** in the sandbox. In production it would be off or behind auth.
 
 ## Production work (not built)
 
-API keys or OAuth with per-wallet ownership, least-privilege DB role, TLS at a proxy,
+Identifier verification, password reset, MFA, asymmetric JWT keys with rotation, least-privilege DB role, TLS at a proxy,
 secret manager, audit of who changed what, alerting on FX failures and lock timeouts.

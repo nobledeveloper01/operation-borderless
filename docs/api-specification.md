@@ -6,7 +6,10 @@ test fails if the two drift.
 
 ## Conventions
 
-- Base path `/api/v1`. JSON only. No authentication (brief p.2).
+- Base path `/api/v1`. JSON only.
+- Auth: `Authorization: Bearer <access token>` or `X-Wallet-Key: <key>` on every wallet route
+  ([authentication.md](authentication.md)). Someone else's wallet or transaction answers
+  `404`.
 - IDs are UUIDs and are named for what they are (`walletId`, `transactionId`).
 - Money amounts are strings with up to 6 decimal places in requests, exactly 6 in responses.
   JSON numbers for amounts are refused with `400`.
@@ -48,11 +51,13 @@ test fails if the two drift.
 | Status | Code(s) | When |
 | --- | --- | --- |
 | 400 | `VALIDATION_FAILED`, `IDEMPOTENCY_KEY_REQUIRED`, `SAME_CURRENCY` | Bad input |
+| 401 | `UNAUTHENTICATED`, `SESSION_REVOKED` | Missing, bad, expired or revoked token or key; failed login |
+| 403 | `SESSION_REQUIRED` | A wallet key used on a session-only route |
 | 404 | `WALLET_NOT_FOUND`, `TRANSACTION_NOT_FOUND`, `ROUTE_NOT_FOUND` | Unknown resource |
-| 409 | `WALLET_ALREADY_EXISTS` | Email or number already has a wallet |
+| 409 | `WALLET_ALREADY_EXISTS`, `TOO_MANY_KEYS` | Identifier already has a wallet; 5 active keys |
 | 422 | `INSUFFICIENT_FUNDS`, `AMOUNT_TOO_SMALL`, `SAME_WALLET`, `IDEMPOTENCY_KEY_REUSED` | Valid input, refused by a business rule |
 | 429 | `RATE_LIMITED` | Too many requests |
-| 503 | `FX_RATE_UNAVAILABLE`, `SERVICE_BUSY` | No usable rate; lock or statement timeout |
+| 503 | `FX_RATE_UNAVAILABLE`, `SERVICE_BUSY` | No rate within 26 h of its publication; lock or statement timeout |
 | 500 | `INTERNAL_ERROR` | Unexpected; generic message only |
 
 ## Endpoints
@@ -69,11 +74,18 @@ test fails if the two drift.
 | API-008 | `GET /transactions/{transactionId}` | One transaction | 200 |
 | API-009 | `GET /fx/rates` | All pair rates with refresh times | 200 |
 | API-010 | `GET /health`, `GET /health/ready` | Liveness, readiness (outside `/api/v1`) | 200 / 503 |
+| API-013 | `POST /auth/login` | Log in | 200 |
+| API-014 | `POST /auth/refresh` | New token pair (rotation) | 200 |
+| API-015 | `POST /auth/logout`, `POST /auth/logout-all` | End this or every session | 204 |
+| API-016 | `GET /auth/me` | Account and wallet ID | 200 |
+| API-017 | `POST /wallets/{walletId}/keys` | Create a wallet key (shown once) | 201 |
+| API-018 | `GET /wallets/{walletId}/keys` | List keys, no secrets | 200 |
+| API-019 | `DELETE /wallets/{walletId}/keys/{keyId}` | Revoke a key | 204 |
 | API-011 | `GET /fx/quote` | Could-have: price preview | 200 |
 | API-012 | `GET /wallets?email=` / `?phoneNumber=` | Could-have: lookup | 200 |
 
 Rate limit (*proposed*): 120 requests per minute per IP overall, 30 per minute per IP on
-money writes and wallet creation.
+money writes, 10 per minute per IP on wallet creation and login.
 
 ### API-001 Create wallet
 
@@ -81,11 +93,12 @@ money writes and wallet creation.
 POST /api/v1/wallets
 Content-Type: application/json
 
-{ "email": "ada@example.com" }
+{ "email": "ada@example.com", "password": "correct horse battery staple" }
 ```
 
 Body: `email` (optional, valid email, max 254), `phoneNumber` (optional, international or
-Nigerian local format, stored as E.164). At least one is required.
+Nigerian local format, stored as E.164), `password` (12–128 characters). At least one
+identifier is required. Public, 10 per minute per IP.
 
 `201`:
 
@@ -102,7 +115,13 @@ Nigerian local format, stored as E.164). At least one is required.
     { "currency": "EURx", "amount": "0.000000" }
   ],
   "totalUsd": "0.000000",
-  "createdAt": "2026-10-29T10:00:00.000Z"
+  "createdAt": "2026-10-29T10:00:00.000Z",
+  "session": {
+    "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+    "accessTokenExpiresAt": "2026-10-29T10:15:00.000Z",
+    "refreshToken": "q9X2...",
+    "refreshTokenExpiresAt": "2026-11-28T10:00:00.000Z"
+  }
 }
 ```
 
@@ -120,7 +139,7 @@ Errors: `400`, `409`.
     { "currency": "USDx", "amount": "10.000000", "usdValue": "10.000000" }
   ],
   "totalUsd": "47.140000",
-  "rates": { "source": "exchangerate-api", "isFallback": false, "asOf": "2026-10-29T00:02:31Z" }
+  "rates": { "source": "exchangerate-api", "isStale": false, "asOf": "2026-10-29T00:02:31Z" }
 }
 ```
 
@@ -215,7 +234,6 @@ Newest first. `currency` matches `fromCurrency` or `toCurrency`.
 {
   "base": "USDx",
   "source": "exchangerate-api",
-  "isFallback": false,
   "isStale": false,
   "providerUpdatedAt": "2026-10-29T00:02:31Z",
   "fetchedAt": "2026-10-29T09:00:03Z",
@@ -227,8 +245,45 @@ Newest first. `currency` matches `fromCurrency` or `toCurrency`.
 }
 ```
 
-20 pairs in all (shortened). `refreshedAt` is the provider's update time for live rates, or
-the table's date for fallback rates.
+20 pairs in all (shortened). `refreshedAt` is the provider's update time. `isStale` is `true`
+once that is more than 26 hours ago; swaps and transfers are then refused.
+
+### API-013 Log in
+
+```http
+POST /api/v1/auth/login
+
+{ "email": "ada@example.com", "password": "correct horse battery staple" }
+```
+
+`200`: the `session` object above plus `walletId`. `401` for any failure (same message).
+
+### API-014 Refresh
+
+`POST /api/v1/auth/refresh` with `{ "refreshToken": "..." }` → `200` new `session`. A used
+or expired token → `401`; a reused token also revokes the session.
+
+### API-017 Create wallet key
+
+```http
+POST /api/v1/wallets/{walletId}/keys
+Authorization: Bearer eyJ...
+
+{ "name": "payroll-script" }
+```
+
+`201`:
+
+```json
+{
+  "keyId": "k_3f9a1c",
+  "name": "payroll-script",
+  "key": "bwk_k_3f9a1c_Vb7...",
+  "createdAt": "2026-10-29T10:20:00.000Z"
+}
+```
+
+`key` is shown only in this answer.
 
 ## OpenAPI strategy
 
@@ -236,5 +291,7 @@ the table's date for fallback rates.
 - Swagger UI at `/docs`, JSON at `/docs-json`.
 - `yarn openapi` writes `docs/openapi.json`; a test regenerates it in memory and fails if the
   committed file differs.
+- Security schemes `bearer` (JWT) and `walletKey` (`X-Wallet-Key`) are declared; each
+  operation lists which it accepts.
 - Each operation documents its error statuses with the shared error schema and the
   `Idempotency-Key` header where required.

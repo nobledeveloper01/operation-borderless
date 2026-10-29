@@ -17,8 +17,10 @@ At the design stage every applicable item is NEEDS VERIFICATION.
 | Injection prevented (parameterised SQL) | R | NEEDS VERIFICATION | TC-040, code review |
 | Input validation and unknown-field refusal | M | NEEDS VERIFICATION | TC-010, TC-041, TC-042 |
 | Mass-assignment protection | R | NEEDS VERIFICATION | TC-041 |
-| BOLA/IDOR | N/A | NOT APPLICABLE | No users or ownership by design (A-01); documented risk |
-| AuthN/AuthZ on protected endpoints | N/A | NOT APPLICABLE | Brief p.2: no full authentication required |
+| BOLA/IDOR (other wallets answer 404) | R | NEEDS VERIFICATION | TC-056, TC-057 |
+| AuthN on every wallet route | R | NEEDS VERIFICATION | TC-055 |
+| JWT config (pinned alg, iss, aud, exp, secret length) | R | NEEDS VERIFICATION | TC-058, config test |
+| Brute-force protection on login | R | NEEDS VERIFICATION | TC-048, TC-049 |
 | Rate limiting | R | NEEDS VERIFICATION | TC-043 |
 | Request size and query limits | R | NEEDS VERIFICATION | TC-042 |
 | CORS explicit | R | NEEDS VERIFICATION | TC-045 |
@@ -29,7 +31,7 @@ At the design stage every applicable item is NEEDS VERIFICATION.
 | Secrets not committed | M | NEEDS VERIFICATION | Secret scan of history |
 | Dependency vulnerabilities assessed | R | NEEDS VERIFICATION | `yarn npm audit` output |
 | Race conditions and duplicate operations | M | NEEDS VERIFICATION | TC-020, TC-023, TC-027, TC-035 |
-| CSRF, cookies, sessions, MFA, webhooks, uploads, bot protection | N/A | NOT APPLICABLE | No browser sessions, accounts, webhooks or uploads |
+| CSRF, cookies, MFA, webhooks, uploads, bot protection | N/A | NOT APPLICABLE | Tokens in headers, no cookies; no webhooks or uploads; MFA out of scope |
 | Debug mode off, no default credentials | R | NEEDS VERIFICATION | Config review |
 | Row-level security | N/A | NOT APPLICABLE | No tenants or users to separate |
 
@@ -37,8 +39,14 @@ At the design stage every applicable item is NEEDS VERIFICATION.
 
 | Item | Applies | Status | Reason |
 | --- | --- | --- | --- |
-| Signup, login, recovery, tokens, roles, sessions | N/A | NOT APPLICABLE | Brief p.2 excludes full authentication |
+| Signup (wallet create) and login | R | NEEDS VERIFICATION | TC-001, TC-047 |
+| Passwords hashed with argon2id; no secrets stored in plain text | R | NEEDS VERIFICATION | TC-059 |
+| Refresh rotation and reuse detection | R | NEEDS VERIFICATION | TC-050, TC-051 |
+| Logout takes effect at once | R | NEEDS VERIFICATION | TC-052 |
+| Wallet keys shown once, scoped, revocable | R | NEEDS VERIFICATION | TC-053, TC-054 |
+| Same answer for every login failure | R | NEEDS VERIFICATION | TC-048 |
 | Account enumeration on wallet create | R | NEEDS VERIFICATION | TC-005 generic message |
+| Email/SMS verification, password reset, roles, suspension | N/A | NOT APPLICABLE | No mail or SMS provider; one holder per wallet; documented limitation |
 
 ## D. Database and data integrity
 
@@ -68,7 +76,7 @@ At the design stage every applicable item is NEEDS VERIFICATION.
 | Item | Applies | Status | Evidence needed |
 | --- | --- | --- | --- |
 | FX timeouts and bounded retries | M | NEEDS VERIFICATION | TC-015, TC-018 |
-| FX failure handled gracefully | M | NEEDS VERIFICATION | TC-016, TC-008 |
+| FX failure handled gracefully (secondary source; 503 past 26 h) | M | NEEDS VERIFICATION | TC-015, TC-016, TC-008 |
 | DB statement and lock timeouts | R | NEEDS VERIFICATION | Config + test |
 | Indexed history queries, no N+1 | R | NEEDS VERIFICATION | `EXPLAIN` on history query |
 | Load test | R | NEEDS VERIFICATION | Only if time allows; report real numbers only |

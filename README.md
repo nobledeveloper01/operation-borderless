@@ -16,7 +16,8 @@ instructions are added with the code.
 | Framework | NestJS 11 |
 | Database | PostgreSQL 17 (why: [database design](docs/database-design.md#why-postgresql)) |
 | Data access | TypeORM with hand-checked migrations |
-| FX rates | ExchangeRate-API open endpoint, with stored and fixed fallbacks |
+| FX rates | ExchangeRate-API (primary) and Currency API (secondary), daily; stale rates refused |
+| Auth | Account sessions (argon2id passwords, JWT with rotating refresh tokens) and per-wallet API keys |
 | Tests | Jest and Supertest, against a real PostgreSQL started by Testcontainers |
 | Tooling | Yarn 4, ESLint, Prettier |
 | Runtime | Docker and docker compose |
@@ -32,6 +33,7 @@ instructions are added with the code.
 | [Architecture](docs/architecture.md) | Modules, request flow, diagrams and repository layout |
 | [API specification](docs/api-specification.md) | Endpoints, request and response shapes, error format |
 | [Database design](docs/database-design.md) | Tables, constraints, indexes and migrations |
+| [Authentication](docs/authentication.md) | Accounts, sessions, wallet keys and who may call what |
 | [Money, idempotency, concurrency and FX](docs/money-handling.md) | Precision, rounding, locking, retries and rate failures |
 | [Security review](docs/security-review.md) | Threat model and the controls planned for each threat |
 | [Test strategy](docs/test-strategy.md) | Unit, integration, API, concurrency and contract tests |

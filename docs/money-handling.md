@@ -31,54 +31,79 @@ version; the README will summarise it.
 
 ### Provider choice
 
-| Provider | NGN | GHS | XAF | Key | Updates | Verdict |
+| Provider | NGN | GHS | XAF | Key | Updates | Use |
 | --- | --- | --- | --- | --- | --- | --- |
-| Frankfurter (ECB data) | No | No | No | None | Daily | Can't price three of five coins |
-| ExchangeRate-API open endpoint (`open.er-api.com/v6/latest/USD`) | Yes | Yes | Yes | None | Daily | **Chosen** |
-| ExchangeRate-API free key plan | Yes | Yes | Yes | Needed | Daily | Same data, adds a secret for reviewers |
+| ExchangeRate-API open endpoint (`open.er-api.com/v6/latest/USD`) | Yes | Yes | Yes | None | Daily | **Primary** |
+| Currency API by fawazahmed0 (`latest.currency-api.pages.dev`, mirror on jsDelivr) | Yes | Yes | Yes | None | Daily | **Secondary** |
+| Frankfurter (ECB data) | No | No | No | None | Daily | Not used: can't price three of five coins |
+| ExchangeRate-API key plan / paid feeds | Yes | Yes | Yes | Needed | Hourly or faster | Production option |
 
-Checked on 29 Oct 2026: the open endpoint returned NGN, GHS, XAF and EUR, with
-`time_last_update_utc` and `time_next_update_utc`; Frankfurter returned only EUR for that
-set. The open endpoint asks for attribution and is rate limited; its terms
-(`exchangerate-api.com/terms`) must be re-read before submission. The API
-and README show the attribution.
+Checked on 29 Oct 2026: both chosen sources returned NGN, GHS, XAF and EUR for that day;
+Frankfurter returned only EUR. The primary asks for attribution and says clients should
+request about once every 24 hours, or risk a 20-minute block. Its terms
+(`exchangerate-api.com/terms`) and the secondary's licence must be re-read before
+submission. The API and README show the attribution.
 
-These are **daily reference rates, not executable market prices**. That is fine for a
-sandbox and is stated in the README.
+These are **daily reference rates, not executable market prices**. That is stated in the
+README.
+
+### Freshness standard
+
+There are two industry norms, and the free sources only allow the second:
+
+- **Live market pricing** (trading desks, card schemes, remittance apps with paid feeds):
+  rates refreshed every few seconds, quotes valid 15–60 seconds, and execution refused on
+  a rate older than that.
+- **Daily reference rates** (ECB, central-bank fixings, accounting): a rate is valid until
+  the next daily publication, with a short grace period. A rate from an older publication
+  is stale and is not used to move money.
+
+Borderless follows the second:
+
+| Setting | Value | Why |
+| --- | --- | --- |
+| `FX_MAX_DATA_AGE_HOURS` | **26** | One 24-hour publication cycle plus 2 hours' grace. Measured from the provider's own update time, not from when we fetched it. |
+| Execution on stale rates | **Refused** (`503 FX_RATE_UNAVAILABLE`) | Fail closed: money never moves on a rate from a missed publication. |
+| Quote validity (if the quote endpoint is built) | **30 seconds** | Typical remittance quote window. |
+| Client-supplied rates | Never accepted | The server prices every operation. |
 
 ### Refresh and fallback
 
-1. On startup and every `FX_REFRESH_MINUTES` (60), fetch the provider: 3 s timeout, up to 2
-   retries with full-jitter backoff (base 500 ms), only on network errors, timeouts, 5xx
-   and 429.
-2. Validate the response: `result === "success"`, all five fiat codes present, each a finite
-   number `> 0`, update time parseable. Anything else is a failed fetch.
-3. A valid response is stored as a new `fx_snapshots` row.
-4. Pricing uses the newest live snapshot if `fetched_at` is younger than
-   `FX_MAX_AGE_HOURS` (48). The provider updates daily, so 48 h allows one missed update.
-5. Otherwise pricing uses the **fixed fallback table** in the code (USD-based rates with the
-   date they were set). The brief allows "a fixed rate table you define".
-6. Every response that shows a rate says its `source`, `isFallback` and time. Every
-   transaction stores its rate, source and rate time.
-7. Requests never call the provider. A slow provider can't slow the API.
+1. **Primary refresh:** on startup, then 5 minutes after the provider's
+   `time_next_update_utc`. This keeps us on the latest publication while calling about once
+   a day, as the provider asks. 3 s timeout, up to 2 retries with full-jitter backoff (base
+   500 ms) on network errors, timeouts and 5xx. A `429` is not retried; we wait 30 minutes.
+2. **Failure:** if the primary fails or its data is older than 26 h, fetch the secondary
+   (same timeout and retry rules). Failed refreshes retry every 15 minutes with jitter until
+   one source succeeds.
+3. **Validation:** both adapters check that all five fiat codes are present, each a finite
+   number `> 0`, and the update time is parseable and not in the future. Anything else is a
+   failed fetch. A rate that moves more than 20% from the previous snapshot is refused and
+   logged as suspicious.
+4. A valid response is stored as a new `fx_snapshots` row with `source`,
+   `provider_updated_at` and `fetched_at`.
+5. **Pricing:** the newest snapshot (from either source) whose provider data is at most
+   26 h old. If none, swaps and transfers get `503` and nothing moves. Deposits and reads
+   still work; balances show `totalUsd: null` with the reason.
+6. `GET /fx/rates` always answers: the newest snapshot, with `isStale: true` once it is past
+   26 h, so clients can see the last known rates and their age.
+7. Requests never call a provider. A slow provider can't slow the API.
+8. Every transaction stores its rate, source and the provider update time it used.
 
-`isStale` on `GET /fx/rates` is `true` when the live snapshot is older than 26 h (one
-provider cycle plus margin).
-
-**Open decision D-03:** when only fallback rates are available, should swaps and transfers
-still run (recommended: yes, marked `fallback-table`; it is a sandbox and the brief allows a
-fixed table) or be refused with `503`?
+A fixed rate table (which the brief also allows) exists only for offline demos and tests,
+behind `FX_FIXED_TABLE=false` by default. When turned on it is used only if both live
+sources fail, and every response and transaction marks it `fixed-table`.
 
 ### Pegs
 
-The fallback table keeps cXAF at the official peg 655.957 XAF per EUR. Live data is used as
+The fixed table keeps cXAF at the official peg 655.957 XAF per EUR. Live data is used as
 given.
 
 ## Idempotency
 
 - Header `Idempotency-Key` on deposits, swaps and transfers. Required (missing → `400`).
 - Inside the money transaction, first statement:
-  `INSERT INTO idempotency_keys (key, request_hash, ...) VALUES (...) ON CONFLICT (key) DO NOTHING RETURNING key`.
+  `INSERT INTO idempotency_keys (account_id, key, request_hash, ...) VALUES (...) ON CONFLICT (account_id, key) DO NOTHING RETURNING key`.
   - Row inserted → this request owns the key; run the operation; update the row with the
     response; commit.
   - No row returned → another request has (or had) the key. Read it: same hash → return the
@@ -90,7 +115,7 @@ given.
   don't store error answers: a later retry may legitimately succeed (for example after a
   deposit).
 - Keys expire after 24 h; a job deletes expired rows hourly. An expired key can be reused.
-- Scope: global. Keys should be random (UUID); the docs say so.
+- Scope: per account, unique `(account_id, key)`. Keys should be random (UUID).
 
 ## Concurrency
 

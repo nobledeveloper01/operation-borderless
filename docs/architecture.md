@@ -17,11 +17,13 @@ to process ([ADR-001](decisions/ADR-001-modular-monolith.md),
 flowchart LR
   client[API client] -->|HTTPS JSON| api[Borderless API<br/>NestJS]
   api -->|SQL| db[(PostgreSQL 17)]
-  api -->|HTTPS, every 60 min| fx[ExchangeRate-API<br/>open.er-api.com]
+  api -->|HTTPS, after each daily update| fx[ExchangeRate-API<br/>primary]
+  api -.->|HTTPS, if primary fails| fx2[Currency API<br/>secondary]
   reviewer[Reviewer] -->|Swagger UI /docs| api
 ```
 
-Trust boundaries: the client is untrusted (no auth, all input validated); the FX provider is
+Trust boundaries: the client is untrusted (authenticated, but all input validated and
+ownership checked); the FX provider is
 untrusted (every response validated before use); the database is trusted.
 
 ## Modules
@@ -32,7 +34,8 @@ untrusted (every response validated before use); the database is trusted.
 | `database` | TypeORM data source, migrations, `runInTransaction` helper, naming strategy. |
 | `common` | Error filter and error codes, request ID middleware, validation pipe, money helpers (`Money`, parse/format), pagination DTOs. |
 | `currencies` | The five supported stablecoins, their fiat pegs and decimals. Pure code, no table. |
-| `fx` | `FxProvider` interface, ExchangeRate-API adapter, fallback table, snapshot store, refresh scheduler, `FxService.rate(from, to)`, `GET /fx/rates`. |
+| `fx` | `FxProvider` interface, primary and secondary adapters, snapshot store, refresh scheduler, `FxService.rate(from, to)`, `GET /fx/rates`. |
+| `auth` | Accounts, argon2id passwords, login, JWT access tokens, refresh rotation, logout, wallet keys, the auth guard and the ownership check. |
 | `wallets` | Create and read wallets and balances, USD total. |
 | `ledger` | `LedgerService`: the only code that changes balances. Locks rows, checks funds, writes transaction + ledger lines. |
 | `deposits`, `swaps`, `transfers` | Thin controllers and services that validate, price, and call `LedgerService` inside an idempotent transaction. |
@@ -79,12 +82,14 @@ commits, then replays it.
 
 ```mermaid
 flowchart TD
-  t[Startup and every 60 min] --> f[Fetch provider, 3 s timeout, 2 retries]
-  f -->|valid| s[Store snapshot: rates, source, providerUpdatedAt, fetchedAt]
-  f -->|fails| k[Keep previous snapshot, log reason]
-  r[Request needs a rate] --> q{Live snapshot younger than FX_MAX_AGE_HOURS?}
+  t[Startup, then 5 min after the provider's next update] --> p[Fetch primary, 3 s timeout, 2 retries]
+  p -->|valid| s[Store snapshot: rates, source, providerUpdatedAt, fetchedAt]
+  p -->|fails or data older than 26 h| sec[Fetch secondary]
+  sec -->|valid| s
+  sec -->|fails| k[Keep previous snapshot, retry in 15 min]
+  r[Swap or transfer needs a rate] --> q{Newest snapshot's provider data at most 26 h old?}
   q -->|yes| u[Use it]
-  q -->|no| fb[Use fixed fallback table, marked isFallback]
+  q -->|no| no[503 FX_RATE_UNAVAILABLE, nothing moves]
 ```
 
 ## Request lifecycle
@@ -92,9 +97,12 @@ flowchart TD
 1. `helmet`, body size limit, request ID middleware (accepts a safe incoming
    `X-Request-Id` or makes one).
 2. Throttler guard (per IP).
-3. Validation pipe: `whitelist`, `forbidNonWhitelisted`, `transform`.
-4. Controller → service → `LedgerService` / repositories.
-5. Global error filter maps known errors to codes; anything else becomes a generic `500`
+3. Auth guard: verifies the JWT (pinned algorithm, `iss`, `aud`, `exp`) and that its session
+   isn't revoked, or checks the wallet key; public routes are marked `@Public()`. Services
+   then check the caller owns the wallet.
+4. Validation pipe: `whitelist`, `forbidNonWhitelisted`, `transform`.
+5. Controller → service → `LedgerService` / repositories.
+6. Global error filter maps known errors to codes; anything else becomes a generic `500`
    with the request ID, and the real error is logged.
 
 ## Error handling
@@ -121,7 +129,7 @@ operation-borderless/
 ├── src/
 │   ├── main.ts, app.module.ts, app.setup.ts
 │   ├── config/  database/  common/  currencies/
-│   ├── fx/  wallets/  ledger/  idempotency/
+│   ├── auth/  fx/  wallets/  ledger/  idempotency/
 │   ├── deposits/  swaps/  transfers/  transactions/  health/
 │   └── migrations/
 ├── test/
@@ -140,6 +148,8 @@ operation-borderless/
 | Choice | Gain | Cost |
 | --- | --- | --- |
 | Pessimistic row locks | Simple, provably correct, no retry loops | Hot wallets serialise; fine for a sandbox |
-| FX read from stored snapshot | Requests never hang on the provider | Rates can be up to 60 min behind the provider (which updates daily anyway) |
-| No auth | Matches the brief | Anyone with a wallet ID can move its money (documented) |
+| FX read from stored snapshot | Requests never hang on a provider | Rates are daily reference rates, not live market prices |
+| Fail closed on stale rates | Money never moves on an old rate | Swaps and transfers stop if both sources are down for over 2 h past a publication |
+| Auth added beyond the brief | Only owners move money | ~8 h of work; reviewers copy a token once |
+| Session check per request | Logout is immediate | One indexed read per request |
 | Offset pagination | Simple, gives `total` | Slower on deep pages; cursor noted as future work |

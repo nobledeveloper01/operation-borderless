@@ -31,7 +31,7 @@ own targets; the brief sets none.
 
 | ID | Requirement | Type |
 | --- | --- | --- |
-| NFR-020 | FX provider call: 3 s timeout, at most 2 retries with jittered backoff, refresh every 60 min (*proposed*). | Mandatory (fallback required) |
+| NFR-020 | FX: two live sources; 3 s timeout, at most 2 retries with jitter; refresh after each daily publication; rates older than 26 h never price money. | Mandatory (fallback required) |
 | NFR-021 | Requests never wait on the FX provider; they read the stored snapshot. | Recommended |
 | NFR-022 | Config is validated at startup; the app refuses to start on bad values. | Recommended |
 | NFR-023 | Graceful shutdown closes the HTTP server and database pool. | Recommended |
@@ -45,7 +45,9 @@ own targets; the brief sets none.
 
 ## Security
 
-See [security-review.md](security-review.md). Summary: strict validation with unknown
+See [security-review.md](security-review.md) and [authentication.md](authentication.md).
+Summary: argon2id passwords, 15-minute JWTs with rotating refresh tokens, wallet keys stored
+as hashes, ownership checks on every wallet route, strict validation with unknown
 fields refused, parameterised SQL only, rate limiting, `helmet`, request size limit 16 KB,
 no stack traces or SQL text in responses, email and phone redacted from logs, no secrets in
 the repo.

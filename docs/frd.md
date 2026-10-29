@@ -6,7 +6,8 @@ IDs here are used in the [traceability matrix](requirements-traceability.md) and
 
 Common rules for every requirement:
 
-- No authentication. Wallet IDs are random UUIDs.
+- Every wallet route needs a session token or a wallet key and checks ownership (FR-022 to
+  FR-027, [authentication.md](authentication.md)). Wallet IDs are random UUIDs.
 - Money amounts in requests and responses are decimal strings (for example `"1500.25"`),
   never JSON numbers.
 - Errors use the shared error body (api-specification.md, "Errors").
@@ -18,10 +19,10 @@ Common rules for every requirement:
 
 - **Source:** brief p.2, Wallets. Mandatory.
 - **Actor:** API client.
-- **Trigger:** `POST /api/v1/wallets` with `email` and/or `phoneNumber`.
+- **Trigger:** `POST /api/v1/wallets` with `email` and/or `phoneNumber`, and `password`.
 - **Main flow:** validate; normalise the email (trim, lower case) and the number (E.164);
-  insert the wallet and five zero balances in one transaction; return `201` with the wallet
-  and balances.
+  hash the password (argon2id); insert the account, the wallet and five zero balances in one
+  transaction; start a session; return `201` with the wallet, balances and tokens.
 - **Alternative flows:** both email and number given → both are stored and both must be free.
 - **Failures:** neither given, bad email, bad number → `400`. Identifier already used → `409`
   (FR-002).
@@ -95,17 +96,18 @@ Common rules for every requirement:
 
 - **Source:** brief p.2 ("live is preferred, with a fallback when the provider fails").
   Mandatory.
-- **Rule:** rates come from the live provider through an adapter. Order of use:
-  1. the latest live snapshot, if younger than `FX_MAX_AGE_HOURS`;
-  2. otherwise the fixed fallback table shipped with the code.
-
-  The provider is refreshed in the background; requests never wait on it. Each snapshot
+- **Rule:** rates come from two live daily sources through adapters (primary, then
+  secondary). A snapshot can price money only while the provider's data is at most 26 hours
+  old (one daily publication plus 2 hours' grace). Past that, swaps and transfers are refused
+  with `503`; nothing moves on a stale rate. Requests never wait on a provider. Each snapshot
   records its source, the provider's update time and the fetch time. See
-  [money-handling.md](money-handling.md#fx-rates).
-- **Failures:** timeout, network error, non-200, bad JSON, missing currency or non-positive
-  rate → the fetch is refused, logged, and the previous snapshot stays in use.
-- **Acceptance:** AC-011 a provider timeout leaves the last snapshot in use; AC-012 with no
-  snapshot and the provider down, rates come from the fallback table and say so.
+  [money-handling.md](money-handling.md#freshness-standard).
+- **Failures:** timeout, network error, non-200, bad JSON, missing currency, non-positive or
+  future-dated rate, or a jump above 20% → the fetch is refused, logged, and the secondary
+  source or the previous snapshot is used if still fresh.
+- **Acceptance:** AC-011 a primary timeout switches to the secondary; AC-012 when both fail
+  and the last snapshot is older than 26 h, swaps and transfers get `503` and
+  `GET /fx/rates` shows the old rates with `isStale: true`.
 - **Tests:** TC-015, TC-016, TC-017, TC-018.
 
 ## FR-008 No negative balances
@@ -199,7 +201,7 @@ Common rules for every requirement:
 - **Source:** brief p.3. Mandatory.
 - **Trigger:** `GET /api/v1/fx/rates`.
 - **Output:** every ordered pair of the five stablecoins (20 pairs) with `rate`, plus
-  `source`, `providerUpdatedAt`, `fetchedAt`, `isFallback`, `isStale`.
+  `source`, `providerUpdatedAt`, `fetchedAt`, `isStale`.
 - **Acceptance:** AC-023 the response has 20 pairs and each pair's inverse multiplies to
   ≈1 within rounding.
 - **Tests:** TC-034.
@@ -217,6 +219,42 @@ Same as FR-009. Tests TC-011, TC-036.
 - **FR-019 Quote:** `GET /api/v1/fx/quote?from=&to=&amount=` returns the amount the client
   would get now, with the rate. No money moves.
 - **FR-020 Wallet lookup:** `GET /api/v1/wallets?email=` or `?phoneNumber=`.
+
+## FR-022 Log in (ours)
+
+- `POST /api/v1/auth/login` with identifier + password → `200` with access and refresh
+  tokens. Wrong identifier, wrong password or locked account → the same `401`. 5 failures
+  lock the account for 15 minutes.
+- **Tests:** TC-047, TC-048, TC-049.
+
+## FR-023 Refresh with rotation (ours)
+
+- `POST /api/v1/auth/refresh` → new pair; the old refresh token stops working. Reusing a used
+  token revokes the whole session (`401`).
+- **Tests:** TC-050, TC-051.
+
+## FR-024 Log out (ours)
+
+- `POST /auth/logout` revokes this session; `POST /auth/logout-all` revokes all. The access
+  token stops working on the next request.
+- **Tests:** TC-052.
+
+## FR-025 Wallet keys (ours)
+
+- Create (key shown once), list (no secrets), revoke. Max 5 active. Session only.
+- A key acts only on its own wallet; a revoked key → `401`.
+- **Tests:** TC-053, TC-054.
+
+## FR-026 Ownership on every wallet route (ours)
+
+- Balances, history, deposits, swaps, transfers (sender), transaction by ID (sender or
+  receiver) need the owner. Others → `404`. No credentials → `401`.
+- **Tests:** TC-055, TC-056, TC-057.
+
+## FR-027 Token checks (ours)
+
+- Expired, wrongly signed, `alg: none`, wrong `iss`/`aud`, malformed → `401`.
+- **Tests:** TC-058.
 
 ## Health (Should)
 

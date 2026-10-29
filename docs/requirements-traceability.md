@@ -26,6 +26,18 @@ Brief → requirement → component/API → test → evidence → status. Status
 | (inferred) transfers refuse overdraft | FR-017 | `ledger` | TC-026, TC-035 | — | PLANNED |
 | (inferred) deposits and transfers idempotent | FR-018 | `idempotency` | TC-011, TC-036 | — | PLANNED |
 
+## Authentication (ours, beyond the brief)
+
+| Req | Component / API | Tests | Status |
+| --- | --- | --- | --- |
+| FR-022 login and lockout | `auth` / API-013 | TC-047–049 | PLANNED |
+| FR-023 refresh rotation | `auth` / API-014 | TC-050, TC-051 | PLANNED |
+| FR-024 logout | `auth` / API-015 | TC-052 | PLANNED |
+| FR-025 wallet keys | `auth` / API-017–019 | TC-053, TC-054 | PLANNED |
+| FR-026 ownership | auth guard + services | TC-055–057 | PLANNED |
+| FR-027 token checks | auth guard | TC-058 | PLANNED |
+| BR-13 secrets stored as hashes | `auth` | TC-059 | PLANNED |
+
 ## Stack and deliverables (brief p.1–3)
 
 | Brief | Req | How it is met | Evidence | Status |

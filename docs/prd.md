@@ -19,7 +19,8 @@ where every balance change can be explained by a transaction and a rate.
 | API client (wallet holder's app) | Create a wallet, move money, see balances and history |
 | Reviewer | Run the project with one command, read clear docs, see tests prove the money rules |
 
-There is no authentication (brief, p.2: "No full authentication is required").
+The brief doesn't require authentication (p.2). We add it so only a wallet's holder can use
+it; see [authentication.md](authentication.md).
 
 ## Supported stablecoins
 
@@ -50,7 +51,8 @@ as sent and as received.
 request with the same `Idempotency-Key`. The API returns the first result and moves no money.
 
 **J5. Check rates.** The client reads every pair's rate, the source, and when it was refreshed.
-If the live provider is down, the API says the rates are from a fallback.
+If the main provider is down, rates come from a second live source. If both are down past a
+daily publication, the API shows the last rates as stale and refuses swaps and transfers.
 
 ## User stories
 
@@ -69,6 +71,10 @@ If the live provider is down, the API says the rates are from a fallback.
 | US-11 | As a client, I read all current rates and when each was refreshed. | Must |
 | US-12 | As a client, I preview what a swap or transfer would give before sending it. | Could |
 | US-13 | As a client, I find a wallet by email or mobile number. | Could |
+| US-15 | As a holder, I log in with my identifier and password and stay signed in with refresh tokens. | Must (ours) |
+| US-16 | As a holder, I log out and my session stops working at once. | Must (ours) |
+| US-17 | As a holder, I create and revoke API keys for scripts that act on my wallet. | Must (ours) |
+| US-18 | As a holder, no one else can read or move my wallet's money. | Must (ours) |
 | US-14 | As an operator, I check the API and database are healthy. | Should |
 
 ## Business rules
@@ -85,6 +91,8 @@ If the live provider is down, the API says the rates are from a fallback.
 | BR-08 | A transfer records sender, receiver, both amounts and currencies, the rate and a timestamp. | Brief p.2 |
 | BR-09 | A wallet can't transfer to itself (use a swap). | Inferred |
 | BR-10 | Amounts are positive, have at most 6 decimal places, and are capped per operation. | Inferred (A-04, A-05) |
+| BR-12 | Only the wallet's owner (session or wallet key) can read it or move its money; transfers can go to any wallet. | Ours |
+| BR-13 | Passwords are hashed with argon2id; tokens and keys are stored only as hashes. | Ours |
 | BR-11 | No fees or spreads. Rounding of converted amounts is down, so no money is created. | Inferred (A-06) |
 
 ## Features and MoSCoW
@@ -94,6 +102,9 @@ deposits, swaps with live rates and fallback, overdraft refusal, idempotency, tr
 conversion and full records, history with pagination and filters, transaction by ID, rates
 with refresh times, Docker compose, `yarn test`, OpenAPI spec, README.
 
+**Must (ours, beyond the brief):** accounts, login, refresh rotation, logout, wallet keys,
+ownership checks.
+
 **Should (recommended, cheap, raises quality):** ledger lines per balance change, health and
 readiness checks, structured logs with request IDs, rate limiting, security headers, CI
 running lint, type check and tests, OpenAPI drift test.
@@ -101,7 +112,7 @@ running lint, type check and tests, OpenAPI drift test.
 **Could (only if time is left):** quote endpoint (US-12), wallet lookup (US-13), Postman
 collection in addition to OpenAPI.
 
-**Won't (this assessment):** authentication, frontend, fees, withdrawals, KYC, real chains,
+**Won't (this assessment):** email/SMS verification, password reset, MFA, roles, frontend, fees, withdrawals, KYC, real chains,
 webhooks, Redis or a queue, deployment.
 
 ## MVP

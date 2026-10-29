@@ -22,7 +22,7 @@
 
 | Level | What | Where |
 | --- | --- | --- |
-| Unit | Amount parsing and formatting, cross-rate maths, rounding, USD totals, fallback selection, provider response validation, idempotency hash, error mapping | `test/unit` |
+| Unit | Amount parsing and formatting, cross-rate maths, rounding, USD totals, snapshot freshness (26 h rule), provider response validation, idempotency hash, error mapping | `test/unit` |
 | Integration | `LedgerService` against PostgreSQL: locks, checks, rollback, append-only triggers, unique constraints, idempotency claim/replay | `test/integration` |
 | API | Every endpoint through the full Nest app with Supertest: success, validation, 404/409/422/503, headers, paging, filters | `test/api` |
 | Concurrency | Parallel swaps and transfers; parallel same-key requests; ledger sum equals balances | `test/integration` |
@@ -49,10 +49,10 @@ Each test name starts with its test case ID, for example
 | TC-012 | FR-006 | Swap amount exact at known rate |
 | TC-013 | FR-006 | Same-currency swap → 400; amount rounds to 0 → 422 |
 | TC-014 | FR-006 | Failure mid-swap rolls back both balances |
-| TC-015 | FR-007 | Provider timeout → previous snapshot kept |
-| TC-016 | FR-007 | No snapshot + provider down → fallback table, flagged |
-| TC-017 | FR-007 | Bad provider data (missing code, 0, NaN, wrong JSON) refused |
-| TC-018 | FR-007 | Retries bounded; 4xx not retried |
+| TC-015 | FR-007 | Primary timeout → secondary used and stored |
+| TC-016 | FR-007 | Both down, snapshot 26 h + 1 min old → swap and transfer 503, rates show `isStale` |
+| TC-017 | FR-007 | Bad data (missing code, 0, NaN, future date, 20% jump, wrong JSON) refused |
+| TC-018 | FR-007 | Retries bounded; 4xx and 429 not retried; next fetch scheduled after the provider's next update |
 | TC-019 | FR-008 | Swap above balance → 422, nothing changes |
 | TC-020 | FR-008 | 20 parallel swaps of 1/4 balance → exactly 4 succeed |
 | TC-021 | FR-009 | Same key, same body → same response, `Idempotent-Replayed` |
@@ -81,6 +81,19 @@ Each test name starts with its test case ID, for example
 | TC-044 | Security | Unexpected error → generic 500 with request ID, no stack |
 | TC-045 | Security | Security headers present; no CORS headers by default |
 | TC-046 | FR-021 | Health 200; readiness 503 when DB is down |
+| TC-047 | FR-022 | Login with email or phone → tokens; access token works |
+| TC-048 | FR-022 | Unknown identifier, wrong password, locked → same 401 body |
+| TC-049 | FR-022 | 5 wrong passwords lock for 15 min; right password then fails until unlock |
+| TC-050 | FR-023 | Refresh returns a new pair; old refresh token refused |
+| TC-051 | FR-023 | Reusing a used refresh token revokes the session |
+| TC-052 | FR-024 | After logout the same access token gets 401 at once |
+| TC-053 | FR-025 | Key shown once; list hides secrets; 6th key → 409; key can't manage keys (403) |
+| TC-054 | FR-025 | Revoked key → 401; key for wallet A on wallet B → 404 |
+| TC-055 | FR-026 | No credentials on every wallet route → 401 |
+| TC-056 | FR-026 | Caller B on A's balances, history, deposits, swaps → 404 |
+| TC-057 | FR-026 | Transfer from a wallet the caller doesn't own → 404; receiver can read the transfer, a third wallet can't |
+| TC-058 | FR-027 | Expired, wrong secret, `alg: none`, wrong `iss`/`aud`, garbage → 401 |
+| TC-059 | BR-13 | Database holds no plain passwords, refresh tokens or key secrets |
 
 ## Rules
 

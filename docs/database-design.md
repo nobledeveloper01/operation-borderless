@@ -20,6 +20,10 @@ Data access is TypeORM with `synchronize` off and migrations written by hand. Ra
 
 ```mermaid
 erDiagram
+  accounts ||--|| wallets : owns
+  accounts ||--o{ sessions : has
+  sessions ||--|{ refresh_tokens : rotates
+  wallets ||--o{ wallet_keys : has
   wallets ||--|{ balances : has
   wallets ||--o{ ledger_entries : "changes"
   transactions ||--|{ ledger_entries : "posts"
@@ -30,16 +34,59 @@ erDiagram
 
 ## Tables
 
+### `accounts`
+
+| Column | Type | Rules |
+| --- | --- | --- |
+| `id` | uuid PK | |
+| `email` | text null | Normalised. Unique where not null. |
+| `phone_number` | text null | E.164. Unique where not null. |
+| `password_hash` | text | argon2id encoded string |
+| `failed_logins` | int | default 0 |
+| `locked_until` | timestamptz null | |
+| `created_at` | timestamptz | |
+
+`CHECK (email IS NOT NULL OR phone_number IS NOT NULL)`. The identifiers live here, so the
+"one wallet per email or number" rule is these unique indexes plus `wallets.account_id`
+being unique.
+
+### `sessions`
+
+| Column | Type | Rules |
+| --- | --- | --- |
+| `id` | uuid PK | the `sid` claim |
+| `account_id` | uuid FK | indexed |
+| `created_at` | timestamptz | |
+| `revoked_at` | timestamptz null | set by logout or refresh reuse |
+| `revoked_reason` | text null | `LOGOUT`, `LOGOUT_ALL`, `REFRESH_REUSE` |
+
+### `refresh_tokens`
+
+| Column | Type | Rules |
+| --- | --- | --- |
+| `id` | uuid PK | |
+| `session_id` | uuid FK | indexed |
+| `token_hash` | text | SHA-256, unique |
+| `expires_at` | timestamptz | |
+| `used_at` | timestamptz null | set on rotation |
+
+### `wallet_keys`
+
+| Column | Type | Rules |
+| --- | --- | --- |
+| `id` | text PK | public key ID |
+| `wallet_id` | uuid FK | indexed |
+| `name` | text | 1–60 chars |
+| `secret_hash` | text | SHA-256 |
+| `created_at`, `last_used_at`, `revoked_at` | timestamptz | |
+
 ### `wallets`
 
 | Column | Type | Rules |
 | --- | --- | --- |
 | `id` | uuid PK | |
-| `email` | text null | Normalised (trimmed, lower case). Unique where not null. |
-| `phone_number` | text null | E.164. Unique where not null. |
+| `account_id` | uuid FK → accounts | unique (one wallet per account) |
 | `created_at` | timestamptz | default `now()` |
-
-`CHECK (email IS NOT NULL OR phone_number IS NOT NULL)`.
 
 ### `balances`
 
@@ -66,7 +113,7 @@ PK `(wallet_id, currency)`. Five rows are created with every wallet.
 | `to_currency` | text | |
 | `to_amount` | bigint | `> 0` |
 | `rate` | numeric(30,10) | `1` for deposits and same-currency transfers |
-| `rate_source` | text | `none`, `exchangerate-api`, `fallback-table` |
+| `rate_source` | text | `none`, `exchangerate-api`, `currency-api`, `fixed-table` |
 | `rate_as_of` | timestamptz null | |
 | `fx_snapshot_id` | uuid null FK | |
 | `created_at` | timestamptz | |
@@ -97,7 +144,7 @@ balances (sum of lines per wallet and currency = `balances.amount`).
 | Column | Type | Rules |
 | --- | --- | --- |
 | `id` | uuid PK | |
-| `source` | text | `exchangerate-api` or `fallback-table` |
+| `source` | text | `exchangerate-api`, `currency-api` or `fixed-table` |
 | `base` | text | `USD` |
 | `rates` | jsonb | `{ "NGN": "1346.236888", ... }` as strings, all five present and `> 0` |
 | `provider_updated_at` | timestamptz | from the provider |
@@ -111,7 +158,8 @@ can be pruned (*proposed*, not built unless time allows).
 
 | Column | Type | Rules |
 | --- | --- | --- |
-| `key` | text PK | |
+| `account_id` | uuid FK | |
+| `key` | text | PK is `(account_id, key)` |
 | `request_hash` | text | sha256 of method + path + canonical body |
 | `status_code` | int | |
 | `response_body` | jsonb | |
@@ -138,7 +186,7 @@ A trigger refuses `UPDATE` and `DELETE` on `transactions` and `ledger_entries`.
 ## Seed data
 
 No seed is required to use the API. `yarn seed` (Could) creates two demo wallets with
-deposits for the README walkthrough. The fallback FX table is code, not seed data.
+deposits for the README walkthrough. The optional fixed FX table is code, not seed data.
 
 ## Connections and timeouts
 
