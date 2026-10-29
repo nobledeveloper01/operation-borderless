@@ -23,7 +23,7 @@
     "test:int": "ROUTE_COVERAGE=check vitest run --project integration",
     "env:new": "node scripts/make-env.mjs",
     "demo": "node scripts/demo.mjs",
-    "test:routes": "ROUTE_COVERAGE=check UPDATE_ROUTE_COVERAGE=1 vitest run --project integration",
+    "test:routes": "ROUTE_COVERAGE=check UPDATE_ROUTE_COVERAGE=1 vitest run --project integration && prettier --write docs/api-test-coverage.md",
     "test:mutation": "stryker run",
     "openapi": "UPDATE_OPENAPI=1 vitest run test/api/openapi.api.spec.ts",
     "migration:run": "typeorm migration:run -d dist/common/database/data-source.js",
