@@ -16,3 +16,5 @@ coverage/
 keys/
 caddy-root.crt
 *.tsbuildinfo
+.stryker-tmp
+reports

@@ -1,6 +1,8 @@
 import {
   DB_CONFLICT_RETRY,
+  FX_FETCH_RETRY,
   fullJitterDelay,
+  OUTBOX_RETRY,
   withRetry,
 } from '../../../../src/common/retry/retry.js';
 
@@ -55,5 +57,46 @@ describe('retry', () => {
       ),
     ).rejects.toThrow('try 1');
     expect(calls).toBe(1);
+  });
+
+  it('keeps the policies ADR-012 and ADR-016 document', () => {
+    expect(FX_FETCH_RETRY).toEqual({
+      retries: 2,
+      baseDelayMs: 500,
+      maxDelayMs: 4_000,
+    });
+    expect(DB_CONFLICT_RETRY).toEqual({
+      retries: 2,
+      baseDelayMs: 20,
+      maxDelayMs: 200,
+    });
+    expect(OUTBOX_RETRY).toEqual({
+      retries: 10,
+      baseDelayMs: 1_000,
+      maxDelayMs: 300_000,
+    });
+  });
+
+  it('really waits between tries when no sleep is passed in', async () => {
+    vi.useFakeTimers();
+    try {
+      let calls = 0;
+      const done = withRetry(
+        () =>
+          ++calls < 2
+            ? Promise.reject(new Error('busy'))
+            : Promise.resolve('ok'),
+        { retries: 1, baseDelayMs: 1_000, maxDelayMs: 1_000 },
+        () => true,
+        { random: () => 0.5 },
+      );
+      await vi.advanceTimersByTimeAsync(499);
+      expect(calls).toBe(1);
+      await vi.advanceTimersByTimeAsync(1);
+      await expect(done).resolves.toBe('ok');
+      expect(calls).toBe(2);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

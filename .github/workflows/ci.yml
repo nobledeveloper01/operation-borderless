@@ -27,6 +27,8 @@ jobs:
         run: node .yarn/releases/yarn-4.18.1.cjs typecheck
       - name: Tests
         run: node .yarn/releases/yarn-4.18.1.cjs test
+      - name: Mutation tests (money and retry code, fails under 90%)
+        run: node .yarn/releases/yarn-4.18.1.cjs test:mutation
       - name: Build
         run: node .yarn/releases/yarn-4.18.1.cjs build
 
