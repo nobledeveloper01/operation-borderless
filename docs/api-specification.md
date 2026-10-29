@@ -230,7 +230,8 @@ key and body returns the same answer with `Idempotent-Replayed: true`. Errors: `
 
 ```http
 POST /api/v1/transfers
-Idempotency-Key: trf-90ab55e1
+Authorization: Bearer eyJ...
+Idempotency-Key: 90ab55e1-3c7d-4f2a-8e61-0b9d4c2f7a13
 
 {
   "fromWalletId": "0192f5c2-...",
@@ -241,8 +242,15 @@ Idempotency-Key: trf-90ab55e1
 }
 ```
 
-`201`: the transaction with `type: "TRANSFER"`. Same-currency transfers have `rate: "1"`.
-Errors: `400`, `404`, `422`, `503`.
+`201`: the movement result (shape under API-005) with `type: "TRANSFER"`, both wallet IDs,
+both amounts and currencies, the rate, its source and time, and `createdAt`. `balances` shows
+only the sender's balance; the receiver's is never returned. `toCurrency` defaults to
+`fromCurrency`; same-currency transfers have `rate: "1.0000000000"` and `rateSource: "none"`.
+The caller must own `fromWalletId`; `toWalletId` can be any existing wallet.
+
+Errors: `400` (validation, key), `401`, `404` (sender not yours, or receiver unknown), `422`
+(`INSUFFICIENT_FUNDS`, `SAME_WALLET`, `AMOUNT_TOO_SMALL`, `BALANCE_LIMIT`,
+`IDEMPOTENCY_KEY_REUSED`), `429`, `503` (`FX_RATE_UNAVAILABLE`).
 
 ### API-007 History
 

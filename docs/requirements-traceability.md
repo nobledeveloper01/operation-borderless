@@ -16,31 +16,31 @@ Brief → requirement → component/API → test → evidence → status. Status
 | Swaps: live rates preferred, fallback              | FR-007 | `fx` / API-009                      | TC-015–018     | test/api/fx.api.spec.ts, test/unit/fx/*                             | PASS    |
 | Swaps: reject negative balance                     | FR-008 | `ledger`, DB check / API-005        | TC-019, TC-020 | test/api/money.api.spec.ts                                          | PASS    |
 | Swaps: never process twice                         | FR-009 | `idempotency` / API-004–006         | TC-021–024     | test/api/money.api.spec.ts                                          | PASS    |
-| Transfers: between wallets, same or other currency | FR-010 | `transfers`, `ledger` / API-006     | TC-025–027     | —                                                                   | PLANNED |
-| Transfers: auto convert at current rate            | FR-011 | `fx`, `transfers` / API-006         | TC-028         | —                                                                   | PLANNED |
-| Transfers: record all fields                       | FR-012 | `transactions` table / API-008      | TC-029         | —                                                                   | PLANNED |
+| Transfers: between wallets, same or other currency | FR-010 | `transfers`, `ledger` / API-006     | TC-025–027     | test/api/transfers.api.spec.ts                                      | PASS    |
+| Transfers: auto convert at current rate            | FR-011 | `fx`, `transfers` / API-006         | TC-028         | test/api/transfers.api.spec.ts                                      | PASS    |
+| Transfers: record all fields                       | FR-012 | `transactions` table / API-008      | TC-029         | test/api/transfers.api.spec.ts                                      | PASS    |
 | History: all types, newest first                   | FR-013 | `transactions` / API-007            | TC-030         | —                                                                   | PLANNED |
 | History: pagination, filter type and currency      | FR-014 | `transactions` / API-007            | TC-031, TC-032 | —                                                                   | PLANNED |
 | History: single transaction by id                  | FR-015 | `transactions` / API-008            | TC-029, TC-033 | —                                                                   | PLANNED |
 | Rates: all pairs with refresh time                 | FR-016 | `fx` / API-009                      | TC-034         | test/api/fx.api.spec.ts                                             | PASS    |
-| (inferred) transfers refuse overdraft              | FR-017 | `ledger`                            | TC-026, TC-035 | —                                                                   | PLANNED |
+| (inferred) transfers refuse overdraft              | FR-017 | `ledger`                            | TC-026, TC-035 | test/api/transfers.api.spec.ts                                      | PASS    |
 | (inferred) deposits and transfers idempotent       | FR-018 | `idempotency`                       | TC-011, TC-036 | test/api/money.api.spec.ts                                          | PASS    |
 
 ## Authentication (beyond the brief)
 
-| Req                            | Component / API       | Tests          | Status                                                  |
-| ------------------------------ | --------------------- | -------------- | ------------------------------------------------------- |
-| FR-022 login and lockout       | `auth` / API-013      | TC-047–049     | PASS                                                    |
-| FR-023 refresh rotation        | `auth` / API-014      | TC-050, TC-051 | PASS                                                    |
-| FR-024 logout                  | `auth` / API-015      | TC-052         | PASS                                                    |
-| FR-025 wallet keys             | `auth` / API-017–019  | TC-053, TC-054 | PASS                                                    |
-| FR-026 ownership               | auth guard + services | TC-055–057     | PASS (wallet and key routes; transfers wait for TC-057) |
-| FR-027 token checks            | auth guard            | TC-058         | PASS                                                    |
-| BR-13 secrets stored as hashes | `auth`                | TC-059         | PASS                                                    |
-| NFR-060 HTTPS, HSTS            | `proxy` (Caddy)       | TC-060         | PASS (scripts/smoke-tls.sh)                             |
-| NFR-061 database TLS           | `database`, `config`  | TC-061         | PASS (config refuses production without verify-full)    |
-| NFR-062 field encryption       | `crypto`, `auth`      | TC-062, TC-063 | PASS                                                    |
-| NFR-063 ES256 with rotation    | `auth`                | TC-058         | PASS                                                    |
+| Req                            | Component / API       | Tests          | Status                                               |
+| ------------------------------ | --------------------- | -------------- | ---------------------------------------------------- |
+| FR-022 login and lockout       | `auth` / API-013      | TC-047–049     | PASS                                                 |
+| FR-023 refresh rotation        | `auth` / API-014      | TC-050, TC-051 | PASS                                                 |
+| FR-024 logout                  | `auth` / API-015      | TC-052         | PASS                                                 |
+| FR-025 wallet keys             | `auth` / API-017–019  | TC-053, TC-054 | PASS                                                 |
+| FR-026 ownership               | auth guard + services | TC-055–057     | PASS                                                 |
+| FR-027 token checks            | auth guard            | TC-058         | PASS                                                 |
+| BR-13 secrets stored as hashes | `auth`                | TC-059         | PASS                                                 |
+| NFR-060 HTTPS, HSTS            | `proxy` (Caddy)       | TC-060         | PASS (scripts/smoke-tls.sh)                          |
+| NFR-061 database TLS           | `database`, `config`  | TC-061         | PASS (config refuses production without verify-full) |
+| NFR-062 field encryption       | `crypto`, `auth`      | TC-062, TC-063 | PASS                                                 |
+| NFR-063 ES256 with rotation    | `auth`                | TC-058         | PASS                                                 |
 
 ## Stack and deliverables (brief p.1–3)
 
