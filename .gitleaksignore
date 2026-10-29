@@ -1,0 +1,13 @@
+# Example values in docs and tests, and local-only keys that production refuses to start with.
+7b4225dca875bac7c9fcb3e4762effbbdd2510d2:README.md:generic-api-key:176
+406aaffc3cb36df854066e775ed148da6cb264f7:docs/api-specification.md:generic-api-key:234
+3df9e17ad887db1aabd31016b97ade58b031e82e:docs/api-specification.md:generic-api-key:179
+3df9e17ad887db1aabd31016b97ade58b031e82e:docs/api-specification.md:generic-api-key:193
+1bb52e8d920cf7439bd82e81129851fe16eafda7:test/unit/fx/fx.service.spec.ts:generic-api-key:17
+79869b0191abd3847c8d3d8d5939db18b969221d:test/unit/config/env.validation.spec.ts:generic-api-key:6
+79869b0191abd3847c8d3d8d5939db18b969221d:.env.example:generic-api-key:59
+79869b0191abd3847c8d3d8d5939db18b969221d:test/support/env.ts:generic-api-key:15
+869073bf6f19d9a11f0d27bd7daed3f5fe4c8cb1:test/unit/auth/access-tokens.spec.ts:generic-api-key:12
+61342a0d635f8cee2e506181072af9d69b092d3a:docs/api-specification.md:generic-api-key:120
+61342a0d635f8cee2e506181072af9d69b092d3a:docs/api-specification.md:generic-api-key:281
+a7391492a961fb64ae969ea32be174a6514d68b6:docs/api-specification.md:generic-api-key:134
