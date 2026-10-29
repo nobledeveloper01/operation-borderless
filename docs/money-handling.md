@@ -11,7 +11,7 @@ version; the README will summarise it.
   through a JavaScript `number`.
 - The API accepts amounts as strings matching `^\d{1,15}(\.\d{1,6})?$` and returns them with
   exactly 6 decimals. More than 6 decimals is refused, not rounded.
-- Cap per operation (_proposed_): 1,000,000,000 units of the currency. The largest balance a
+- Cap per operation: 1,000,000,000 units of the currency. The largest balance a
   `bigint` holds at this scale is about 9.2 trillion units. A credit that would take a balance
   past that is refused with `422 BALANCE_LIMIT`, checked under the row lock.
 

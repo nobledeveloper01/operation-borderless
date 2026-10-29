@@ -85,6 +85,21 @@ Dependencies: Docker, internet for live rates (optional), GitHub.
 | D-12 | Account vs wallet                                         | One account per identifier, one wallet per account, created together by `POST /wallets`                                                                                                                 |
 | D-13 | Encryption                                                | HTTPS via Caddy with HSTS, database TLS setting, AES-256-GCM email and phone with HMAC lookup, ES256 tokens; no JWE or JWS now (ADR-009)                                                                |
 
+## Decisions made during the build
+
+| ID   | Decision                                                                                    | Record  |
+| ---- | ------------------------------------------------------------------------------------------- | ------- |
+| D-14 | Features in `src/modules`, shared code in `src/common`                                      | ADR-010 |
+| D-15 | Keep ExchangeRate-API and document its no-redistribution clause                             | ADR-011 |
+| D-16 | One retry helper with full-jitter backoff; money transactions retry deadlocks               | ADR-012 |
+| D-17 | Metrics, ledger check and platform account behind an operator token, no outside service     | ADR-013 |
+| D-18 | 0.5% conversion fee; fees and rounding to an append-only platform account                   | ADR-014 |
+| D-19 | Quotes that hold for 30 seconds and are spent once (replaces the read-only preview of D-09) | ADR-015 |
+| D-20 | Transactional outbox delivered as in-app notices; no SMTP                                   | ADR-016 |
+| D-21 | Send to an email or phone; inviting people without a wallet needs SMTP, so it waits         | ADR-017 |
+| D-22 | Property-based and mutation testing, in CI                                                  | ADR-018 |
+| D-23 | One wallet per email or phone; one person may hold two                                      | ADR-019 |
+
 ## Submission
 
 Deliverable: the public repo link, sent by email with the candidate's full name. The email

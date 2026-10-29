@@ -108,7 +108,7 @@ test fails if the two drift.
 | API-011 | `POST /quotes`                                                 | Quote that holds for 30 s (ADR-015)     | 201       |
 | API-012 | `POST /transfers` with `toEmail` / `toPhoneNumber`             | Send to an email or phone (ADR-017)     | 201       |
 
-Rate limit (_proposed_): 120 requests per minute per IP overall, 30 per minute per IP on
+Rate limit: 120 requests per minute per IP overall, 30 per minute per IP on
 money writes, 10 per minute per IP on wallet creation and login.
 
 ### API-001 Create wallet

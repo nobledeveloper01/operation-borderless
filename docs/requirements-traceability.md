@@ -28,19 +28,24 @@ Brief → requirement → component/API → test → evidence → status. Status
 
 ## Authentication (beyond the brief)
 
-| Req                            | Component / API       | Tests          | Status                                               |
-| ------------------------------ | --------------------- | -------------- | ---------------------------------------------------- |
-| FR-022 login and lockout       | `auth` / API-013      | TC-047–049     | PASS                                                 |
-| FR-023 refresh rotation        | `auth` / API-014      | TC-050, TC-051 | PASS                                                 |
-| FR-024 logout                  | `auth` / API-015      | TC-052         | PASS                                                 |
-| FR-025 wallet keys             | `auth` / API-017–019  | TC-053, TC-054 | PASS                                                 |
-| FR-026 ownership               | auth guard + services | TC-055–057     | PASS                                                 |
-| FR-027 token checks            | auth guard            | TC-058         | PASS                                                 |
-| BR-13 secrets stored as hashes | `auth`                | TC-059         | PASS                                                 |
-| NFR-060 HTTPS, HSTS            | `proxy` (Caddy)       | TC-060         | PASS (scripts/smoke-tls.sh)                          |
-| NFR-061 database TLS           | `database`, `config`  | TC-061         | PASS (config refuses production without verify-full) |
-| NFR-062 field encryption       | `crypto`, `auth`      | TC-062, TC-063 | PASS                                                 |
-| NFR-063 ES256 with rotation    | `auth`                | TC-058         | PASS                                                 |
+| Req                            | Component / API           | Tests          | Status                                               |
+| ------------------------------ | ------------------------- | -------------- | ---------------------------------------------------- |
+| FR-022 login and lockout       | `auth` / API-013          | TC-047–049     | PASS                                                 |
+| FR-023 refresh rotation        | `auth` / API-014          | TC-050, TC-051 | PASS                                                 |
+| FR-024 logout                  | `auth` / API-015          | TC-052         | PASS                                                 |
+| FR-025 wallet keys             | `auth` / API-017–019      | TC-053, TC-054 | PASS                                                 |
+| FR-026 ownership               | auth guard + services     | TC-055–057     | PASS                                                 |
+| FR-027 token checks            | auth guard                | TC-058         | PASS                                                 |
+| FR-019 quotes                  | `quotes` / API-011        | TC-067         | PASS (test/api/quotes.api.spec.ts)                   |
+| FR-020 send to email or phone  | `transfers` / API-012     | TC-069         | PASS (test/api/send-to-address.api.spec.ts)          |
+| FR-028 conversion fees         | `pricing`, `ledger`       | TC-066         | PASS (test/api/fees.api.spec.ts)                     |
+| FR-029 events and notices      | `outbox` / API-022–023    | TC-068         | PASS (test/api/outbox.api.spec.ts)                   |
+| FR-030 operator routes         | `ops` / API-020, 021, 024 | TC-065         | PASS (test/api/ops.api.spec.ts)                      |
+| BR-13 secrets stored as hashes | `auth`                    | TC-059         | PASS                                                 |
+| NFR-060 HTTPS, HSTS            | `proxy` (Caddy)           | TC-060         | PASS (scripts/smoke-tls.sh)                          |
+| NFR-061 database TLS           | `database`, `config`      | TC-061         | PASS (config refuses production without verify-full) |
+| NFR-062 field encryption       | `crypto`, `auth`          | TC-062, TC-063 | PASS                                                 |
+| NFR-063 ES256 with rotation    | `auth`                    | TC-058         | PASS                                                 |
 
 ## Stack and deliverables (brief p.1–3)
 

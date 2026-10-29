@@ -1,8 +1,8 @@
 # Non-Functional Requirements
 
 "Mandatory" means the brief states it. "Recommended" means I add it because it is cheap and
-protects money correctness or the reviewer's experience. Numbers marked _proposed_ are my
-own targets; the brief sets none.
+protects money correctness or the reviewer's experience. The numbers (timeouts, limits,
+latency targets) are my own; the brief sets none.
 
 ## Stack and tooling (brief p.1–2)
 
@@ -35,12 +35,13 @@ own targets; the brief sets none.
 | NFR-021 | Requests never wait on the FX provider; they read the stored snapshot.                                                                           | Recommended                   |
 | NFR-022 | Config is validated at startup; the app refuses to start on bad values.                                                                          | Recommended                   |
 | NFR-023 | Graceful shutdown closes the HTTP server and database pool.                                                                                      | Recommended                   |
-| NFR-024 | Database statement timeout 5 s and lock timeout 3 s (_proposed_).                                                                                | Recommended                   |
+| NFR-024 | Database statement timeout 5 s and lock timeout 3 s (built).                                                                                     | Recommended                   |
 
-## Performance (_proposed_, checked only roughly)
+## Performance
 
-- Reads p95 under 100 ms and money writes p95 under 200 ms on a laptop with 20 parallel
-  clients. Not a brief requirement; I report a measurement only if I run one.
+- Target: reads p95 under 100 ms and money writes p95 under 200 ms on a laptop. Measured with
+  32 parallel clients ([load-test.md](load-test.md)): reads p95 22–26 ms, deposits 33 ms,
+  transfers 44 ms, transfers all from one wallet 93 ms, with no errors.
 - History queries use an index on `(wallet_id, created_at DESC)`; no per-item queries.
 
 ## Security

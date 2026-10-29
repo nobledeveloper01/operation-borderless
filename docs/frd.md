@@ -257,6 +257,26 @@ Same as FR-009. Tests TC-011, TC-036.
 - Expired, wrongly signed, `alg: none`, wrong `iss`/`aud`, malformed → `401`.
 - **Tests:** TC-058.
 
+## FR-028 Conversion fees (beyond the brief)
+
+- **Rule:** swaps and cross-currency transfers pay `FEE_BPS` (50 by default) from the amount sent,
+  rounded up; same-currency transfers and deposits are free; per-pair overrides. Fees and whole
+  leftover millionths go to the platform account. See ADR-014.
+- **Tests:** TC-066.
+
+## FR-029 Events and notices (beyond the brief)
+
+- **Rule:** every movement writes outbox events in its transaction; a worker delivers them as
+  in-app notices, at most once each, with retries. `GET /wallets/{walletId}/notifications`.
+  See ADR-016.
+- **Tests:** TC-068.
+
+## FR-030 Operator routes (beyond the brief)
+
+- **Rule:** `GET /ops/metrics`, `/ops/ledger-check` and `/ops/platform-account` need
+  `X-Ops-Token`; wallet credentials are refused. See ADR-013.
+- **Tests:** TC-065.
+
 ## Health (Should)
 
 - **FR-021:** `GET /health` (process up) and `GET /health/ready` (database reachable). No
