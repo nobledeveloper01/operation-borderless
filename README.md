@@ -573,8 +573,11 @@ Full detail is in [money handling](docs/money-handling.md). In short:
 
 ## Assumptions
 
-- A wallet needs an email or a phone number, or both. Each is unique on its own. Phone numbers
-  without a country code are read as Nigerian (+234).
+- A wallet needs an email or a phone number, or both. Each is unique on its own, and each
+  account has exactly one wallet. Because email and phone are checked separately, one person
+  can sign up once with each and hold two wallets; without identity checks the system can't
+  tell they are the same person ([ADR-019](docs/decisions/ADR-019-one-wallet-per-identifier.md)).
+  Phone numbers without a country code are read as Nigerian (+234).
 - Each stablecoin is worth 1 unit of its fiat currency, so FX comes from fiat rates.
 - All five stablecoins use 6 decimal places.
 - Deposits are simulated: instant, and they always succeed.

@@ -22,3 +22,4 @@ Each record says what I decided, why, and what it costs.
 | [016](ADR-016-outbox-and-notifications.md)      | A transactional outbox, delivered inside the API as in-app notices                     |
 | [017](ADR-017-send-to-email-or-phone.md)        | Send to an email or phone number; inviting people needs SMTP, so it waits              |
 | [018](ADR-018-property-and-mutation-testing.md) | Property-based tests for the money rules, and mutation testing to prove the tests bite |
+| [019](ADR-019-one-wallet-per-identifier.md)     | One wallet per email or phone; one person may still hold two                           |
