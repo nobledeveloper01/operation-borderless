@@ -1,5 +1,6 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
+import { DataSource } from 'typeorm';
 import { createTestApp } from '../support/test-app.js';
 
 describe('platform', () => {
@@ -27,6 +28,40 @@ describe('platform', () => {
       .get('/health/ready')
       .expect(200);
     expect(ready.body.data).toEqual({ status: 'ok' });
+  });
+
+  it('TC-046 answers 503 NOT_READY while the database is down', async () => {
+    const db = app.get(DataSource);
+    const query = vi
+      .spyOn(db, 'query')
+      .mockRejectedValueOnce(new Error('connection refused'));
+    const res = await request(app.getHttpServer())
+      .get('/health/ready')
+      .expect(503);
+    expect(res.body.code).toBe('NOT_READY');
+    expect(query).toHaveBeenCalledWith('SELECT 1');
+    query.mockRestore();
+  });
+
+  it('never rate limits health checks', async () => {
+    const small = await createTestApp({ RATE_LIMIT_PER_MINUTE: '5' });
+    const statuses = await Promise.all(
+      Array.from({ length: 20 }, () =>
+        request(small.getHttpServer())
+          .get('/health')
+          .then((r) => r.status),
+      ),
+    );
+    expect(new Set(statuses)).toEqual(new Set([200]));
+    const rates = await Promise.all(
+      Array.from({ length: 20 }, () =>
+        request(small.getHttpServer())
+          .get('/api/v1/fx/rates')
+          .then((r) => r.status),
+      ),
+    );
+    expect(rates).toContain(429);
+    await small.close();
   });
 
   it('marks every answer as not cacheable', async () => {
