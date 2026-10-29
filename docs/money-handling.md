@@ -71,28 +71,38 @@ Borderless follows the second:
 
 1. **Primary refresh:** on startup, then 5 minutes after the provider's
    `time_next_update_utc`. This keeps the API on the latest publication while calling about once
-   a day, as the provider asks. 3 s timeout, up to 2 retries with full-jitter backoff (base
-   500 ms) on network errors, timeouts and 5xx. A `429` is not retried; the next try waits 30 minutes.
+   a day, as the provider asks. The provider's next-update time is only a hint: the wait is
+   capped at 24 hours and always ends 15 minutes before the current rates would go stale.
+   3 s timeout, up to 2 retries with full-jitter backoff (base 500 ms) on network errors,
+   timeouts and 5xx. A `429` is not retried, and the next try waits 30 minutes even if the
+   secondary answered. Bodies over 1 MB are cut off while reading, and redirects are refused.
 2. **Failure:** if the primary fails or its data is older than 26 h, fetch the secondary
    (same timeout and retry rules). Failed refreshes retry every 15 minutes with jitter until
    one source succeeds.
 3. **Validation:** both adapters check that all five fiat codes are present, each a finite
    number `> 0`, and the update time is parseable and not in the future. Anything else is a
-   failed fetch. A rate that moves more than 20% from the previous snapshot is refused and
-   logged as suspicious.
-4. A valid response is stored as a new `fx_snapshots` row with `source`,
+   failed fetch.
+4. **Big moves need two sources.** An answer that moves any rate more than 20% from the
+   current live rates, or the very first answer when there are no live rates yet, is used only
+   if the other provider agrees with it within 2%. One broken feed is refused; a real
+   devaluation, seen by both, is accepted at once. When the two disagree and nothing trusted
+   exists yet, neither is used until they agree. A single answer is accepted only when there
+   is no trusted rate and the other source is down.
+5. A valid response is stored as a new `fx_snapshots` row with `source`,
    `provider_updated_at` and `fetched_at`.
-5. **Pricing:** the newest snapshot (from either source) whose provider data is at most
+6. **Pricing:** the newest snapshot (from either source) whose provider data is at most
    26 h old. If none, swaps and transfers get `503` and nothing moves. Deposits and reads
    still work; balances show `totalUsd: null` with the reason.
-6. `GET /fx/rates` always answers: the newest snapshot, with `isStale: true` once it is past
+7. `GET /fx/rates` always answers: the newest snapshot, with `isStale: true` once it is past
    26 h, so clients can see the last known rates and their age.
-7. Requests never call a provider. A slow provider can't slow the API.
-8. Every transaction stores its rate, source and the provider update time it used.
+8. Requests never call a provider. A slow provider can't slow the API.
+9. Every transaction stores its rate, source and the provider update time it used.
 
 A fixed rate table (which the brief also allows) exists only for offline demos and tests,
 behind `FX_FIXED_TABLE=false` by default. When turned on it is used only if both live
-sources fail, and every response and transaction marks it `fixed-table`.
+sources fail, and every response and transaction marks it `fixed-table`. Live rates replace it
+as soon as a provider answers again, and it is never loaded after a restart with the setting
+off.
 
 ### Pegs
 

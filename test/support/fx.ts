@@ -41,7 +41,7 @@ export class FakeProvider implements FxProvider {
 
   constructor(readonly name: ProviderRates['source']) {}
 
-  fetchLatest(): Promise<ProviderRates> {
+  fetchLatest(_now: Date): Promise<ProviderRates> {
     this.calls++;
     return this.answer instanceof FetchFailure
       ? Promise.reject(this.answer)

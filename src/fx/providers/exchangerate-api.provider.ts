@@ -41,9 +41,10 @@ export class ExchangeRateApiProvider implements FxProvider {
     private readonly timeoutMs: number,
   ) {}
 
-  async fetchLatest(): Promise<ProviderRates> {
+  async fetchLatest(now: Date): Promise<ProviderRates> {
     return parseExchangeRateApi(
       await fetchJson(this.url, { timeoutMs: this.timeoutMs }),
+      now,
     );
   }
 }

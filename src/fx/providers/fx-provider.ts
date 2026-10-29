@@ -4,5 +4,5 @@ export const FX_PROVIDERS = Symbol('FX_PROVIDERS');
 
 export interface FxProvider {
   readonly name: ProviderRates['source'];
-  fetchLatest(): Promise<ProviderRates>;
+  fetchLatest(now: Date): Promise<ProviderRates>;
 }

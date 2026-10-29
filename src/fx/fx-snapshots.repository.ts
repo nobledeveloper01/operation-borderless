@@ -36,11 +36,13 @@ export class FxSnapshotsRepository {
     return toSnapshot(rows[0]!);
   }
 
-  // The newest publication wins, whichever source it came from.
-  async latest(): Promise<FxSnapshot | undefined> {
+  // Live data always outranks the fixed demo table, which is only loaded at all when it is switched on.
+  async latest(includeFixed: boolean): Promise<FxSnapshot | undefined> {
     const rows = await this.db.query<SnapshotRow[]>(
       `SELECT id, source, rates, provider_updated_at, fetched_at FROM fx_snapshots
-        ORDER BY provider_updated_at DESC, fetched_at DESC LIMIT 1`,
+        WHERE $1 OR source <> 'fixed-table'
+        ORDER BY (source = 'fixed-table'), provider_updated_at DESC, fetched_at DESC LIMIT 1`,
+      [includeFixed],
     );
     return rows[0] ? toSnapshot(rows[0]) : undefined;
   }

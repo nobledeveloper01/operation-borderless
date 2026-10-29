@@ -31,9 +31,10 @@ export class CurrencyApiProvider implements FxProvider {
     private readonly timeoutMs: number,
   ) {}
 
-  async fetchLatest(): Promise<ProviderRates> {
+  async fetchLatest(now: Date): Promise<ProviderRates> {
     return parseCurrencyApi(
       await fetchJson(this.url, { timeoutMs: this.timeoutMs }),
+      now,
     );
   }
 }

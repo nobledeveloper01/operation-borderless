@@ -25,12 +25,28 @@ describe('nextRefreshDelay', () => {
     expect(
       nextRefreshDelay({ kind: 'failed', rateLimited: false }, now, mid),
     ).toBe(900_000);
-    expect(nextRefreshDelay({ kind: 'secondary' }, now, mid)).toBe(900_000);
+    expect(
+      nextRefreshDelay({ kind: 'secondary', rateLimited: false }, now, mid),
+    ).toBe(900_000);
     expect(
       nextRefreshDelay({ kind: 'failed', rateLimited: true }, now, mid),
     ).toBe(1_800_000);
     expect(
       nextRefreshDelay({ kind: 'failed', rateLimited: false }, now, () => 0),
     ).toBe(810_000);
+  });
+
+  it('never trusts a far-off next-update time: it refreshes before the rates go stale, and within a day', () => {
+    const staleAt = new Date(now.getTime() + 10 * 3_600_000);
+    const farAway = {
+      kind: 'primary' as const,
+      nextUpdateAt: new Date(now.getTime() + 40 * 86_400_000),
+    };
+    expect(nextRefreshDelay(farAway, now, mid, staleAt)).toBeLessThanOrEqual(
+      10 * 3_600_000,
+    );
+    expect(nextRefreshDelay(farAway, now, mid)).toBeLessThanOrEqual(
+      24 * 3_600_000,
+    );
   });
 });

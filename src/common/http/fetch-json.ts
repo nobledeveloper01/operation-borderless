@@ -91,12 +91,37 @@ async function fetchOnce(
       response.status,
     );
 
-  const text = await response.text();
-  if (text.length > (options.maxBytes ?? 1_000_000))
-    throw new FetchFailure('invalid_body', 'The answer is too large');
+  const text = await readCapped(response, options.maxBytes ?? 1_000_000);
   try {
     return JSON.parse(text) as unknown;
   } catch {
     throw new FetchFailure('invalid_body', 'The answer is not JSON');
   }
+}
+
+// Reads the body chunk by chunk and stops as soon as it passes the cap, so a huge answer never fills memory.
+async function readCapped(
+  response: Response,
+  maxBytes: number,
+): Promise<string> {
+  const declared = Number(response.headers.get('content-length'));
+  if (Number.isFinite(declared) && declared > maxBytes) {
+    await response.body?.cancel();
+    throw new FetchFailure('invalid_body', 'The answer is too large');
+  }
+  if (!response.body) return '';
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > maxBytes) {
+      await reader.cancel();
+      throw new FetchFailure('invalid_body', 'The answer is too large');
+    }
+    chunks.push(value);
+  }
+  return new TextDecoder().decode(Buffer.concat(chunks));
 }

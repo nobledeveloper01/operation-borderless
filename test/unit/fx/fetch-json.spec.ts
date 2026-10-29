@@ -71,3 +71,25 @@ describe('fetchJson', () => {
     ).rejects.toMatchObject({ kind: 'timeout' });
   });
 });
+
+describe('fetchJson size cap', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('stops reading an endless answer once it passes the cap', async () => {
+    const chunk = new Uint8Array(64 * 1024);
+    const endless = new ReadableStream<Uint8Array>({
+      pull: (c) => c.enqueue(chunk),
+    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.resolve(new Response(endless, { status: 200 }))),
+    );
+    await expect(
+      fetchJson('https://x.test', {
+        timeoutMs: 60_000,
+        maxBytes: 256 * 1024,
+        retries: 0,
+      }),
+    ).rejects.toMatchObject({ kind: 'invalid_body' });
+  });
+});
