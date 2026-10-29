@@ -136,6 +136,13 @@ yarn typecheck
 
 CI runs the first three, `yarn test`, the build and a Docker image build on every push to
 `main` and every pull request.
+A sweep test reads `docs/openapi.json` and calls every route one by one: without credentials,
+for someone else's wallet, with a malformed ID, an empty body or no `Idempotency-Key`, and
+past the rate limit. After a full run, `yarn test` fails if any documented route never
+answered with success; `yarn test:routes` rewrites [the coverage table](docs/api-test-coverage.md).
+Every bug fixed so far has a test that failed first, listed in
+[regression tests](docs/regression-tests.md).
+
 Property-based tests (fast-check) generate thousands of amounts, rates and random sequences of
 movements and check the money rules on each. `yarn test:mutation` (Stryker) breaks the money
 and retry code on purpose, one small change at a time, and checks a test notices; it runs in
@@ -681,6 +688,8 @@ Full detail is in [money handling](docs/money-handling.md). In short:
 | [Security review](docs/security-review.md)                         | Threat model and the control for each threat                   |
 | [Test strategy](docs/test-strategy.md)                             | Unit, integration, API, concurrency and contract tests         |
 | [Load test](docs/load-test.md)                                     | Throughput, latency and money checks under parallel load       |
+| [API test coverage](docs/api-test-coverage.md)                     | Every route with the statuses its tests produce                |
+| [Regression tests](docs/regression-tests.md)                       | Every bug fixed and the test that guards it                    |
 | [Requirements traceability](docs/requirements-traceability.md)     | Brief → requirement → component → test → evidence              |
 | [Delivery plan](docs/plan.md)                                      | The 48-hour schedule, assumptions, risks and open decisions    |
 | [Pre-launch checklist](docs/checklists/pre-launch-checklist.md)    | Every check, marked mandatory, recommended or not applicable   |

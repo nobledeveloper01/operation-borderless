@@ -1,5 +1,6 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
+import { inject } from 'vitest';
 import { AppModule } from '../../src/app.module.js';
 import { configureApp } from '../../src/app.setup.js';
 import { CLOCK, type Clock } from '../../src/common/clock.js';
@@ -11,6 +12,7 @@ import {
   FX_PROVIDERS,
   type FxProvider,
 } from '../../src/modules/fx/providers/fx-provider.js';
+import { recordRoutes } from './route-coverage.js';
 
 export interface TestAppOptions {
   // Fake FX providers in primary-then-secondary order; without them the real adapters are wired but never called.
@@ -38,6 +40,7 @@ export async function createTestApp(
     bodyParser: false,
   });
   configureApp(app);
+  recordRoutes(app, inject('routeHits'));
   // A real port lets many parallel supertest calls share one server.
   await app.listen(0, '127.0.0.1');
   return app;

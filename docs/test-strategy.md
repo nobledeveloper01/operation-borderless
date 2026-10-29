@@ -12,16 +12,17 @@
 
 ## Commands
 
-| Command                                            | Runs                                                                       |
-| -------------------------------------------------- | -------------------------------------------------------------------------- |
-| `yarn test`                                        | Everything below except mutation (brief: "runs the full suite and passes") |
-| `yarn test:unit`                                   | Unit tests only, no Docker                                                 |
-| `yarn test:int`                                    | Integration and API tests                                                  |
-| `yarn test:mutation`                               | Stryker on the money and retry code; fails under 90%                       |
-| `yarn openapi`                                     | Rewrites `docs/openapi.json` after a route change                          |
-| `yarn lint`, `yarn format:check`, `yarn typecheck` | Static checks                                                              |
-| `./scripts/smoke-tls.sh`, `yarn demo`              | Checks against a running compose stack                                     |
-| `node scripts/load-test.mjs`                       | Load test; results in [load-test.md](load-test.md)                         |
+| Command                                            | Runs                                                                          |
+| -------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `yarn test`                                        | Everything below except mutation (brief: "runs the full suite and passes")    |
+| `yarn test:unit`                                   | Unit tests only, no Docker                                                    |
+| `yarn test:int`                                    | Integration and API tests                                                     |
+| `yarn test:routes`                                 | Integration suite, then rewrites [api-test-coverage.md](api-test-coverage.md) |
+| `yarn test:mutation`                               | Stryker on the money and retry code; fails under 90%                          |
+| `yarn openapi`                                     | Rewrites `docs/openapi.json` after a route change                             |
+| `yarn lint`, `yarn format:check`, `yarn typecheck` | Static checks                                                                 |
+| `./scripts/smoke-tls.sh`, `yarn demo`              | Checks against a running compose stack                                        |
+| `node scripts/load-test.mjs`                       | Load test; results in [load-test.md](load-test.md)                            |
 
 ## Levels
 

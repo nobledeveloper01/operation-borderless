@@ -252,6 +252,12 @@ describe('quotes', () => {
       toCurrency: 'cNGN',
       amount: '-1',
     }).expect(400);
+    const tiny = await quote(w, {
+      fromCurrency: 'USDx',
+      toCurrency: 'cNGN',
+      amount: '0.000001',
+    }).expect(422);
+    expect(tiny.body.code).toBe('AMOUNT_TOO_SMALL');
     await request(app.getHttpServer())
       .post('/api/v1/quotes')
       .send({ fromCurrency: 'USDx', toCurrency: 'cNGN', amount: '1' })

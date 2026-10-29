@@ -70,12 +70,7 @@ describe('operations', () => {
   });
 
   it('TC-037 finds balances that drift from their ledger lines', async () => {
-    const clean = await request(server())
-      .get('/api/v1/ops/ledger-check')
-      .set(OPS)
-      .expect(200);
-    const baseline = clean.body.data.mismatchCount as number;
-
+    // Other test files write balances directly on purpose, so this checks for its own row, not a total.
     const w = await createWallet(app);
     await deposit(app, w, 'cXAF', '9').expect(201);
     await db.query(
@@ -88,7 +83,7 @@ describe('operations', () => {
         .set(OPS)
         .expect(200);
       expect(res.body.data.ok).toBe(false);
-      expect(res.body.data.mismatchCount).toBe(baseline + 1);
+      expect(res.body.data.mismatchCount).toBeGreaterThanOrEqual(1);
       expect(res.body.data.mismatches).toContainEqual({
         walletId: w.walletId,
         currency: 'cXAF',
@@ -99,9 +94,8 @@ describe('operations', () => {
         .get('/api/v1/ops/metrics')
         .set(OPS)
         .expect(200);
-      expect(metrics.text).toContain(
-        `borderless_ledger_mismatches ${baseline + 1}`,
-      );
+      // The gauge holds the count from the last check, which is at least this one.
+      expect(metrics.text).toMatch(/^borderless_ledger_mismatches [1-9]\d*$/m);
     } finally {
       await db.query(
         `UPDATE balances SET amount = amount - 1 WHERE wallet_id = $1 AND currency = 'cXAF'`,
