@@ -5,26 +5,26 @@ Brief → requirement → component/API → test → evidence → status. Status
 
 ## Functional (brief p.2–3)
 
-| Brief                                              | Req    | Component / API                     | Tests          | Evidence                                                            | Status  |
-| -------------------------------------------------- | ------ | ----------------------------------- | -------------- | ------------------------------------------------------------------- | ------- |
-| Wallets: create with email or mobile               | FR-001 | `wallets` / API-001                 | TC-001–003     | test/api/accounts-auth.api.spec.ts                                  | PASS    |
-| Wallets: same email or number can't create two     | FR-002 | `wallets`, unique indexes / API-001 | TC-004, TC-005 | test/api/accounts-auth.api.spec.ts, test/integration/schema.spec.ts | PASS    |
-| Wallets: balance per stablecoin                    | FR-003 | `balances` table / API-001–003      | TC-001, TC-006 | test/api/accounts-auth.api.spec.ts, test/integration/schema.spec.ts | PASS    |
-| Wallets: all balances + USD total                  | FR-004 | `wallets`, `fx` / API-002, API-003  | TC-007, TC-008 | test/api/fx.api.spec.ts                                             | PASS    |
-| Deposits: currency + amount, immediate, record     | FR-005 | `deposits`, `ledger` / API-004      | TC-009–011     | test/api/money.api.spec.ts                                          | PASS    |
-| Swaps: within one wallet using FX                  | FR-006 | `swaps`, `ledger`, `fx` / API-005   | TC-012–014     | test/api/money.api.spec.ts                                          | PASS    |
-| Swaps: live rates preferred, fallback              | FR-007 | `fx` / API-009                      | TC-015–018     | test/api/fx.api.spec.ts, test/unit/fx/*                             | PASS    |
-| Swaps: reject negative balance                     | FR-008 | `ledger`, DB check / API-005        | TC-019, TC-020 | test/api/money.api.spec.ts                                          | PASS    |
-| Swaps: never process twice                         | FR-009 | `idempotency` / API-004–006         | TC-021–024     | test/api/money.api.spec.ts                                          | PASS    |
-| Transfers: between wallets, same or other currency | FR-010 | `transfers`, `ledger` / API-006     | TC-025–027     | test/api/transfers.api.spec.ts                                      | PASS    |
-| Transfers: auto convert at current rate            | FR-011 | `fx`, `transfers` / API-006         | TC-028         | test/api/transfers.api.spec.ts                                      | PASS    |
-| Transfers: record all fields                       | FR-012 | `transactions` table / API-008      | TC-029         | test/api/transfers.api.spec.ts                                      | PASS    |
-| History: all types, newest first                   | FR-013 | `transactions` / API-007            | TC-030         | —                                                                   | PLANNED |
-| History: pagination, filter type and currency      | FR-014 | `transactions` / API-007            | TC-031, TC-032 | —                                                                   | PLANNED |
-| History: single transaction by id                  | FR-015 | `transactions` / API-008            | TC-029, TC-033 | —                                                                   | PLANNED |
-| Rates: all pairs with refresh time                 | FR-016 | `fx` / API-009                      | TC-034         | test/api/fx.api.spec.ts                                             | PASS    |
-| (inferred) transfers refuse overdraft              | FR-017 | `ledger`                            | TC-026, TC-035 | test/api/transfers.api.spec.ts                                      | PASS    |
-| (inferred) deposits and transfers idempotent       | FR-018 | `idempotency`                       | TC-011, TC-036 | test/api/money.api.spec.ts                                          | PASS    |
+| Brief                                              | Req    | Component / API                     | Tests          | Evidence                                                            | Status |
+| -------------------------------------------------- | ------ | ----------------------------------- | -------------- | ------------------------------------------------------------------- | ------ |
+| Wallets: create with email or mobile               | FR-001 | `wallets` / API-001                 | TC-001–003     | test/api/accounts-auth.api.spec.ts                                  | PASS   |
+| Wallets: same email or number can't create two     | FR-002 | `wallets`, unique indexes / API-001 | TC-004, TC-005 | test/api/accounts-auth.api.spec.ts, test/integration/schema.spec.ts | PASS   |
+| Wallets: balance per stablecoin                    | FR-003 | `balances` table / API-001–003      | TC-001, TC-006 | test/api/accounts-auth.api.spec.ts, test/integration/schema.spec.ts | PASS   |
+| Wallets: all balances + USD total                  | FR-004 | `wallets`, `fx` / API-002, API-003  | TC-007, TC-008 | test/api/fx.api.spec.ts                                             | PASS   |
+| Deposits: currency + amount, immediate, record     | FR-005 | `deposits`, `ledger` / API-004      | TC-009–011     | test/api/money.api.spec.ts                                          | PASS   |
+| Swaps: within one wallet using FX                  | FR-006 | `swaps`, `ledger`, `fx` / API-005   | TC-012–014     | test/api/money.api.spec.ts                                          | PASS   |
+| Swaps: live rates preferred, fallback              | FR-007 | `fx` / API-009                      | TC-015–018     | test/api/fx.api.spec.ts, test/unit/fx/*                             | PASS   |
+| Swaps: reject negative balance                     | FR-008 | `ledger`, DB check / API-005        | TC-019, TC-020 | test/api/money.api.spec.ts                                          | PASS   |
+| Swaps: never process twice                         | FR-009 | `idempotency` / API-004–006         | TC-021–024     | test/api/money.api.spec.ts                                          | PASS   |
+| Transfers: between wallets, same or other currency | FR-010 | `transfers`, `ledger` / API-006     | TC-025–027     | test/api/transfers.api.spec.ts                                      | PASS   |
+| Transfers: auto convert at current rate            | FR-011 | `fx`, `transfers` / API-006         | TC-028         | test/api/transfers.api.spec.ts                                      | PASS   |
+| Transfers: record all fields                       | FR-012 | `transactions` table / API-008      | TC-029         | test/api/transfers.api.spec.ts                                      | PASS   |
+| History: all types, newest first                   | FR-013 | `transactions` / API-007            | TC-030         | test/api/history.api.spec.ts                                        | PASS   |
+| History: pagination, filter type and currency      | FR-014 | `transactions` / API-007            | TC-031, TC-032 | test/api/history.api.spec.ts                                        | PASS   |
+| History: single transaction by id                  | FR-015 | `transactions` / API-008            | TC-029, TC-033 | test/api/history.api.spec.ts                                        | PASS   |
+| Rates: all pairs with refresh time                 | FR-016 | `fx` / API-009                      | TC-034         | test/api/fx.api.spec.ts                                             | PASS   |
+| (inferred) transfers refuse overdraft              | FR-017 | `ledger`                            | TC-026, TC-035 | test/api/transfers.api.spec.ts                                      | PASS   |
+| (inferred) deposits and transfers idempotent       | FR-018 | `idempotency`                       | TC-011, TC-036 | test/api/money.api.spec.ts                                          | PASS   |
 
 ## Authentication (beyond the brief)
 

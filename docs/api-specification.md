@@ -268,9 +268,17 @@ Errors: `400` (validation, key), `401`, `404` (sender not yours, or receiver unk
 `direction`: `IN` (deposit, transfer received), `OUT` (transfer sent), `INTERNAL` (swap).
 Newest first. `currency` matches `fromCurrency` or `toCurrency`.
 
+- `page` is 1 to 10,000 (default 1) and `limit` is 1 to 100 (default 20). A page past the end
+  returns no items and the real `total`.
+- `type` and `currency` each take one value or a comma list, and can be combined.
+- Bad values get `400 VALIDATION_FAILED`. Someone else's wallet gets `404 WALLET_NOT_FOUND`.
+- The count and the page are read from one snapshot, so `total` matches the pages.
+
 ### API-008 Transaction by ID
 
-`GET /api/v1/transactions/{transactionId}` → `200` transaction, `404` if unknown.
+`GET /api/v1/transactions/{transactionId}` → `200` transaction, the same shape as in a
+transfer answer. Only the sending and the receiving wallet can see it. Anyone else gets
+`404 TRANSACTION_NOT_FOUND`, the same as for an unknown ID. Not a UUID → `400`.
 
 ### API-009 Rates
 
