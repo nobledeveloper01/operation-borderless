@@ -136,7 +136,10 @@ given.
 - It checks funds on the locked row, then updates. No read-modify-write outside a lock.
 - `CHECK (amount >= 0)` stays as a final guard; a violation maps to `422`.
 - `lock_timeout` 3 s: a request that can't get its lock in time gets `503 SERVICE_BUSY`
-  instead of hanging.
+  instead of hanging. A deadlock or serialization failure, which the lock order should prevent,
+  also answers `503 SERVICE_BUSY`, so a retry is safe.
+- Wallet IDs are lowercased before any comparison or lock, because Postgres ignores case in
+  UUIDs and the lock order must not depend on how a client wrote them.
 - Isolation level: READ COMMITTED with row locks (enough, because every write locks what it
   changes).
 - Tests: parallel swaps against one balance, parallel opposite transfers, parallel same-key
