@@ -14,23 +14,23 @@ where every balance change can be explained by a transaction and a rate.
 
 ## Actors
 
-| Actor | Needs |
-| --- | --- |
-| API client (wallet holder's app) | Create a wallet, move money, see balances and history |
-| Reviewer | Run the project with one command, read clear docs, see tests prove the money rules |
+| Actor                            | Needs                                                                              |
+| -------------------------------- | ---------------------------------------------------------------------------------- |
+| API client (wallet holder's app) | Create a wallet, move money, see balances and history                              |
+| Reviewer                         | Run the project with one command, read clear docs, see tests prove the money rules |
 
 The brief doesn't require authentication (p.2). I add it so only a wallet's holder can use
 it; see [authentication.md](authentication.md).
 
 ## Supported stablecoins
 
-| Code | Pegged to | Notes |
-| --- | --- | --- |
-| cNGN | Nigerian naira (NGN) | |
-| cGHS | Ghanaian cedi (GHS) | |
-| cXAF | Central African CFA franc (XAF) | XAF is pegged to EUR |
-| USDx | US dollar (USD) | Base for the USD total |
-| EURx | Euro (EUR) | |
+| Code | Pegged to                       | Notes                  |
+| ---- | ------------------------------- | ---------------------- |
+| cNGN | Nigerian naira (NGN)            |                        |
+| cGHS | Ghanaian cedi (GHS)             |                        |
+| cXAF | Central African CFA franc (XAF) | XAF is pegged to EUR   |
+| USDx | US dollar (USD)                 | Base for the USD total |
+| EURx | Euro (EUR)                      |                        |
 
 Each stablecoin is valued 1:1 with its fiat currency for FX purposes (assumption A-03).
 
@@ -56,44 +56,44 @@ daily publication, the API shows the last rates as stale and refuses swaps and t
 
 ## User stories
 
-| ID | Story | Priority |
-| --- | --- | --- |
-| US-01 | As a client, I create a wallet with an email or mobile number, so I can hold stablecoins. | Must |
-| US-02 | As a client, I get a clear error if that email or number already has a wallet. | Must |
-| US-03 | As a client, I see every balance and the total in USD. | Must |
-| US-04 | As a client, I deposit any supported stablecoin and see the balance change at once. | Must |
-| US-05 | As a client, I swap one stablecoin for another in my wallet at the current rate. | Must |
-| US-06 | As a client, I am refused if a swap or transfer would overdraw my balance. | Must |
-| US-07 | As a client, I can retry a money request without it running twice. | Must |
-| US-08 | As a client, I send money to another wallet in the same or another stablecoin. | Must |
-| US-09 | As a client, I list my transactions newest first, paged, filtered by type and currency. | Must |
-| US-10 | As a client, I fetch one transaction by ID. | Must |
-| US-11 | As a client, I read all current rates and when each was refreshed. | Must |
-| US-12 | As a client, I preview what a swap or transfer would give before sending it. | Could |
-| US-13 | As a client, I find a wallet by email or mobile number. | Could |
+| ID    | Story                                                                                         | Priority                |
+| ----- | --------------------------------------------------------------------------------------------- | ----------------------- |
+| US-01 | As a client, I create a wallet with an email or mobile number, so I can hold stablecoins.     | Must                    |
+| US-02 | As a client, I get a clear error if that email or number already has a wallet.                | Must                    |
+| US-03 | As a client, I see every balance and the total in USD.                                        | Must                    |
+| US-04 | As a client, I deposit any supported stablecoin and see the balance change at once.           | Must                    |
+| US-05 | As a client, I swap one stablecoin for another in my wallet at the current rate.              | Must                    |
+| US-06 | As a client, I am refused if a swap or transfer would overdraw my balance.                    | Must                    |
+| US-07 | As a client, I can retry a money request without it running twice.                            | Must                    |
+| US-08 | As a client, I send money to another wallet in the same or another stablecoin.                | Must                    |
+| US-09 | As a client, I list my transactions newest first, paged, filtered by type and currency.       | Must                    |
+| US-10 | As a client, I fetch one transaction by ID.                                                   | Must                    |
+| US-11 | As a client, I read all current rates and when each was refreshed.                            | Must                    |
+| US-12 | As a client, I preview what a swap or transfer would give before sending it.                  | Could                   |
+| US-13 | As a client, I find a wallet by email or mobile number.                                       | Could                   |
 | US-15 | As a holder, I log in with my identifier and password and stay signed in with refresh tokens. | Must (beyond the brief) |
-| US-16 | As a holder, I log out and my session stops working at once. | Must (beyond the brief) |
-| US-17 | As a holder, I create and revoke API keys for scripts that act on my wallet. | Must (beyond the brief) |
-| US-18 | As a holder, no one else can read or move my wallet's money. | Must (beyond the brief) |
-| US-14 | As an operator, I check the API and database are healthy. | Should |
+| US-16 | As a holder, I log out and my session stops working at once.                                  | Must (beyond the brief) |
+| US-17 | As a holder, I create and revoke API keys for scripts that act on my wallet.                  | Must (beyond the brief) |
+| US-18 | As a holder, no one else can read or move my wallet's money.                                  | Must (beyond the brief) |
+| US-14 | As an operator, I check the API and database are healthy.                                     | Should                  |
 
 ## Business rules
 
-| ID | Rule | Source |
-| --- | --- | --- |
-| BR-01 | One wallet per email and one per mobile number. | Brief p.2 |
-| BR-02 | Every wallet has a balance for each of the five stablecoins. | Brief p.2 |
-| BR-03 | A deposit raises the balance at once and creates a transaction record. | Brief p.2 |
-| BR-04 | A swap stays inside one wallet and uses two different stablecoins. | Brief p.2; same-currency refusal inferred |
-| BR-05 | No swap or transfer may make a balance negative. | Brief p.2 (swaps); inferred for transfers |
-| BR-06 | The same request is never processed twice. | Brief p.2 (swaps); applied to all money writes |
-| BR-07 | Transfers in different currencies convert at the current rate. | Brief p.2 |
-| BR-08 | A transfer records sender, receiver, both amounts and currencies, the rate and a timestamp. | Brief p.2 |
-| BR-09 | A wallet can't transfer to itself (use a swap). | Inferred |
-| BR-10 | Amounts are positive, have at most 6 decimal places, and are capped per operation. | Inferred (A-04, A-05) |
-| BR-12 | Only the wallet's owner (session or wallet key) can read it or move its money; transfers can go to any wallet. | Beyond the brief |
-| BR-13 | Passwords are hashed with argon2id; tokens and keys are stored only as hashes. | Beyond the brief |
-| BR-11 | No fees or spreads. Rounding of converted amounts is down, so no money is created. | Inferred (A-06) |
+| ID    | Rule                                                                                                           | Source                                         |
+| ----- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| BR-01 | One wallet per email and one per mobile number.                                                                | Brief p.2                                      |
+| BR-02 | Every wallet has a balance for each of the five stablecoins.                                                   | Brief p.2                                      |
+| BR-03 | A deposit raises the balance at once and creates a transaction record.                                         | Brief p.2                                      |
+| BR-04 | A swap stays inside one wallet and uses two different stablecoins.                                             | Brief p.2; same-currency refusal inferred      |
+| BR-05 | No swap or transfer may make a balance negative.                                                               | Brief p.2 (swaps); inferred for transfers      |
+| BR-06 | The same request is never processed twice.                                                                     | Brief p.2 (swaps); applied to all money writes |
+| BR-07 | Transfers in different currencies convert at the current rate.                                                 | Brief p.2                                      |
+| BR-08 | A transfer records sender, receiver, both amounts and currencies, the rate and a timestamp.                    | Brief p.2                                      |
+| BR-09 | A wallet can't transfer to itself (use a swap).                                                                | Inferred                                       |
+| BR-10 | Amounts are positive, have at most 6 decimal places, and are capped per operation.                             | Inferred (A-04, A-05)                          |
+| BR-12 | Only the wallet's owner (session or wallet key) can read it or move its money; transfers can go to any wallet. | Beyond the brief                               |
+| BR-13 | Passwords are hashed with argon2id; tokens and keys are stored only as hashes.                                 | Beyond the brief                               |
+| BR-11 | No fees or spreads. Rounding of converted amounts is down, so no money is created.                             | Inferred (A-06)                                |
 
 ## Features and MoSCoW
 

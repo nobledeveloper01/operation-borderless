@@ -7,10 +7,10 @@ identifier still gives one wallet.
 
 Two ways to call the API:
 
-| Method | Header | For | Lifetime |
-| --- | --- | --- | --- |
-| Account session | `Authorization: Bearer <access token>` | Apps acting for a signed-in holder | Access 15 min, refresh 30 days |
-| Wallet key | `X-Wallet-Key: <key>` | Scripts and servers acting on one wallet | Until revoked |
+| Method          | Header                                 | For                                      | Lifetime                       |
+| --------------- | -------------------------------------- | ---------------------------------------- | ------------------------------ |
+| Account session | `Authorization: Bearer <access token>` | Apps acting for a signed-in holder       | Access 15 min, refresh 30 days |
+| Wallet key      | `X-Wallet-Key: <key>`                  | Scripts and servers acting on one wallet | Until revoked                  |
 
 Both lead to the same check: the caller must own the wallet it acts on.
 
@@ -56,7 +56,7 @@ Both lead to the same check: the caller must own the wallet it acts on.
   enough here because the secret is random and long; argon2 is for low-entropy passwords.
 - Checked with a constant-time compare. A key acts only on its own wallet.
 - `GET /wallets/{walletId}/keys` lists keys without secrets; `DELETE
-  /wallets/{walletId}/keys/{keyId}` revokes one. At most 5 active keys per wallet.
+/wallets/{walletId}/keys/{keyId}` revokes one. At most 5 active keys per wallet.
 - A wallet key can't create or revoke keys, or log out sessions (session only).
 
 ## Brute force and enumeration
@@ -73,16 +73,16 @@ Both lead to the same check: the caller must own the wallet it acts on.
 
 ## Authorization rules
 
-| Route | Who |
-| --- | --- |
-| `POST /wallets`, `POST /auth/login`, `POST /auth/refresh` | Public |
-| `GET /fx/rates`, `/health`, `/health/ready`, `/docs` | Public |
-| `POST /auth/logout`, `/auth/logout-all`, `GET /auth/me` | Session |
-| Wallet keys routes | Session, own wallet |
-| `GET /wallets/{walletId}`, balances, history | Session or key, own wallet |
-| Deposits, swaps | Session or key, own wallet |
-| `POST /transfers` | Session or key, must own `fromWalletId`; `toWalletId` can be any wallet |
-| `GET /transactions/{transactionId}` | Session or key, caller's wallet must be sender or receiver |
+| Route                                                     | Who                                                                     |
+| --------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `POST /wallets`, `POST /auth/login`, `POST /auth/refresh` | Public                                                                  |
+| `GET /fx/rates`, `/health`, `/health/ready`, `/docs`      | Public                                                                  |
+| `POST /auth/logout`, `/auth/logout-all`, `GET /auth/me`   | Session                                                                 |
+| Wallet keys routes                                        | Session, own wallet                                                     |
+| `GET /wallets/{walletId}`, balances, history              | Session or key, own wallet                                              |
+| Deposits, swaps                                           | Session or key, own wallet                                              |
+| `POST /transfers`                                         | Session or key, must own `fromWalletId`; `toWalletId` can be any wallet |
+| `GET /transactions/{transactionId}`                       | Session or key, caller's wallet must be sender or receiver              |
 
 - No header or a bad token/key → `401 UNAUTHENTICATED`.
 - Valid caller, someone else's wallet or transaction → `404` (same as not found), so wallet

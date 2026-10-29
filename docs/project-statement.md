@@ -48,12 +48,12 @@ publication never moves money. Everything starts with `docker compose up`.
 
 ## Actors and stakeholders
 
-| Actor | Role |
-| --- | --- |
-| API client | Any program calling the API on behalf of a wallet holder, with a session token or a wallet key. |
-| FX provider | External source of live rates. |
-| Reviewer | Tonic engineers who run the project and read the code, tests and README. |
-| Candidate | Builds and submits the project. |
+| Actor       | Role                                                                                            |
+| ----------- | ----------------------------------------------------------------------------------------------- |
+| API client  | Any program calling the API on behalf of a wallet holder, with a session token or a wallet key. |
+| FX provider | External source of live rates.                                                                  |
+| Reviewer    | Tonic engineers who run the project and read the code, tests and README.                        |
+| Candidate   | Builds and submits the project.                                                                 |
 
 ## Scope
 
@@ -97,14 +97,14 @@ Listed with their decision status in [plan.md](plan.md#assumptions).
 
 ## Risks
 
-| Risk | Effect | Response |
-| --- | --- | --- |
-| FX provider down, slow or changed | Swaps and transfers can't price | Timeout, bounded retry, second live source, `503` once rates are over 26 h old |
-| Floating-point money errors | Wrong balances | Integer minor units, BigInt and decimal.js only |
-| Double processing on retries | Money created or lost | Idempotency key stored in the money transaction |
-| Races between parallel requests | Negative balances or lost updates | Row locks in a fixed order and a `CHECK (amount >= 0)` |
-| Tests need a database | `yarn test` fails on a reviewer's machine | Testcontainers starts PostgreSQL; documented Docker requirement |
-| Time | Missing deliverables | Mandatory items first; testing and README time protected |
+| Risk                              | Effect                                    | Response                                                                       |
+| --------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------ |
+| FX provider down, slow or changed | Swaps and transfers can't price           | Timeout, bounded retry, second live source, `503` once rates are over 26 h old |
+| Floating-point money errors       | Wrong balances                            | Integer minor units, BigInt and decimal.js only                                |
+| Double processing on retries      | Money created or lost                     | Idempotency key stored in the money transaction                                |
+| Races between parallel requests   | Negative balances or lost updates         | Row locks in a fixed order and a `CHECK (amount >= 0)`                         |
+| Tests need a database             | `yarn test` fails on a reviewer's machine | Testcontainers starts PostgreSQL; documented Docker requirement                |
+| Time                              | Missing deliverables                      | Mandatory items first; testing and README time protected                       |
 
 ## Success criteria
 

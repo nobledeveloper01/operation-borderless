@@ -6,21 +6,21 @@ keys that sign access tokens.
 
 ## Decision: what I build
 
-| Layer | Control |
-| --- | --- |
-| In transit, client ↔ API | HTTPS through a Caddy reverse proxy in docker compose: TLS 1.2 minimum, TLS 1.3 preferred, HTTP redirected to HTTPS, HSTS (`max-age=31536000; includeSubDomains`). Locally Caddy uses its own internal certificate authority. The API container's port is not published; only Caddy is reachable. |
-| In transit, API ↔ database | `DB_SSL` setting: `disable` (local default), `require` or `verify-full` with `DB_SSL_CA`. Production must use `verify-full`; the config check refuses `disable` when `NODE_ENV=production`. |
-| At rest, personal data | Email and phone encrypted per field with AES-256-GCM: random 12-byte IV, 16-byte tag, the account ID and field name as associated data, and a key version prefix so keys can rotate. Uniqueness and login lookup use an HMAC-SHA256 "blind index" of the normalised value with a separate key. Plain values never reach logs. |
-| At rest, secrets | argon2id for passwords; SHA-256 for refresh tokens, wallet-key secrets and idempotency request hashes (already in [ADR-008](ADR-008-authentication.md)). |
-| Token signing | ES256 (ECDSA P-256) instead of a shared HMAC secret. Every token carries a `kid`; several public keys can be trusted at once so keys rotate without logging everyone out. |
-| At rest, disk | Not built: it is a hosting setting (encrypted volumes or a managed database with encryption at rest). Documented in the deployment notes. |
+| Layer                      | Control                                                                                                                                                                                                                                                                                                                       |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| In transit, client ↔ API   | HTTPS through a Caddy reverse proxy in docker compose: TLS 1.2 minimum, TLS 1.3 preferred, HTTP redirected to HTTPS, HSTS (`max-age=31536000; includeSubDomains`). Locally Caddy uses its own internal certificate authority. The API container's port is not published; only Caddy is reachable.                             |
+| In transit, API ↔ database | `DB_SSL` setting: `disable` (local default), `require` or `verify-full` with `DB_SSL_CA`. Production must use `verify-full`; the config check refuses `disable` when `NODE_ENV=production`.                                                                                                                                   |
+| At rest, personal data     | Email and phone encrypted per field with AES-256-GCM: random 12-byte IV, 16-byte tag, the account ID and field name as associated data, and a key version prefix so keys can rotate. Uniqueness and login lookup use an HMAC-SHA256 "blind index" of the normalised value with a separate key. Plain values never reach logs. |
+| At rest, secrets           | argon2id for passwords; SHA-256 for refresh tokens, wallet-key secrets and idempotency request hashes (already in [ADR-008](ADR-008-authentication.md)).                                                                                                                                                                      |
+| Token signing              | ES256 (ECDSA P-256) instead of a shared HMAC secret. Every token carries a `kid`; several public keys can be trusted at once so keys rotate without logging everyone out.                                                                                                                                                     |
+| At rest, disk              | Not built: it is a hosting setting (encrypted volumes or a managed database with encryption at rest). Documented in the deployment notes.                                                                                                                                                                                     |
 
 ## Decision: what I do not build now
 
 **1. Message-level encryption of request and response bodies (JWE, RFC 7516).**
 
 TLS already encrypts every body, header and token between the client and the API. JWE adds
-value only when a payload must stay encrypted *through* intermediaries that end TLS (API
+value only when a payload must stay encrypted _through_ intermediaries that end TLS (API
 gateways, partner networks), as with Visa and Mastercard card-data APIs, or when a regulator
 requires it. Neither applies to this sandbox. It would also:
 

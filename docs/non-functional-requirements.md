@@ -1,43 +1,43 @@
 # Non-Functional Requirements
 
 "Mandatory" means the brief states it. "Recommended" means I add it because it is cheap and
-protects money correctness or the reviewer's experience. Numbers marked *proposed* are my
+protects money correctness or the reviewer's experience. Numbers marked _proposed_ are my
 own targets; the brief sets none.
 
 ## Stack and tooling (brief p.1–2)
 
-| ID | Requirement | Type |
-| --- | --- | --- |
-| NFR-001 | Node.js LTS with TypeScript, `strict: true` | Mandatory |
-| NFR-002 | Express or NestJS (I use NestJS) | Mandatory |
-| NFR-003 | SQL or NoSQL database, choice justified in the README | Mandatory |
-| NFR-004 | Redis, BullMQ or RabbitMQ only where they earn their place (I use none) | Mandatory |
-| NFR-005 | Jest or Vitest plus Supertest (I use Vitest) | Mandatory |
-| NFR-006 | Yarn, ESLint, Prettier | Mandatory |
+| ID      | Requirement                                                                   | Type      |
+| ------- | ----------------------------------------------------------------------------- | --------- |
+| NFR-001 | Node.js LTS with TypeScript, `strict: true`                                   | Mandatory |
+| NFR-002 | Express or NestJS (I use NestJS)                                              | Mandatory |
+| NFR-003 | SQL or NoSQL database, choice justified in the README                         | Mandatory |
+| NFR-004 | Redis, BullMQ or RabbitMQ only where they earn their place (I use none)       | Mandatory |
+| NFR-005 | Jest or Vitest plus Supertest (I use Vitest)                                  | Mandatory |
+| NFR-006 | Yarn, ESLint, Prettier                                                        | Mandatory |
 | NFR-007 | Docker and docker compose start the API and its dependencies with one command | Mandatory |
-| NFR-008 | No frontend | Mandatory |
+| NFR-008 | No frontend                                                                   | Mandatory |
 
 ## Correctness and data integrity
 
-| ID | Requirement | Type |
-| --- | --- | --- |
+| ID      | Requirement                                                                                 | Type                                                                 |
+| ------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | NFR-010 | Money is never a float. Integer minor units in the database, BigInt and decimal.js in code. | Mandatory (brief p.3, "correct money handling"; README must explain) |
-| NFR-011 | Each money operation is one database transaction: all of it or none of it. | Mandatory (inferred from "never negative", "never twice") |
-| NFR-012 | Parallel requests can't overdraw or lose updates. | Mandatory (README must explain concurrency) |
-| NFR-013 | Transactions and ledger lines are append-only (database trigger). | Recommended |
-| NFR-014 | For every balance, the sum of its ledger lines equals the stored amount. | Recommended (checked in tests) |
+| NFR-011 | Each money operation is one database transaction: all of it or none of it.                  | Mandatory (inferred from "never negative", "never twice")            |
+| NFR-012 | Parallel requests can't overdraw or lose updates.                                           | Mandatory (README must explain concurrency)                          |
+| NFR-013 | Transactions and ledger lines are append-only (database trigger).                           | Recommended                                                          |
+| NFR-014 | For every balance, the sum of its ledger lines equals the stored amount.                    | Recommended (checked in tests)                                       |
 
 ## Reliability
 
-| ID | Requirement | Type |
-| --- | --- | --- |
+| ID      | Requirement                                                                                                                                      | Type                          |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
 | NFR-020 | FX: two live sources; 3 s timeout, at most 2 retries with jitter; refresh after each daily publication; rates older than 26 h never price money. | Mandatory (fallback required) |
-| NFR-021 | Requests never wait on the FX provider; they read the stored snapshot. | Recommended |
-| NFR-022 | Config is validated at startup; the app refuses to start on bad values. | Recommended |
-| NFR-023 | Graceful shutdown closes the HTTP server and database pool. | Recommended |
-| NFR-024 | Database statement timeout 5 s and lock timeout 3 s (*proposed*). | Recommended |
+| NFR-021 | Requests never wait on the FX provider; they read the stored snapshot.                                                                           | Recommended                   |
+| NFR-022 | Config is validated at startup; the app refuses to start on bad values.                                                                          | Recommended                   |
+| NFR-023 | Graceful shutdown closes the HTTP server and database pool.                                                                                      | Recommended                   |
+| NFR-024 | Database statement timeout 5 s and lock timeout 3 s (_proposed_).                                                                                | Recommended                   |
 
-## Performance (*proposed*, checked only roughly)
+## Performance (_proposed_, checked only roughly)
 
 - Reads p95 under 100 ms and money writes p95 under 200 ms on a laptop with 20 parallel
   clients. Not a brief requirement; I report a measurement only if I run one.
@@ -55,31 +55,31 @@ the repo.
 
 ## Encryption
 
-| ID | Requirement | Type |
-| --- | --- | --- |
-| NFR-060 | HTTPS only through the proxy: TLS 1.2+, HTTP → HTTPS, HSTS; API port not published. | Recommended |
-| NFR-061 | Database TLS settable; `verify-full` required in production. | Recommended |
-| NFR-062 | Email and phone encrypted at rest (AES-256-GCM, versioned keys), unique by HMAC index. | Recommended |
-| NFR-063 | Access tokens signed with ES256 and a `kid`; keys rotate without logging users out. | Recommended |
-| NFR-064 | No message-level body encryption (JWE) or response signing (JWS) for now. | Decision ([ADR-009](decisions/ADR-009-encryption.md)) |
+| ID      | Requirement                                                                            | Type                                                  |
+| ------- | -------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| NFR-060 | HTTPS only through the proxy: TLS 1.2+, HTTP → HTTPS, HSTS; API port not published.    | Recommended                                           |
+| NFR-061 | Database TLS settable; `verify-full` required in production.                           | Recommended                                           |
+| NFR-062 | Email and phone encrypted at rest (AES-256-GCM, versioned keys), unique by HMAC index. | Recommended                                           |
+| NFR-063 | Access tokens signed with ES256 and a `kid`; keys rotate without logging users out.    | Recommended                                           |
+| NFR-064 | No message-level body encryption (JWE) or response signing (JWS) for now.              | Decision ([ADR-009](decisions/ADR-009-encryption.md)) |
 
 ## Observability
 
-| ID | Requirement | Type |
-| --- | --- | --- |
+| ID      | Requirement                                                                           | Type        |
+| ------- | ------------------------------------------------------------------------------------- | ----------- |
 | NFR-040 | Structured JSON logs (pino) with a request ID on every line; `X-Request-Id` returned. | Recommended |
-| NFR-041 | FX refresh results logged (success, failure reason, snapshot age). | Recommended |
-| NFR-042 | `/health` and `/health/ready`. | Recommended |
+| NFR-041 | FX refresh results logged (success, failure reason, snapshot age).                    | Recommended |
+| NFR-042 | `/health` and `/health/ready`.                                                        | Recommended |
 
 ## Maintainability and testability
 
-| ID | Requirement | Type |
-| --- | --- | --- |
-| NFR-050 | Controllers stay thin; money rules live in services and pure functions. | Recommended |
-| NFR-051 | The FX provider sits behind an interface and can be swapped by config. | Recommended |
-| NFR-052 | `yarn test` runs the full suite and passes. | Mandatory (brief p.3) |
-| NFR-053 | Lint, format check and type check pass with no errors. | Recommended (tools are mandatory) |
-| NFR-054 | Committed OpenAPI spec matches the running app (test fails on drift). | Mandatory spec; drift test recommended |
+| ID      | Requirement                                                             | Type                                   |
+| ------- | ----------------------------------------------------------------------- | -------------------------------------- |
+| NFR-050 | Controllers stay thin; money rules live in services and pure functions. | Recommended                            |
+| NFR-051 | The FX provider sits behind an interface and can be swapped by config.  | Recommended                            |
+| NFR-052 | `yarn test` runs the full suite and passes.                             | Mandatory (brief p.3)                  |
+| NFR-053 | Lint, format check and type check pass with no errors.                  | Recommended (tools are mandatory)      |
+| NFR-054 | Committed OpenAPI spec matches the running app (test fails on drift).   | Mandatory spec; drift test recommended |
 
 ## Portability and configuration
 

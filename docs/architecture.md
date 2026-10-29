@@ -28,21 +28,21 @@ untrusted (every response validated before use); the database is trusted.
 
 ## Modules
 
-| Module | Responsibility |
-| --- | --- |
-| `config` | Loads and validates environment variables at startup. |
-| `database` | TypeORM data source, migrations, `runInTransaction` helper, naming strategy. |
-| `common` | Error filter and error codes, request ID middleware, validation pipe, money helpers (`Money`, parse/format), pagination DTOs. |
-| `currencies` | The five supported stablecoins, their fiat pegs and decimals. Pure code, no table. |
-| `fx` | `FxProvider` interface, primary and secondary adapters, snapshot store, refresh scheduler, `FxService.rate(from, to)`, `GET /fx/rates`. |
-| `crypto` | AES-256-GCM field encryption with key versions, HMAC blind index, key loading and checks. |
-| `auth` | Accounts, argon2id passwords, login, ES256 JWT access tokens, refresh rotation, logout, wallet keys, the auth guard and the ownership check. |
-| `wallets` | Create and read wallets and balances, USD total. |
-| `ledger` | `LedgerService`: the only code that changes balances. Locks rows, checks funds, writes transaction + ledger lines. |
-| `deposits`, `swaps`, `transfers` | Thin controllers and services that validate, price, and call `LedgerService` inside an idempotent transaction. |
-| `transactions` | History list with filters and pagination, transaction by ID. |
-| `idempotency` | Claim, replay and conflict logic on `idempotency_keys`; cleanup job. |
-| `health` | Liveness and readiness. |
+| Module                           | Responsibility                                                                                                                               |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `config`                         | Loads and validates environment variables at startup.                                                                                        |
+| `database`                       | TypeORM data source, migrations, `runInTransaction` helper, naming strategy.                                                                 |
+| `common`                         | Error filter and error codes, request ID middleware, validation pipe, money helpers (`Money`, parse/format), pagination DTOs.                |
+| `currencies`                     | The five supported stablecoins, their fiat pegs and decimals. Pure code, no table.                                                           |
+| `fx`                             | `FxProvider` interface, primary and secondary adapters, snapshot store, refresh scheduler, `FxService.rate(from, to)`, `GET /fx/rates`.      |
+| `crypto`                         | AES-256-GCM field encryption with key versions, HMAC blind index, key loading and checks.                                                    |
+| `auth`                           | Accounts, argon2id passwords, login, ES256 JWT access tokens, refresh rotation, logout, wallet keys, the auth guard and the ownership check. |
+| `wallets`                        | Create and read wallets and balances, USD total.                                                                                             |
+| `ledger`                         | `LedgerService`: the only code that changes balances. Locks rows, checks funds, writes transaction + ledger lines.                           |
+| `deposits`, `swaps`, `transfers` | Thin controllers and services that validate, price, and call `LedgerService` inside an idempotent transaction.                               |
+| `transactions`                   | History list with filters and pagination, transaction by ID.                                                                                 |
+| `idempotency`                    | Claim, replay and conflict logic on `idempotency_keys`; cleanup job.                                                                         |
+| `health`                         | Liveness and readiness.                                                                                                                      |
 
 Deposits, swaps and transfers may later merge into one `payments` module if the code is
 small; the boundaries above stay the same.
@@ -118,11 +118,11 @@ flowchart TD
 
 `docker compose up` starts three services:
 
-| Service | Image | Notes |
-| --- | --- | --- |
-| `proxy` | `caddy:2-alpine` | The only published ports: 443 (HTTPS) and 80 (redirects to 443). TLS 1.2+, internal CA locally, HSTS header. Forwards to `api:3000`. |
-| `db` | `postgres:17-alpine` | Not published. Health check `pg_isready`; data in a named volume. |
-| `api` | Built from `Dockerfile` (Node 24, multi-stage, non-root) | Not published. Waits for `db` healthy, makes dev keys if missing (development only), runs migrations, then starts. Trusts `X-Forwarded-For` only from the proxy. |
+| Service | Image                                                    | Notes                                                                                                                                                            |
+| ------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `proxy` | `caddy:2-alpine`                                         | The only published ports: 443 (HTTPS) and 80 (redirects to 443). TLS 1.2+, internal CA locally, HSTS header. Forwards to `api:3000`.                             |
+| `db`    | `postgres:17-alpine`                                     | Not published. Health check `pg_isready`; data in a named volume.                                                                                                |
+| `api`   | Built from `Dockerfile` (Node 24, multi-stage, non-root) | Not published. Waits for `db` healthy, makes dev keys if missing (development only), runs migrations, then starts. Trusts `X-Forwarded-For` only from the proxy. |
 
 ```mermaid
 flowchart LR
@@ -156,11 +156,11 @@ operation-borderless/
 
 ## Trade-offs
 
-| Choice | Gain | Cost |
-| --- | --- | --- |
-| Pessimistic row locks | Simple, provably correct, no retry loops | Hot wallets serialise; fine for a sandbox |
-| FX read from stored snapshot | Requests never hang on a provider | Rates are daily reference rates, not live market prices |
-| Fail closed on stale rates | Money never moves on an old rate | Swaps and transfers stop if both sources are down for over 2 h past a publication |
-| Auth added beyond the brief | Only owners move money | ~8 h of work; reviewers copy a token once |
-| Session check per request | Logout is immediate | One indexed read per request |
-| Offset pagination | Simple, gives `total` | Slower on deep pages; cursor noted as future work |
+| Choice                       | Gain                                     | Cost                                                                              |
+| ---------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------- |
+| Pessimistic row locks        | Simple, provably correct, no retry loops | Hot wallets serialise; fine for a sandbox                                         |
+| FX read from stored snapshot | Requests never hang on a provider        | Rates are daily reference rates, not live market prices                           |
+| Fail closed on stale rates   | Money never moves on an old rate         | Swaps and transfers stop if both sources are down for over 2 h past a publication |
+| Auth added beyond the brief  | Only owners move money                   | ~8 h of work; reviewers copy a token once                                         |
+| Session check per request    | Logout is immediate                      | One indexed read per request                                                      |
+| Offset pagination            | Simple, gives `total`                    | Slower on deep pages; cursor noted as future work                                 |

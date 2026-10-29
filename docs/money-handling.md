@@ -11,7 +11,7 @@ version; the README will summarise it.
   through a JavaScript `number`.
 - The API accepts amounts as strings matching `^\d{1,15}(\.\d{1,6})?$` and returns them with
   exactly 6 decimals. More than 6 decimals is refused, not rounded.
-- Cap per operation (*proposed*): 1,000,000,000 units of the currency. The largest balance a
+- Cap per operation (_proposed_): 1,000,000,000 units of the currency. The largest balance a
   `bigint` holds at this scale is about 9.2 trillion units, far above any test.
 
 ## FX maths
@@ -31,12 +31,12 @@ version; the README will summarise it.
 
 ### Provider choice
 
-| Provider | NGN | GHS | XAF | Key | Updates | Use |
-| --- | --- | --- | --- | --- | --- | --- |
-| ExchangeRate-API open endpoint (`open.er-api.com/v6/latest/USD`) | Yes | Yes | Yes | None | Daily | **Primary** |
-| Currency API by fawazahmed0 (`latest.currency-api.pages.dev`, mirror on jsDelivr) | Yes | Yes | Yes | None | Daily | **Secondary** |
-| Frankfurter (ECB data) | No | No | No | None | Daily | Not used: can't price three of five coins |
-| ExchangeRate-API key plan / paid feeds | Yes | Yes | Yes | Needed | Hourly or faster | Production option |
+| Provider                                                                          | NGN | GHS | XAF | Key    | Updates          | Use                                       |
+| --------------------------------------------------------------------------------- | --- | --- | --- | ------ | ---------------- | ----------------------------------------- |
+| ExchangeRate-API open endpoint (`open.er-api.com/v6/latest/USD`)                  | Yes | Yes | Yes | None   | Daily            | **Primary**                               |
+| Currency API by fawazahmed0 (`latest.currency-api.pages.dev`, mirror on jsDelivr) | Yes | Yes | Yes | None   | Daily            | **Secondary**                             |
+| Frankfurter (ECB data)                                                            | No  | No  | No  | None   | Daily            | Not used: can't price three of five coins |
+| ExchangeRate-API key plan / paid feeds                                            | Yes | Yes | Yes | Needed | Hourly or faster | Production option                         |
 
 Checked on 29 Oct 2026: both chosen sources returned NGN, GHS, XAF and EUR for that day;
 Frankfurter returned only EUR. The primary asks for attribution and says clients should
@@ -60,12 +60,12 @@ There are two industry norms, and the free sources only allow the second:
 
 Borderless follows the second:
 
-| Setting | Value | Why |
-| --- | --- | --- |
-| `FX_MAX_DATA_AGE_HOURS` | **26** | One 24-hour publication cycle plus 2 hours' grace. Measured from the provider's own update time, not from when the API fetched it. |
-| Execution on stale rates | **Refused** (`503 FX_RATE_UNAVAILABLE`) | Fail closed: money never moves on a rate from a missed publication. |
-| Quote validity (if the quote endpoint is built) | **30 seconds** | Typical remittance quote window. |
-| Client-supplied rates | Never accepted | The server prices every operation. |
+| Setting                                         | Value                                   | Why                                                                                                                                |
+| ----------------------------------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `FX_MAX_DATA_AGE_HOURS`                         | **26**                                  | One 24-hour publication cycle plus 2 hours' grace. Measured from the provider's own update time, not from when the API fetched it. |
+| Execution on stale rates                        | **Refused** (`503 FX_RATE_UNAVAILABLE`) | Fail closed: money never moves on a rate from a missed publication.                                                                |
+| Quote validity (if the quote endpoint is built) | **30 seconds**                          | Typical remittance quote window.                                                                                                   |
+| Client-supplied rates                           | Never accepted                          | The server prices every operation.                                                                                                 |
 
 ### Refresh and fallback
 

@@ -24,14 +24,14 @@ test fails if the two drift.
 `POST` deposits, swaps and transfers require `Idempotency-Key` (8–128 chars,
 `[A-Za-z0-9_-]`). Keys are kept for 24 hours.
 
-| Case | Result |
-| --- | --- |
-| New key | Runs; response stored with the key |
+| Case                                 | Result                                                     |
+| ------------------------------------ | ---------------------------------------------------------- |
+| New key                              | Runs; response stored with the key                         |
 | Same key, same method, path and body | Stored status and body, header `Idempotent-Replayed: true` |
-| Same key, different request | `422 IDEMPOTENCY_KEY_REUSED` |
-| Same key in parallel | One runs; others wait, then replay |
-| Request failed (4xx/5xx) | Nothing stored; the same key can be retried |
-| Missing or invalid key | `400` |
+| Same key, different request          | `422 IDEMPOTENCY_KEY_REUSED`                               |
+| Same key in parallel                 | One runs; others wait, then replay                         |
+| Request failed (4xx/5xx)             | Nothing stored; the same key can be retried                |
+| Missing or invalid key               | `400`                                                      |
 
 ## Errors
 
@@ -41,50 +41,54 @@ test fails if the two drift.
   "error": "Unprocessable Entity",
   "code": "INSUFFICIENT_FUNDS",
   "message": "The cNGN balance is too low for this swap.",
-  "details": { "currency": "cNGN", "available": "500.000000", "requested": "1000.000000" },
+  "details": {
+    "currency": "cNGN",
+    "available": "500.000000",
+    "requested": "1000.000000"
+  },
   "requestId": "6f1c...",
   "path": "/api/v1/wallets/1b9.../swaps",
   "timestamp": "2026-10-29T10:00:00.000Z"
 }
 ```
 
-| Status | Code(s) | When |
-| --- | --- | --- |
-| 400 | `VALIDATION_FAILED`, `IDEMPOTENCY_KEY_REQUIRED`, `SAME_CURRENCY` | Bad input |
-| 401 | `UNAUTHENTICATED`, `SESSION_REVOKED` | Missing, bad, expired or revoked token or key; failed login |
-| 403 | `SESSION_REQUIRED` | A wallet key used on a session-only route |
-| 404 | `WALLET_NOT_FOUND`, `TRANSACTION_NOT_FOUND`, `ROUTE_NOT_FOUND` | Unknown resource |
-| 409 | `WALLET_ALREADY_EXISTS`, `TOO_MANY_KEYS` | Identifier already has a wallet; 5 active keys |
-| 422 | `INSUFFICIENT_FUNDS`, `AMOUNT_TOO_SMALL`, `SAME_WALLET`, `IDEMPOTENCY_KEY_REUSED` | Valid input, refused by a business rule |
-| 429 | `RATE_LIMITED` | Too many requests |
-| 503 | `FX_RATE_UNAVAILABLE`, `SERVICE_BUSY` | No rate within 26 h of its publication; lock or statement timeout |
-| 500 | `INTERNAL_ERROR` | Unexpected; generic message only |
+| Status | Code(s)                                                                           | When                                                              |
+| ------ | --------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| 400    | `VALIDATION_FAILED`, `IDEMPOTENCY_KEY_REQUIRED`, `SAME_CURRENCY`                  | Bad input                                                         |
+| 401    | `UNAUTHENTICATED`, `SESSION_REVOKED`                                              | Missing, bad, expired or revoked token or key; failed login       |
+| 403    | `SESSION_REQUIRED`                                                                | A wallet key used on a session-only route                         |
+| 404    | `WALLET_NOT_FOUND`, `TRANSACTION_NOT_FOUND`, `ROUTE_NOT_FOUND`                    | Unknown resource                                                  |
+| 409    | `WALLET_ALREADY_EXISTS`, `TOO_MANY_KEYS`                                          | Identifier already has a wallet; 5 active keys                    |
+| 422    | `INSUFFICIENT_FUNDS`, `AMOUNT_TOO_SMALL`, `SAME_WALLET`, `IDEMPOTENCY_KEY_REUSED` | Valid input, refused by a business rule                           |
+| 429    | `RATE_LIMITED`                                                                    | Too many requests                                                 |
+| 503    | `FX_RATE_UNAVAILABLE`, `SERVICE_BUSY`                                             | No rate within 26 h of its publication; lock or statement timeout |
+| 500    | `INTERNAL_ERROR`                                                                  | Unexpected; generic message only                                  |
 
 ## Endpoints
 
-| ID | Method and path | Purpose | Success |
-| --- | --- | --- | --- |
-| API-001 | `POST /wallets` | Create a wallet | 201 |
-| API-002 | `GET /wallets/{walletId}` | Wallet with balances and USD total | 200 |
-| API-003 | `GET /wallets/{walletId}/balances` | Balances and USD total | 200 |
-| API-004 | `POST /wallets/{walletId}/deposits` | Simulated deposit | 201 |
-| API-005 | `POST /wallets/{walletId}/swaps` | Swap inside the wallet | 201 |
-| API-006 | `POST /transfers` | Send to another wallet | 201 |
-| API-007 | `GET /wallets/{walletId}/transactions` | History, paged and filtered | 200 |
-| API-008 | `GET /transactions/{transactionId}` | One transaction | 200 |
-| API-009 | `GET /fx/rates` | All pair rates with refresh times | 200 |
-| API-010 | `GET /health`, `GET /health/ready` | Liveness, readiness (outside `/api/v1`) | 200 / 503 |
-| API-013 | `POST /auth/login` | Log in | 200 |
-| API-014 | `POST /auth/refresh` | New token pair (rotation) | 200 |
-| API-015 | `POST /auth/logout`, `POST /auth/logout-all` | End this or every session | 204 |
-| API-016 | `GET /auth/me` | Account and wallet ID | 200 |
-| API-017 | `POST /wallets/{walletId}/keys` | Create a wallet key (shown once) | 201 |
-| API-018 | `GET /wallets/{walletId}/keys` | List keys, no secrets | 200 |
-| API-019 | `DELETE /wallets/{walletId}/keys/{keyId}` | Revoke a key | 204 |
-| API-011 | `GET /fx/quote` | Could-have: price preview | 200 |
-| API-012 | `GET /wallets?email=` / `?phoneNumber=` | Could-have: lookup | 200 |
+| ID      | Method and path                              | Purpose                                 | Success   |
+| ------- | -------------------------------------------- | --------------------------------------- | --------- |
+| API-001 | `POST /wallets`                              | Create a wallet                         | 201       |
+| API-002 | `GET /wallets/{walletId}`                    | Wallet with balances and USD total      | 200       |
+| API-003 | `GET /wallets/{walletId}/balances`           | Balances and USD total                  | 200       |
+| API-004 | `POST /wallets/{walletId}/deposits`          | Simulated deposit                       | 201       |
+| API-005 | `POST /wallets/{walletId}/swaps`             | Swap inside the wallet                  | 201       |
+| API-006 | `POST /transfers`                            | Send to another wallet                  | 201       |
+| API-007 | `GET /wallets/{walletId}/transactions`       | History, paged and filtered             | 200       |
+| API-008 | `GET /transactions/{transactionId}`          | One transaction                         | 200       |
+| API-009 | `GET /fx/rates`                              | All pair rates with refresh times       | 200       |
+| API-010 | `GET /health`, `GET /health/ready`           | Liveness, readiness (outside `/api/v1`) | 200 / 503 |
+| API-013 | `POST /auth/login`                           | Log in                                  | 200       |
+| API-014 | `POST /auth/refresh`                         | New token pair (rotation)               | 200       |
+| API-015 | `POST /auth/logout`, `POST /auth/logout-all` | End this or every session               | 204       |
+| API-016 | `GET /auth/me`                               | Account and wallet ID                   | 200       |
+| API-017 | `POST /wallets/{walletId}/keys`              | Create a wallet key (shown once)        | 201       |
+| API-018 | `GET /wallets/{walletId}/keys`               | List keys, no secrets                   | 200       |
+| API-019 | `DELETE /wallets/{walletId}/keys/{keyId}`    | Revoke a key                            | 204       |
+| API-011 | `GET /fx/quote`                              | Could-have: price preview               | 200       |
+| API-012 | `GET /wallets?email=` / `?phoneNumber=`      | Could-have: lookup                      | 200       |
 
-Rate limit (*proposed*): 120 requests per minute per IP overall, 30 per minute per IP on
+Rate limit (_proposed_): 120 requests per minute per IP overall, 30 per minute per IP on
 money writes, 10 per minute per IP on wallet creation and login.
 
 ### API-001 Create wallet
@@ -139,7 +143,11 @@ Errors: `400`, `409`.
     { "currency": "USDx", "amount": "10.000000", "usdValue": "10.000000" }
   ],
   "totalUsd": "47.140000",
-  "rates": { "source": "exchangerate-api", "isStale": false, "asOf": "2026-10-29T00:02:31Z" }
+  "rates": {
+    "source": "exchangerate-api",
+    "isStale": false,
+    "asOf": "2026-10-29T00:02:31Z"
+  }
 }
 ```
 
@@ -212,7 +220,7 @@ Errors: `400`, `404`, `422`, `503`.
 
 ```json
 {
-  "items": [ { "...transaction fields...": "", "direction": "IN" } ],
+  "items": [{ "...transaction fields...": "", "direction": "IN" }],
   "page": 1,
   "limit": 20,
   "total": 3
@@ -238,8 +246,18 @@ Newest first. `currency` matches `fromCurrency` or `toCurrency`.
   "providerUpdatedAt": "2026-10-29T00:02:31Z",
   "fetchedAt": "2026-10-29T09:00:03Z",
   "pairs": [
-    { "from": "USDx", "to": "cNGN", "rate": "1346.2368880000", "refreshedAt": "2026-10-29T00:02:31Z" },
-    { "from": "cNGN", "to": "USDx", "rate": "0.0007428000", "refreshedAt": "2026-10-29T00:02:31Z" }
+    {
+      "from": "USDx",
+      "to": "cNGN",
+      "rate": "1346.2368880000",
+      "refreshedAt": "2026-10-29T00:02:31Z"
+    },
+    {
+      "from": "cNGN",
+      "to": "USDx",
+      "rate": "0.0007428000",
+      "refreshedAt": "2026-10-29T00:02:31Z"
+    }
   ],
   "attribution": "Rates by Exchange Rate API (https://www.exchangerate-api.com)"
 }
