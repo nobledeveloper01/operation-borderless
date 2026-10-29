@@ -13,7 +13,7 @@ import {
   ApiSecurity,
   getSchemaPath,
 } from '@nestjs/swagger';
-import { type Access, RouteAccess } from '../../auth/access.decorators.js';
+import { type Access, RouteAccess } from '../http/route-access.js';
 import { SkipThrottle } from '@nestjs/throttler';
 import { RateLimited, type RateLimitGroup } from '../http/rate-limit-groups.js';
 import { ErrorResponseDto } from '../errors/error-response.dto.js';

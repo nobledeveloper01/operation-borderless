@@ -1,7 +1,7 @@
 import { Writable } from 'node:stream';
 import { pino } from 'pino';
 import { loggerOptions } from '../../../src/common/http/logger.options.js';
-import { validateEnv } from '../../../src/config/env.validation.js';
+import { validateEnv } from '../../../src/common/config/env.validation.js';
 
 const env = validateEnv({
   NODE_ENV: 'test',

@@ -11,7 +11,7 @@ import { Logger } from 'nestjs-pino';
 import { bodyErrorsMiddleware } from './common/middleware/body-errors.middleware.js';
 import { noStoreMiddleware } from './common/middleware/no-store.middleware.js';
 import { requestIdMiddleware } from './common/middleware/request-id.middleware.js';
-import { EnvironmentVariables } from './config/env.validation.js';
+import { EnvironmentVariables } from './common/config/env.validation.js';
 
 export const API_PREFIX = 'api/v1';
 

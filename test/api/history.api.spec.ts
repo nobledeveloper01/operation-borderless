@@ -1,6 +1,6 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
-import { FxService } from '../../src/fx/fx.service.js';
+import { FxService } from '../../src/modules/fx/fx.service.js';
 import { FakeProvider, primaryRates } from '../support/fx.js';
 import { deposit, swap, transfer } from '../support/money.js';
 import { createTestApp } from '../support/test-app.js';

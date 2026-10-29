@@ -3,7 +3,7 @@ import type pg from 'pg';
 import request from 'supertest';
 import { AppError } from '../../src/common/errors/app-error.js';
 import { FetchFailure } from '../../src/common/http/fetch-json.js';
-import { FxService } from '../../src/fx/fx.service.js';
+import { FxService } from '../../src/modules/fx/fx.service.js';
 import { connect } from '../support/db.js';
 import { FakeProvider, primaryRates, secondaryRates } from '../support/fx.js';
 import { createTestApp } from '../support/test-app.js';

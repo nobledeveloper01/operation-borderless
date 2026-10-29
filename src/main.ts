@@ -4,7 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module.js';
 import { configureApp } from './app.setup.js';
-import { EnvironmentVariables } from './config/env.validation.js';
+import { EnvironmentVariables } from './common/config/env.validation.js';
 
 if (existsSync('.env')) process.loadEnvFile('.env');
 

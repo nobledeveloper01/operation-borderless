@@ -1,8 +1,8 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import type pg from 'pg';
 import request from 'supertest';
-import { FxService } from '../../src/fx/fx.service.js';
-import { LedgerService } from '../../src/ledger/ledger.service.js';
+import { FxService } from '../../src/modules/fx/fx.service.js';
+import { LedgerService } from '../../src/modules/ledger/ledger.service.js';
 import { connect } from '../support/db.js';
 import { FakeProvider, primaryRates } from '../support/fx.js';
 import {

@@ -3,7 +3,7 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import { SignJWT, UnsecuredJWT } from 'jose';
 import type pg from 'pg';
 import request from 'supertest';
-import { AccessTokens } from '../../src/auth/access-tokens.js';
+import { AccessTokens } from '../../src/modules/auth/access-tokens.js';
 import { connect } from '../support/db.js';
 import { createTestApp } from '../support/test-app.js';
 import {

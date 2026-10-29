@@ -1,6 +1,6 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import type pg from 'pg';
-import { FxService } from '../../src/fx/fx.service.js';
+import { FxService } from '../../src/modules/fx/fx.service.js';
 import { connect } from '../support/db.js';
 import { FakeProvider, primaryRates } from '../support/fx.js';
 import {

@@ -7,21 +7,22 @@ import { AllExceptionsFilter } from './common/errors/all-exceptions.filter.js';
 import { loggerOptions } from './common/http/logger.options.js';
 import { outsideGroup } from './common/http/rate-limit-groups.js';
 import { SuccessInterceptor } from './common/responses/success.interceptor.js';
-import { AppConfigModule } from './config/config.module.js';
-import { CryptoModule } from './crypto/crypto.module.js';
-import { EnvironmentVariables } from './config/env.validation.js';
-import { databaseOptions } from './database/database.options.js';
-import { AuthGuard } from './auth/auth.guard.js';
-import { AuthModule } from './auth/auth.module.js';
-import { DepositsModule } from './deposits/deposits.module.js';
-import { FxModule } from './fx/fx.module.js';
-import { HealthModule } from './health/health.module.js';
-import { IdempotencyModule } from './idempotency/idempotency.module.js';
-import { LedgerModule } from './ledger/ledger.module.js';
-import { SwapsModule } from './swaps/swaps.module.js';
-import { TransactionsModule } from './transactions/transactions.module.js';
-import { TransfersModule } from './transfers/transfers.module.js';
-import { WalletsModule } from './wallets/wallets.module.js';
+import { AppConfigModule } from './common/config/config.module.js';
+import { CryptoModule } from './common/crypto/crypto.module.js';
+import { EnvironmentVariables } from './common/config/env.validation.js';
+import { databaseOptions } from './common/database/database.options.js';
+import { ACCOUNT_ENTITIES } from './modules/accounts/entities.js';
+import { AuthGuard } from './modules/auth/auth.guard.js';
+import { AuthModule } from './modules/auth/auth.module.js';
+import { DepositsModule } from './modules/deposits/deposits.module.js';
+import { FxModule } from './modules/fx/fx.module.js';
+import { HealthModule } from './modules/health/health.module.js';
+import { IdempotencyModule } from './modules/idempotency/idempotency.module.js';
+import { LedgerModule } from './modules/ledger/ledger.module.js';
+import { SwapsModule } from './modules/swaps/swaps.module.js';
+import { TransactionsModule } from './modules/transactions/transactions.module.js';
+import { TransfersModule } from './modules/transfers/transfers.module.js';
+import { WalletsModule } from './modules/wallets/wallets.module.js';
 
 @Module({
   imports: [
@@ -53,7 +54,8 @@ import { WalletsModule } from './wallets/wallets.module.js';
     }),
     TypeOrmModule.forRootAsync({
       inject: [EnvironmentVariables],
-      useFactory: databaseOptions,
+      useFactory: (config: EnvironmentVariables) =>
+        databaseOptions(config, ACCOUNT_ENTITIES),
     }),
     AuthModule,
     FxModule,

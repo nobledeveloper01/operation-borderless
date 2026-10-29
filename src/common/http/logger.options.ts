@@ -1,5 +1,5 @@
 import type { Params } from 'nestjs-pino';
-import type { EnvironmentVariables } from '../../config/env.validation.js';
+import type { EnvironmentVariables } from '../config/env.validation.js';
 import { randomUUID } from 'node:crypto';
 import type { IncomingMessage } from 'node:http';
 

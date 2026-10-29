@@ -6,11 +6,11 @@ import { CLOCK, type Clock } from '../../src/common/clock.js';
 import {
   EnvironmentVariables,
   validateEnv,
-} from '../../src/config/env.validation.js';
+} from '../../src/common/config/env.validation.js';
 import {
   FX_PROVIDERS,
   type FxProvider,
-} from '../../src/fx/providers/fx-provider.js';
+} from '../../src/modules/fx/providers/fx-provider.js';
 
 export interface TestAppOptions {
   // Fake FX providers in primary-then-secondary order; without them the real adapters are wired but never called.

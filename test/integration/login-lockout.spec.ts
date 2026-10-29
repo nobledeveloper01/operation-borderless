@@ -1,12 +1,12 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import type pg from 'pg';
 import request from 'supertest';
-import * as passwords from '../../src/auth/passwords.js';
+import * as passwords from '../../src/modules/auth/passwords.js';
 import { connect } from '../support/db.js';
 import { createTestApp } from '../support/test-app.js';
 import { createWallet, PASSWORD } from '../support/wallets.js';
 
-vi.mock('../../src/auth/passwords.js', async (importOriginal) => {
+vi.mock('../../src/modules/auth/passwords.js', async (importOriginal) => {
   const actual = await importOriginal<typeof passwords>();
   return { ...actual, verifyPassword: vi.fn(actual.verifyPassword) };
 });

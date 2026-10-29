@@ -1,9 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { FetchFailure } from '../../src/common/http/fetch-json.js';
-import type { ProviderRates } from '../../src/fx/fx.types.js';
-import type { FxProvider } from '../../src/fx/providers/fx-provider.js';
-import { parseCurrencyApi } from '../../src/fx/providers/currency-api.provider.js';
-import { parseExchangeRateApi } from '../../src/fx/providers/exchangerate-api.provider.js';
+import type { ProviderRates } from '../../src/modules/fx/fx.types.js';
+import type { FxProvider } from '../../src/modules/fx/providers/fx-provider.js';
+import { parseCurrencyApi } from '../../src/modules/fx/providers/currency-api.provider.js';
+import { parseExchangeRateApi } from '../../src/modules/fx/providers/exchangerate-api.provider.js';
 
 const fixture = (name: string): unknown =>
   JSON.parse(
