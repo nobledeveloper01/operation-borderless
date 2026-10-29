@@ -33,6 +33,8 @@ services:
       MONEY_RATE_LIMIT_PER_MINUTE: ${MONEY_RATE_LIMIT_PER_MINUTE:-30}
       # Turn on for an offline demo: prices from a built-in table, marked fixed-table.
       FX_FIXED_TABLE: ${FX_FIXED_TABLE:-false}
+      FEE_BPS: ${FEE_BPS:-50}
+      FEE_BPS_BY_PAIR: ${FEE_BPS_BY_PAIR:-}
       TRUST_PROXY: 'true'
       # Local-only operator token for /api/v1/ops; production refuses any value starting with local-.
       OPS_TOKEN: ${OPS_TOKEN:-local-ops-token-for-the-compose-stack-only}

@@ -44,8 +44,34 @@ export class LedgerCheckDto {
   transactionsWithoutLines: number;
 
   @ApiProperty({
+    description:
+      'True when the platform account holds exactly the fees and rounding recorded on transactions.',
+  })
+  platformMatches: boolean;
+
+  @ApiProperty({
     type: [LedgerMismatchDto],
     description: 'The first 100 balances that differ from their ledger lines.',
   })
   mismatches: LedgerMismatchDto[];
+}
+
+export class PlatformBalanceDto {
+  @ApiProperty({ enum: STABLECOINS })
+  currency: Stablecoin;
+
+  @ApiProperty({ example: '12.500000' })
+  fees: string;
+
+  @ApiProperty({
+    example: '0.000841',
+    description: 'Whole millionths kept from rounding down conversions.',
+  })
+  rounding: string;
+
+  @ApiProperty({ example: '12.500841' })
+  total: string;
+
+  @ApiProperty({ example: 250 })
+  entries: number;
 }

@@ -56,6 +56,27 @@ export class TransactionDto {
   })
   rateAsOf: string | null;
 
+  @ApiProperty({
+    example: 50,
+    description:
+      'Fee rate in basis points (50 = 0.5%); 0 for deposits and same-currency transfers.',
+  })
+  feeBps: number;
+
+  @ApiProperty({
+    example: '0.050000',
+    description:
+      'Fee taken from fromAmount, in fromCurrency, before converting.',
+  })
+  feeAmount: string;
+
+  @ApiProperty({
+    example: '0.000000',
+    description:
+      'Whole millionths of fromCurrency that bought nothing after rounding down; kept by the platform.',
+  })
+  roundingAmount: string;
+
   @ApiProperty({ example: '2026-10-29T10:05:00.000Z' })
   createdAt: string;
 }
@@ -73,5 +94,8 @@ export interface TransactionRow {
   rate: string;
   rate_source: string;
   rate_as_of: Date | null;
+  fee_bps: number;
+  fee_amount: string;
+  rounding_amount: string;
   created_at: Date;
 }

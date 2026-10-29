@@ -17,9 +17,12 @@ export function toTransactionDto(row: TransactionRow): TransactionDto {
     rate: row.rate,
     rateSource: row.rate_source,
     rateAsOf: row.rate_as_of?.toISOString() ?? null,
+    feeBps: row.fee_bps,
+    feeAmount: formatAmount(BigInt(row.fee_amount)),
+    roundingAmount: formatAmount(BigInt(row.rounding_amount)),
     createdAt: row.created_at.toISOString(),
   };
 }
 
 export const TRANSACTION_COLUMNS = `id, type, status, from_wallet_id, to_wallet_id, from_currency, from_amount::text,
-  to_currency, to_amount::text, rate::text, rate_source, rate_as_of, created_at`;
+  to_currency, to_amount::text, rate::text, rate_source, rate_as_of, fee_bps, fee_amount::text, rounding_amount::text, created_at`;

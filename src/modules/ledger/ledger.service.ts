@@ -28,6 +28,9 @@ export interface NewTransaction {
   rateSource: string;
   rateAsOf: Date | null;
   fxSnapshotId: string | null;
+  feeBps?: number;
+  fee?: bigint;
+  rounding?: bigint;
 }
 
 export interface Posted {
@@ -78,8 +81,8 @@ export class LedgerService {
 
     const rows = await manager.query<TransactionRow[]>(
       `INSERT INTO transactions (type, from_wallet_id, to_wallet_id, from_currency, from_amount, to_currency, to_amount,
-                                 rate, rate_source, rate_as_of, fx_snapshot_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                                 rate, rate_source, rate_as_of, fx_snapshot_id, fee_bps, fee_amount, rounding_amount)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
        RETURNING ${TRANSACTION_COLUMNS}`,
       [
         tx.type,
@@ -93,9 +96,24 @@ export class LedgerService {
         tx.rateSource,
         tx.rateAsOf,
         tx.fxSnapshotId,
+        tx.feeBps ?? 0,
+        (tx.fee ?? 0n).toString(),
+        (tx.rounding ?? 0n).toString(),
       ],
     );
     const transaction = rows[0]!;
+
+    // Fees and rounding go to the platform in the source currency, in the same transaction as the movement.
+    for (const [kind, amount] of [
+      ['fee', tx.fee ?? 0n],
+      ['rounding', tx.rounding ?? 0n],
+    ] as const) {
+      if (amount > 0n)
+        await manager.query(
+          `INSERT INTO platform_entries (transaction_id, currency, kind, amount) VALUES ($1, $2, $3, $4)`,
+          [transaction.id, tx.fromCurrency, kind, amount.toString()],
+        );
+    }
 
     const balancesAfter: Posted['balancesAfter'] = [];
     for (const leg of legs) {

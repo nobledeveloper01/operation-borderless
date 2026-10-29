@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AppError } from '../../common/errors/app-error.js';
 import { parseAmount } from '../../common/money/amount.js';
-import { convert, formatRate } from '../../common/money/rate.js';
-import { FxService } from '../fx/fx.service.js';
+import { PricingService, pricedFields } from '../pricing/pricing.service.js';
 import type { IdempotencyRequest } from '../idempotency/idempotency-key.decorator.js';
 import {
   IdempotencyService,
@@ -20,7 +19,7 @@ export class TransfersService {
   constructor(
     private readonly ledger: LedgerService,
     private readonly idempotency: IdempotencyService,
-    private readonly fx: FxService,
+    private readonly pricing: PricingService,
   ) {}
 
   // Moves money to another wallet, converting at the current rate when the currencies differ.
@@ -37,15 +36,11 @@ export class TransfersService {
     }
     const toCurrency = dto.toCurrency ?? dto.fromCurrency;
     return this.idempotency.run(accountId, request, async (manager) => {
-      const quote = this.fx.quote(dto.fromCurrency, toCurrency);
-      const amount = parseAmount(dto.amount);
-      const received = convert(amount, quote.rate);
-      if (received === 0n) {
-        throw new AppError(
-          'AMOUNT_TOO_SMALL',
-          `This amount is worth less than 0.000001 ${toCurrency}.`,
-        );
-      }
+      const price = this.pricing.price(
+        dto.fromCurrency,
+        toCurrency,
+        parseAmount(dto.amount),
+      );
       const posted = await this.ledger.post(
         manager,
         {
@@ -53,21 +48,20 @@ export class TransfersService {
           fromWalletId: dto.fromWalletId,
           toWalletId: dto.toWalletId,
           fromCurrency: dto.fromCurrency,
-          fromAmount: amount,
           toCurrency,
-          toAmount: received,
-          rate: formatRate(quote.rate),
-          rateSource: quote.source,
-          rateAsOf: quote.asOf,
-          fxSnapshotId: quote.snapshotId,
+          ...pricedFields(price),
         },
         [
           {
             walletId: dto.fromWalletId,
             currency: dto.fromCurrency,
-            delta: -amount,
+            delta: -price.amount,
           },
-          { walletId: dto.toWalletId, currency: toCurrency, delta: received },
+          {
+            walletId: dto.toWalletId,
+            currency: toCurrency,
+            delta: price.received,
+          },
         ],
       );
       // The answer shows only the sender's own balance, never the receiver's.

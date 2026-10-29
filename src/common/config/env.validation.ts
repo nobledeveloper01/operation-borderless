@@ -13,6 +13,7 @@ import {
   MinLength,
   validateSync,
 } from 'class-validator';
+import { parseFeeOverrides } from '../money/fees.js';
 
 const toBool = ({ value }: { value: unknown }) =>
   value === 'true' || value === true;
@@ -107,6 +108,18 @@ export class EnvironmentVariables {
   @IsString()
   JWT_KEYS_DIR = './keys/jwt';
 
+  // Fee on every conversion, in basis points (50 = 0.5%); same-currency transfers and deposits are free.
+  @Transform(toInt)
+  @IsInt()
+  @Min(0)
+  @Max(1000)
+  FEE_BPS = 50;
+
+  // One direction per entry, for example "cNGN:cGHS=25,USDx:EURx=0".
+  @IsOptional()
+  @IsString()
+  FEE_BPS_BY_PAIR?: string;
+
   @Matches(/^[A-Za-z0-9_-]{1,40}$/)
   JWT_ACTIVE_KID = 'dev-1';
 
@@ -187,6 +200,11 @@ export function validateEnv(
     problems.push('DB_SSL_CA is required when DB_SSL is verify-full');
   }
   problems.push(...keyProblems(env));
+  try {
+    parseFeeOverrides(env.FEE_BPS_BY_PAIR);
+  } catch (error) {
+    problems.push((error as Error).message);
+  }
   if (env.NODE_ENV === 'production' && env.OPS_TOKEN?.startsWith('local-')) {
     problems.push('Production cannot use the local-only OPS_TOKEN');
   }

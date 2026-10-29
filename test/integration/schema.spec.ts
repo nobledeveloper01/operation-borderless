@@ -52,6 +52,7 @@ describe('schema', () => {
         'idempotency_keys',
         'ledger_entries',
         'migrations',
+        'platform_entries',
         'refresh_tokens',
         'sessions',
         'transactions',
@@ -137,6 +138,34 @@ describe('schema', () => {
       ),
     ).toBe(RESTRICT_VIOLATION);
     expect(await errorCode(client, 'TRUNCATE ledger_entries')).toBe(
+      RESTRICT_VIOLATION,
+    );
+  });
+
+  it('refuses fees on deposits and fees that eat the whole amount, and keeps platform entries append-only', async () => {
+    const depositWithFee = `INSERT INTO transactions (type, to_wallet_id, to_currency, to_amount, rate, rate_source, fee_amount)
+      VALUES ('DEPOSIT', $1, 'cNGN', 5, 1, 'none', 1)`;
+    expect(await errorCode(client, depositWithFee, [walletId])).toBe(
+      CHECK_VIOLATION,
+    );
+    const feeTooBig = `INSERT INTO transactions (type, from_wallet_id, to_wallet_id, from_currency, from_amount, to_currency, to_amount, rate, rate_source, fee_amount)
+      VALUES ('TRANSFER', $1, $2, 'cNGN', 5, 'cNGN', 5, 1, 'none', 5)`;
+    const otherWalletId = await insertWallet(client);
+    expect(await errorCode(client, feeTooBig, [walletId, otherWalletId])).toBe(
+      CHECK_VIOLATION,
+    );
+    const { rows } = await client.query<{ id: string }>(
+      `INSERT INTO transactions (type, to_wallet_id, to_currency, to_amount, rate, rate_source) VALUES ('DEPOSIT', $1, 'cNGN', 5, 1, 'none') RETURNING id`,
+      [walletId],
+    );
+    await client.query(
+      `INSERT INTO platform_entries (transaction_id, currency, kind, amount) VALUES ($1, 'cNGN', 'fee', 1)`,
+      [rows[0]!.id],
+    );
+    expect(
+      await errorCode(client, 'UPDATE platform_entries SET amount = 2'),
+    ).toBe(RESTRICT_VIOLATION);
+    expect(await errorCode(client, 'TRUNCATE platform_entries')).toBe(
       RESTRICT_VIOLATION,
     );
   });

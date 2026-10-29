@@ -20,6 +20,8 @@ Object.assign(process.env, {
   JWT_ACTIVE_KID: 'test-1',
   // Tests never call a real FX provider; they inject fakes and refresh by hand.
   FX_REFRESH_ENABLED: 'false',
+  // Most tests check exact conversion maths, so fees are off unless a test turns them on.
+  FEE_BPS: '0',
   OPS_TOKEN: 'test-ops-token-0123456789abcdefghijklmnop',
   PII_ENCRYPTION_KEYS: '1:bG9jYWwtcGlpLWVuY3J5cHRpb24ta2V5LXYxLTAwMDE=',
   PII_LOOKUP_KEY: 'bG9jYWwtcGlpLWxvb2t1cC1rZXktZm9yLWRldi0wMDA=',

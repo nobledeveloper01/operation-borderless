@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AppError } from '../../common/errors/app-error.js';
 import { parseAmount } from '../../common/money/amount.js';
-import { convert, formatRate } from '../../common/money/rate.js';
-import { FxService } from '../fx/fx.service.js';
+import { PricingService, pricedFields } from '../pricing/pricing.service.js';
 import type { IdempotencyRequest } from '../idempotency/idempotency-key.decorator.js';
 import {
   IdempotencyService,
@@ -20,7 +19,7 @@ export class SwapsService {
   constructor(
     private readonly ledger: LedgerService,
     private readonly idempotency: IdempotencyService,
-    private readonly fx: FxService,
+    private readonly pricing: PricingService,
   ) {}
 
   swap(
@@ -37,15 +36,11 @@ export class SwapsService {
     }
     return this.idempotency.run(accountId, request, async (manager) => {
       // Priced inside the claim, so a replay returns the first answer even if the rates have gone stale since.
-      const quote = this.fx.quote(dto.fromCurrency, dto.toCurrency);
-      const amount = parseAmount(dto.amount);
-      const received = convert(amount, quote.rate);
-      if (received === 0n) {
-        throw new AppError(
-          'AMOUNT_TOO_SMALL',
-          `This amount is worth less than 0.000001 ${dto.toCurrency}.`,
-        );
-      }
+      const price = this.pricing.price(
+        dto.fromCurrency,
+        dto.toCurrency,
+        parseAmount(dto.amount),
+      );
       const posted = await this.ledger.post(
         manager,
         {
@@ -53,17 +48,12 @@ export class SwapsService {
           fromWalletId: walletId,
           toWalletId: walletId,
           fromCurrency: dto.fromCurrency,
-          fromAmount: amount,
           toCurrency: dto.toCurrency,
-          toAmount: received,
-          rate: formatRate(quote.rate),
-          rateSource: quote.source,
-          rateAsOf: quote.asOf,
-          fxSnapshotId: quote.snapshotId,
+          ...pricedFields(price),
         },
         [
-          { walletId, currency: dto.fromCurrency, delta: -amount },
-          { walletId, currency: dto.toCurrency, delta: received },
+          { walletId, currency: dto.fromCurrency, delta: -price.amount },
+          { walletId, currency: dto.toCurrency, delta: price.received },
         ],
       );
       return {

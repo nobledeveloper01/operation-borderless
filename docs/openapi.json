@@ -3226,6 +3226,137 @@
           "Operations"
         ]
       }
+    },
+    "/api/v1/ops/platform-account": {
+      "get": {
+        "operationId": "OpsController_platformAccount",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Platform account found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 200
+                        },
+                        "message": {
+                          "example": "Platform account found"
+                        },
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/PlatformBalanceDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, wrong or expired credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 401
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not yours",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 404
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 429
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 500
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opsToken": []
+          }
+        ],
+        "summary": "What the platform has collected in fees and rounding",
+        "tags": [
+          "Operations"
+        ]
+      }
     }
   },
   "info": {
@@ -3641,6 +3772,21 @@
             "nullable": true,
             "example": "2026-10-29T00:02:31.000Z"
           },
+          "feeBps": {
+            "type": "number",
+            "example": 50,
+            "description": "Fee rate in basis points (50 = 0.5%); 0 for deposits and same-currency transfers."
+          },
+          "feeAmount": {
+            "type": "string",
+            "example": "0.050000",
+            "description": "Fee taken from fromAmount, in fromCurrency, before converting."
+          },
+          "roundingAmount": {
+            "type": "string",
+            "example": "0.000000",
+            "description": "Whole millionths of fromCurrency that bought nothing after rounding down; kept by the platform."
+          },
           "createdAt": {
             "type": "string",
             "example": "2026-10-29T10:05:00.000Z"
@@ -3659,6 +3805,9 @@
           "rate",
           "rateSource",
           "rateAsOf",
+          "feeBps",
+          "feeAmount",
+          "roundingAmount",
           "createdAt"
         ]
       },
@@ -3896,6 +4045,21 @@
             "nullable": true,
             "example": "2026-10-29T00:02:31.000Z"
           },
+          "feeBps": {
+            "type": "number",
+            "example": 50,
+            "description": "Fee rate in basis points (50 = 0.5%); 0 for deposits and same-currency transfers."
+          },
+          "feeAmount": {
+            "type": "string",
+            "example": "0.050000",
+            "description": "Fee taken from fromAmount, in fromCurrency, before converting."
+          },
+          "roundingAmount": {
+            "type": "string",
+            "example": "0.000000",
+            "description": "Whole millionths of fromCurrency that bought nothing after rounding down; kept by the platform."
+          },
           "createdAt": {
             "type": "string",
             "example": "2026-10-29T10:05:00.000Z"
@@ -3923,6 +4087,9 @@
           "rate",
           "rateSource",
           "rateAsOf",
+          "feeBps",
+          "feeAmount",
+          "roundingAmount",
           "createdAt",
           "direction"
         ]
@@ -4314,6 +4481,10 @@
             "example": 0,
             "description": "Transactions with no ledger lines, which should never happen."
           },
+          "platformMatches": {
+            "type": "boolean",
+            "description": "True when the platform account holds exactly the fees and rounding recorded on transactions."
+          },
           "mismatches": {
             "description": "The first 100 balances that differ from their ledger lines.",
             "type": "array",
@@ -4328,7 +4499,47 @@
           "balancesChecked",
           "mismatchCount",
           "transactionsWithoutLines",
+          "platformMatches",
           "mismatches"
+        ]
+      },
+      "PlatformBalanceDto": {
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string",
+            "enum": [
+              "cNGN",
+              "cGHS",
+              "cXAF",
+              "USDx",
+              "EURx"
+            ]
+          },
+          "fees": {
+            "type": "string",
+            "example": "12.500000"
+          },
+          "rounding": {
+            "type": "string",
+            "example": "0.000841",
+            "description": "Whole millionths kept from rounding down conversions."
+          },
+          "total": {
+            "type": "string",
+            "example": "12.500841"
+          },
+          "entries": {
+            "type": "number",
+            "example": 250
+          }
+        },
+        "required": [
+          "currency",
+          "fees",
+          "rounding",
+          "total",
+          "entries"
         ]
       }
     }

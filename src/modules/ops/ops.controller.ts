@@ -3,7 +3,7 @@ import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { MetricsService } from '../../common/metrics/metrics.service.js';
 import { ApiEndpoint } from '../../common/responses/api-endpoint.decorator.js';
-import { LedgerCheckDto } from './dto.js';
+import { LedgerCheckDto, PlatformBalanceDto } from './dto.js';
 import { LedgerCheckService } from './ledger-check.service.js';
 
 @ApiTags('Operations')
@@ -38,5 +38,17 @@ export class OpsController {
   })
   ledgerCheck(): Promise<LedgerCheckDto> {
     return this.ledger.check();
+  }
+
+  @Get('platform-account')
+  @ApiEndpoint({
+    summary: 'What the platform has collected in fees and rounding',
+    message: 'Platform account found',
+    type: PlatformBalanceDto,
+    isArray: true,
+    access: 'ops',
+  })
+  platformAccount(): Promise<PlatformBalanceDto[]> {
+    return this.ledger.platformAccount();
   }
 }

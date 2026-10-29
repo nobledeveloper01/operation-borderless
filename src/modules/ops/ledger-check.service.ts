@@ -7,7 +7,7 @@ import {
 import { DataSource } from 'typeorm';
 import { formatAmount } from '../../common/money/amount.js';
 import { MetricsService } from '../../common/metrics/metrics.service.js';
-import type { LedgerCheckDto } from './dto.js';
+import type { LedgerCheckDto, PlatformBalanceDto } from './dto.js';
 
 const CHECK_EVERY_MS = 3_600_000;
 const MISMATCHES_SHOWN = 100;
@@ -60,14 +60,28 @@ export class LedgerCheckService implements OnModuleInit, OnModuleDestroy {
           LIMIT $1`,
         [MISMATCHES_SHOWN],
       );
-      return { counts, rows };
+      // Every fee and rounding amount on a transaction must have the same amount waiting in the platform account.
+      const [platform] = await m.query<{ drift: number }[]>(
+        `SELECT count(*)::int AS drift FROM (
+           SELECT from_currency AS currency, 'fee' AS kind, sum(fee_amount) AS expected
+             FROM transactions WHERE fee_amount > 0 GROUP BY from_currency
+           UNION ALL
+           SELECT from_currency, 'rounding', sum(rounding_amount)
+             FROM transactions WHERE rounding_amount > 0 GROUP BY from_currency
+         ) t
+         FULL JOIN (SELECT currency, kind, sum(amount) AS booked FROM platform_entries GROUP BY currency, kind) p
+           ON p.currency = t.currency AND p.kind = t.kind
+         WHERE COALESCE(t.expected, 0) <> COALESCE(p.booked, 0)`,
+      );
+      return { counts, rows, platformDrift: platform?.drift ?? 0 };
     });
     const mismatchCount = result.rows[0]?.total ?? 0;
     const orphans = result.counts?.orphans ?? 0;
     this.metrics.ledgerMismatches.set(mismatchCount);
     this.metrics.ledgerCheckedAt.setToCurrentTime();
     return {
-      ok: mismatchCount === 0 && orphans === 0,
+      ok: mismatchCount === 0 && orphans === 0 && result.platformDrift === 0,
+      platformMatches: result.platformDrift === 0,
       checkedAt: new Date().toISOString(),
       balancesChecked: result.counts?.balances ?? 0,
       mismatchCount,
@@ -80,6 +94,26 @@ export class LedgerCheckService implements OnModuleInit, OnModuleDestroy {
         ledger: formatAmount(BigInt(r.ledger)),
       })),
     };
+  }
+
+  // The platform's takings per currency: fees plus rounding, summed from its append-only entries.
+  async platformAccount(): Promise<PlatformBalanceDto[]> {
+    const rows = await this.db.query<
+      { currency: string; fees: string; rounding: string; entries: number }[]
+    >(
+      `SELECT currency::text,
+              COALESCE(sum(amount) FILTER (WHERE kind = 'fee'), 0)::text AS fees,
+              COALESCE(sum(amount) FILTER (WHERE kind = 'rounding'), 0)::text AS rounding,
+              count(*)::int AS entries
+         FROM platform_entries GROUP BY currency ORDER BY currency`,
+    );
+    return rows.map((r) => ({
+      currency: r.currency as PlatformBalanceDto['currency'],
+      fees: formatAmount(BigInt(r.fees)),
+      rounding: formatAmount(BigInt(r.rounding)),
+      total: formatAmount(BigInt(r.fees) + BigInt(r.rounding)),
+      entries: r.entries,
+    }));
   }
 
   private async runQuietly(): Promise<void> {
