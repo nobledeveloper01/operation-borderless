@@ -1,0 +1,4037 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Logged in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 200
+                        },
+                        "message": {
+                          "example": "Logged in"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/LoginResultDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 400
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, wrong or expired credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 401
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 429
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 500
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "Log in with an email or phone number and password",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "description": "Each refresh token works once. Using one twice ends the whole session.",
+        "operationId": "AuthController_refresh",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Session refreshed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 200
+                        },
+                        "message": {
+                          "example": "Session refreshed"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/SessionTokensDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 400
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, wrong or expired credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 401
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 429
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 500
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "Swap a refresh token for a new pair",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Logged out",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 200
+                        },
+                        "message": {
+                          "example": "Logged out"
+                        },
+                        "data": {
+                          "type": "object",
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, wrong or expired credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 401
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "These credentials cannot do this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 403
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 429
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 500
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "End this session",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout-all": {
+      "post": {
+        "operationId": "AuthController_logoutAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Logged out everywhere",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 200
+                        },
+                        "message": {
+                          "example": "Logged out everywhere"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/LogoutAllDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, wrong or expired credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 401
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "These credentials cannot do this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 403
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 429
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 500
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "End every session and revoke every wallet key on this account",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "operationId": "AuthController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 200
+                        },
+                        "message": {
+                          "example": "Signed in"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/MeDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, wrong or expired credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 401
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "These credentials cannot do this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 403
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 429
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 500
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Who am I signed in as?",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/fx/rates": {
+      "get": {
+        "description": "Daily reference rates, not market prices. Stale rates are still shown, marked isStale, but cannot price money.",
+        "operationId": "FxController_rates",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Rates found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 200
+                        },
+                        "message": {
+                          "example": "Rates found"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/RatesDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 429
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 500
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "A dependency is unavailable; try again",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 503
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "Current rates between every pair of stablecoins",
+        "tags": [
+          "FX rates"
+        ]
+      }
+    },
+    "/api/v1/wallets/{walletId}/deposits": {
+      "post": {
+        "operationId": "DepositsController_create",
+        "parameters": [
+          {
+            "name": "walletId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "8 to 128 characters of A-Z, a-z, 0-9, _ or -. A retry with the same key and body returns the first answer; the same key with another body is refused.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{8,128}$",
+              "example": "7b0c3e9a-4d1f-4c62-9a55-2f9e1b7c0d11"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDepositDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Deposit completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 201
+                        },
+                        "message": {
+                          "example": "Deposit completed"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/MovementResultDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 400
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, wrong or expired credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 401
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not yours",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 404
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused by a business rule",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 422
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 429
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 500
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "walletKey": []
+          }
+        ],
+        "summary": "Deposit a stablecoin into your wallet (simulated)",
+        "tags": [
+          "Deposits"
+        ]
+      }
+    },
+    "/api/v1/wallets/{walletId}/swaps": {
+      "post": {
+        "description": "Priced at the current rate; refused if it would overdraw the balance or if rates are stale.",
+        "operationId": "SwapsController_create",
+        "parameters": [
+          {
+            "name": "walletId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "8 to 128 characters of A-Z, a-z, 0-9, _ or -. A retry with the same key and body returns the first answer; the same key with another body is refused.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{8,128}$",
+              "example": "7b0c3e9a-4d1f-4c62-9a55-2f9e1b7c0d11"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSwapDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Swap completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 201
+                        },
+                        "message": {
+                          "example": "Swap completed"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/MovementResultDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 400
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, wrong or expired credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 401
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not yours",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 404
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused by a business rule",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 422
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 429
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 500
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "A dependency is unavailable; try again",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 503
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "walletKey": []
+          }
+        ],
+        "summary": "Swap one stablecoin for another inside your wallet",
+        "tags": [
+          "Swaps"
+        ]
+      }
+    },
+    "/api/v1/transfers": {
+      "post": {
+        "description": "When the currencies differ the amount is converted at the current rate, rounded down.",
+        "operationId": "TransfersController_create",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "8 to 128 characters of A-Z, a-z, 0-9, _ or -. A retry with the same key and body returns the first answer; the same key with another body is refused.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{8,128}$",
+              "example": "7b0c3e9a-4d1f-4c62-9a55-2f9e1b7c0d11"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTransferDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Transfer completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 201
+                        },
+                        "message": {
+                          "example": "Transfer completed"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/MovementResultDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 400
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, wrong or expired credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 401
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not yours",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 404
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused by a business rule",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 422
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 429
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 500
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "A dependency is unavailable; try again",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 503
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "walletKey": []
+          }
+        ],
+        "summary": "Send money from your wallet to another wallet",
+        "tags": [
+          "Transfers"
+        ]
+      }
+    },
+    "/api/v1/wallets/{walletId}/transactions": {
+      "get": {
+        "description": "Deposits, swaps, and transfers sent and received, filtered by type and currency.",
+        "operationId": "TransactionsController_history",
+        "parameters": [
+          {
+            "name": "walletId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 10000,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "One or more types, comma separated or repeated.",
+            "schema": {
+              "example": [
+                "SWAP",
+                "TRANSFER"
+              ],
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "DEPOSIT",
+                  "SWAP",
+                  "TRANSFER"
+                ]
+              }
+            }
+          },
+          {
+            "name": "currency",
+            "required": false,
+            "in": "query",
+            "description": "One or more stablecoins, comma separated or repeated; matches either side of the transaction.",
+            "schema": {
+              "example": [
+                "cGHS"
+              ],
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "cNGN",
+                  "cGHS",
+                  "cXAF",
+                  "USDx",
+                  "EURx"
+                ]
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transactions found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 200
+                        },
+                        "message": {
+                          "example": "Transactions found"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/HistoryPageDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 400
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, wrong or expired credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 401
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not yours",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 404
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 429
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 500
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "walletKey": []
+          }
+        ],
+        "summary": "List your transactions, newest first",
+        "tags": [
+          "Transactions"
+        ]
+      }
+    },
+    "/api/v1/transactions/{transactionId}": {
+      "get": {
+        "description": "Visible to the wallet that sent it and the wallet that received it.",
+        "operationId": "TransactionsController_get",
+        "parameters": [
+          {
+            "name": "transactionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transaction found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 200
+                        },
+                        "message": {
+                          "example": "Transaction found"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/TransactionDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 400
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, wrong or expired credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 401
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not yours",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 404
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 429
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 500
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "walletKey": []
+          }
+        ],
+        "summary": "Get one of your transactions",
+        "tags": [
+          "Transactions"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "HealthController_live",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The API is up",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 200
+                        },
+                        "message": {
+                          "example": "The API is up"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/HealthDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 429
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 500
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "Is the process up?",
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "operationId": "HealthController_ready",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The API is ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 200
+                        },
+                        "message": {
+                          "example": "The API is ready"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/HealthDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 429
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 500
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "A dependency is unavailable; try again",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 503
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "Can the API serve traffic?",
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/api/v1/wallets": {
+      "post": {
+        "description": "Creates the account, the wallet and a zero balance for each stablecoin, and signs the holder in.",
+        "operationId": "WalletsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWalletDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Wallet created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 201
+                        },
+                        "message": {
+                          "example": "Wallet created"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/CreatedWalletDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 400
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 409
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 429
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 500
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create a wallet with an email or phone number",
+        "tags": [
+          "Wallets"
+        ]
+      }
+    },
+    "/api/v1/wallets/{walletId}": {
+      "get": {
+        "operationId": "WalletsController_get",
+        "parameters": [
+          {
+            "name": "walletId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wallet found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 200
+                        },
+                        "message": {
+                          "example": "Wallet found"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/WalletDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 400
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, wrong or expired credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 401
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not yours",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 404
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 429
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 500
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "walletKey": []
+          }
+        ],
+        "summary": "Get your wallet and its balances",
+        "tags": [
+          "Wallets"
+        ]
+      }
+    },
+    "/api/v1/wallets/{walletId}/balances": {
+      "get": {
+        "operationId": "WalletsController_balances",
+        "parameters": [
+          {
+            "name": "walletId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Balances found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 200
+                        },
+                        "message": {
+                          "example": "Balances found"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/WalletBalancesDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 400
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, wrong or expired credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 401
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not yours",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 404
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 429
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 500
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "walletKey": []
+          }
+        ],
+        "summary": "Get your balances",
+        "tags": [
+          "Wallets"
+        ]
+      }
+    },
+    "/api/v1/wallets/{walletId}/keys": {
+      "post": {
+        "operationId": "WalletKeysController_create",
+        "parameters": [
+          {
+            "name": "walletId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWalletKeyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Wallet key created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 201
+                        },
+                        "message": {
+                          "example": "Wallet key created"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/CreatedWalletKeyDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 400
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, wrong or expired credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 401
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "These credentials cannot do this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 403
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not yours",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 404
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 409
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 429
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 500
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a wallet key for scripts and servers",
+        "tags": [
+          "Wallet keys"
+        ]
+      },
+      "get": {
+        "operationId": "WalletKeysController_list",
+        "parameters": [
+          {
+            "name": "walletId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wallet keys found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 200
+                        },
+                        "message": {
+                          "example": "Wallet keys found"
+                        },
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/WalletKeyDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 400
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, wrong or expired credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 401
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "These credentials cannot do this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 403
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not yours",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 404
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 429
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 500
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List active wallet keys (secrets are never shown again)",
+        "tags": [
+          "Wallet keys"
+        ]
+      }
+    },
+    "/api/v1/wallets/{walletId}/keys/{keyId}": {
+      "delete": {
+        "operationId": "WalletKeysController_revoke",
+        "parameters": [
+          {
+            "name": "walletId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "keyId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wallet key revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 200
+                        },
+                        "message": {
+                          "example": "Wallet key revoked"
+                        },
+                        "data": {
+                          "type": "object",
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 400
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, wrong or expired credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 401
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "These credentials cannot do this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 403
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not yours",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 404
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 429
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 500
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Revoke a wallet key",
+        "tags": [
+          "Wallet keys"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Borderless API",
+    "description": "Multi-currency stablecoin wallet sandbox: wallets, deposits, swaps, transfers and FX rates.",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      },
+      "walletKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Wallet-Key"
+      }
+    },
+    "schemas": {
+      "SuccessResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "statusCode": {
+            "type": "number",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "Request completed"
+          },
+          "requestId": {
+            "type": "string",
+            "example": "0192f5c2-7b1e-7c40-9d1a-2f6b8f0c9e11"
+          },
+          "timestamp": {
+            "type": "string",
+            "example": "2026-10-29T10:00:00.000Z"
+          }
+        },
+        "required": [
+          "success",
+          "statusCode",
+          "message",
+          "requestId",
+          "timestamp"
+        ]
+      },
+      "ErrorResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "statusCode": {
+            "type": "number",
+            "example": 400
+          },
+          "error": {
+            "type": "string",
+            "example": "Bad Request"
+          },
+          "code": {
+            "type": "string",
+            "example": "VALIDATION_FAILED"
+          },
+          "message": {
+            "type": "string",
+            "example": "amount must be a decimal string with at most 6 decimal places"
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "requestId": {
+            "type": "string",
+            "example": "0192f5c2-7b1e-7c40-9d1a-2f6b8f0c9e11"
+          },
+          "path": {
+            "type": "string",
+            "example": "/api/v1/wallets"
+          },
+          "timestamp": {
+            "type": "string",
+            "example": "2026-10-29T10:00:00.000Z"
+          }
+        },
+        "required": [
+          "success",
+          "statusCode",
+          "error",
+          "code",
+          "message",
+          "requestId",
+          "path",
+          "timestamp"
+        ]
+      },
+      "SessionTokensDto": {
+        "type": "object",
+        "properties": {
+          "tokenType": {
+            "type": "string",
+            "example": "Bearer"
+          },
+          "accessToken": {
+            "type": "string",
+            "example": "eyJhbGciOiJFUzI1NiIs..."
+          },
+          "accessTokenExpiresAt": {
+            "type": "string",
+            "example": "2026-10-29T10:15:00.000Z"
+          },
+          "refreshToken": {
+            "type": "string",
+            "example": "q9X2...",
+            "description": "Shown once; each use returns a new one."
+          },
+          "refreshTokenExpiresAt": {
+            "type": "string",
+            "example": "2026-11-28T10:00:00.000Z"
+          }
+        },
+        "required": [
+          "tokenType",
+          "accessToken",
+          "accessTokenExpiresAt",
+          "refreshToken",
+          "refreshTokenExpiresAt"
+        ]
+      },
+      "LoginResultDto": {
+        "type": "object",
+        "properties": {
+          "walletId": {
+            "type": "string",
+            "example": "0192f5c2-7b1e-7c40-9d1a-2f6b8f0c9e11"
+          },
+          "session": {
+            "$ref": "#/components/schemas/SessionTokensDto"
+          }
+        },
+        "required": [
+          "walletId",
+          "session"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "ada@example.com",
+            "maxLength": 254
+          },
+          "phoneNumber": {
+            "type": "string",
+            "example": "+2348012345678",
+            "description": "International format, or Nigerian local format."
+          },
+          "password": {
+            "type": "string",
+            "example": "correct horse battery staple"
+          }
+        },
+        "required": [
+          "password"
+        ]
+      },
+      "RefreshDto": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "example": "q9X2..."
+          }
+        },
+        "required": [
+          "refreshToken"
+        ]
+      },
+      "LogoutAllDto": {
+        "type": "object",
+        "properties": {
+          "sessionsEnded": {
+            "type": "number",
+            "example": 2,
+            "description": "Sessions that were still open."
+          },
+          "keysRevoked": {
+            "type": "number",
+            "example": 1,
+            "description": "Wallet keys that were still active."
+          }
+        },
+        "required": [
+          "sessionsEnded",
+          "keysRevoked"
+        ]
+      },
+      "MeDto": {
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "type": "string"
+          },
+          "walletId": {
+            "type": "string"
+          },
+          "via": {
+            "type": "string",
+            "enum": [
+              "session",
+              "walletKey"
+            ]
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "phoneNumber": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "accountId",
+          "walletId",
+          "via"
+        ]
+      },
+      "RatePairDto": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "enum": [
+              "cNGN",
+              "cGHS",
+              "cXAF",
+              "USDx",
+              "EURx"
+            ],
+            "example": "USDx"
+          },
+          "to": {
+            "type": "string",
+            "enum": [
+              "cNGN",
+              "cGHS",
+              "cXAF",
+              "USDx",
+              "EURx"
+            ],
+            "example": "cNGN"
+          },
+          "rate": {
+            "type": "string",
+            "example": "1346.2368880000",
+            "description": "Units of `to` per 1 unit of `from`, 10 decimal places."
+          },
+          "refreshedAt": {
+            "type": "string",
+            "example": "2026-10-29T00:02:31.000Z",
+            "description": "The provider's publication time for this rate."
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "rate",
+          "refreshedAt"
+        ]
+      },
+      "RatesDto": {
+        "type": "object",
+        "properties": {
+          "base": {
+            "type": "string",
+            "example": "USDx"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "exchangerate-api",
+              "currency-api",
+              "fixed-table"
+            ]
+          },
+          "isStale": {
+            "type": "boolean",
+            "description": "True once the rates are older than the freshness limit; conversions are then refused."
+          },
+          "providerUpdatedAt": {
+            "type": "string",
+            "example": "2026-10-29T00:02:31.000Z"
+          },
+          "fetchedAt": {
+            "type": "string",
+            "example": "2026-10-29T09:00:03.000Z"
+          },
+          "pairs": {
+            "description": "Every ordered pair of the five stablecoins (20 pairs).",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RatePairDto"
+            }
+          },
+          "attribution": {
+            "type": "string",
+            "example": "Rates by Exchange Rate API (https://www.exchangerate-api.com)"
+          }
+        },
+        "required": [
+          "base",
+          "source",
+          "isStale",
+          "providerUpdatedAt",
+          "fetchedAt",
+          "pairs",
+          "attribution"
+        ]
+      },
+      "TransactionDto": {
+        "type": "object",
+        "properties": {
+          "transactionId": {
+            "type": "string",
+            "example": "0192f5c9-0d3e-7a11-8c2b-6f4e2d1a9b77"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "DEPOSIT",
+              "SWAP",
+              "TRANSFER"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "COMPLETED"
+            ]
+          },
+          "fromWalletId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Null for deposits."
+          },
+          "toWalletId": {
+            "type": "string"
+          },
+          "fromCurrency": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "cNGN",
+              "cGHS",
+              "cXAF",
+              "USDx",
+              "EURx"
+            ]
+          },
+          "fromAmount": {
+            "type": "string",
+            "nullable": true,
+            "example": "10000.000000"
+          },
+          "toCurrency": {
+            "type": "string",
+            "enum": [
+              "cNGN",
+              "cGHS",
+              "cXAF",
+              "USDx",
+              "EURx"
+            ]
+          },
+          "toAmount": {
+            "type": "string",
+            "example": "7.428113"
+          },
+          "rate": {
+            "type": "string",
+            "example": "0.0007428113",
+            "description": "Units of toCurrency per 1 fromCurrency, 10 decimal places."
+          },
+          "rateSource": {
+            "type": "string",
+            "enum": [
+              "none",
+              "exchangerate-api",
+              "currency-api",
+              "fixed-table"
+            ]
+          },
+          "rateAsOf": {
+            "type": "string",
+            "nullable": true,
+            "example": "2026-10-29T00:02:31.000Z"
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-10-29T10:05:00.000Z"
+          }
+        },
+        "required": [
+          "transactionId",
+          "type",
+          "status",
+          "fromWalletId",
+          "toWalletId",
+          "fromCurrency",
+          "fromAmount",
+          "toCurrency",
+          "toAmount",
+          "rate",
+          "rateSource",
+          "rateAsOf",
+          "createdAt"
+        ]
+      },
+      "BalanceAfterDto": {
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string",
+            "enum": [
+              "cNGN",
+              "cGHS",
+              "cXAF",
+              "USDx",
+              "EURx"
+            ]
+          },
+          "amount": {
+            "type": "string",
+            "example": "48500.000000"
+          }
+        },
+        "required": [
+          "currency",
+          "amount"
+        ]
+      },
+      "MovementResultDto": {
+        "type": "object",
+        "properties": {
+          "transaction": {
+            "$ref": "#/components/schemas/TransactionDto"
+          },
+          "balances": {
+            "description": "The caller's balances this movement touched, after it.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BalanceAfterDto"
+            }
+          }
+        },
+        "required": [
+          "transaction",
+          "balances"
+        ]
+      },
+      "CreateDepositDto": {
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string",
+            "enum": [
+              "cNGN",
+              "cGHS",
+              "cXAF",
+              "USDx",
+              "EURx"
+            ],
+            "example": "cNGN"
+          },
+          "amount": {
+            "type": "string",
+            "example": "1500.25",
+            "pattern": "^\\d{1,15}(\\.\\d{1,6})?$",
+            "description": "Decimal string, up to 6 decimal places."
+          }
+        },
+        "required": [
+          "currency",
+          "amount"
+        ]
+      },
+      "CreateSwapDto": {
+        "type": "object",
+        "properties": {
+          "fromCurrency": {
+            "type": "string",
+            "enum": [
+              "cNGN",
+              "cGHS",
+              "cXAF",
+              "USDx",
+              "EURx"
+            ],
+            "example": "cNGN"
+          },
+          "toCurrency": {
+            "type": "string",
+            "enum": [
+              "cNGN",
+              "cGHS",
+              "cXAF",
+              "USDx",
+              "EURx"
+            ],
+            "example": "USDx"
+          },
+          "amount": {
+            "type": "string",
+            "example": "1500.25",
+            "pattern": "^\\d{1,15}(\\.\\d{1,6})?$",
+            "description": "Amount of fromCurrency to swap, decimal string with up to 6 places."
+          }
+        },
+        "required": [
+          "fromCurrency",
+          "toCurrency",
+          "amount"
+        ]
+      },
+      "CreateTransferDto": {
+        "type": "object",
+        "properties": {
+          "fromWalletId": {
+            "type": "string",
+            "description": "Your wallet, which sends the money.",
+            "format": "uuid"
+          },
+          "toWalletId": {
+            "type": "string",
+            "description": "The wallet that receives the money.",
+            "format": "uuid"
+          },
+          "fromCurrency": {
+            "type": "string",
+            "enum": [
+              "cNGN",
+              "cGHS",
+              "cXAF",
+              "USDx",
+              "EURx"
+            ],
+            "example": "USDx"
+          },
+          "toCurrency": {
+            "type": "string",
+            "enum": [
+              "cNGN",
+              "cGHS",
+              "cXAF",
+              "USDx",
+              "EURx"
+            ],
+            "example": "cGHS",
+            "description": "What the receiver gets; defaults to fromCurrency."
+          },
+          "amount": {
+            "type": "string",
+            "example": "1500.25",
+            "pattern": "^\\d{1,15}(\\.\\d{1,6})?$",
+            "description": "Amount of fromCurrency to send, decimal string with up to 6 places."
+          }
+        },
+        "required": [
+          "fromWalletId",
+          "toWalletId",
+          "fromCurrency",
+          "amount"
+        ]
+      },
+      "HistoryItemDto": {
+        "type": "object",
+        "properties": {
+          "transactionId": {
+            "type": "string",
+            "example": "0192f5c9-0d3e-7a11-8c2b-6f4e2d1a9b77"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "DEPOSIT",
+              "SWAP",
+              "TRANSFER"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "COMPLETED"
+            ]
+          },
+          "fromWalletId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Null for deposits."
+          },
+          "toWalletId": {
+            "type": "string"
+          },
+          "fromCurrency": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "cNGN",
+              "cGHS",
+              "cXAF",
+              "USDx",
+              "EURx"
+            ]
+          },
+          "fromAmount": {
+            "type": "string",
+            "nullable": true,
+            "example": "10000.000000"
+          },
+          "toCurrency": {
+            "type": "string",
+            "enum": [
+              "cNGN",
+              "cGHS",
+              "cXAF",
+              "USDx",
+              "EURx"
+            ]
+          },
+          "toAmount": {
+            "type": "string",
+            "example": "7.428113"
+          },
+          "rate": {
+            "type": "string",
+            "example": "0.0007428113",
+            "description": "Units of toCurrency per 1 fromCurrency, 10 decimal places."
+          },
+          "rateSource": {
+            "type": "string",
+            "enum": [
+              "none",
+              "exchangerate-api",
+              "currency-api",
+              "fixed-table"
+            ]
+          },
+          "rateAsOf": {
+            "type": "string",
+            "nullable": true,
+            "example": "2026-10-29T00:02:31.000Z"
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-10-29T10:05:00.000Z"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "IN",
+              "OUT",
+              "INTERNAL"
+            ],
+            "description": "IN for deposits and transfers received, OUT for transfers sent, INTERNAL for swaps."
+          }
+        },
+        "required": [
+          "transactionId",
+          "type",
+          "status",
+          "fromWalletId",
+          "toWalletId",
+          "fromCurrency",
+          "fromAmount",
+          "toCurrency",
+          "toAmount",
+          "rate",
+          "rateSource",
+          "rateAsOf",
+          "createdAt",
+          "direction"
+        ]
+      },
+      "HistoryPageDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HistoryItemDto"
+            }
+          },
+          "page": {
+            "type": "number",
+            "example": 1
+          },
+          "limit": {
+            "type": "number",
+            "example": 20
+          },
+          "total": {
+            "type": "number",
+            "example": 3,
+            "description": "Matching transactions in all pages."
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "limit",
+          "total"
+        ]
+      },
+      "HealthDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok"
+            ],
+            "example": "ok"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "BalanceDto": {
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string",
+            "enum": [
+              "cNGN",
+              "cGHS",
+              "cXAF",
+              "USDx",
+              "EURx"
+            ],
+            "example": "cNGN"
+          },
+          "amount": {
+            "type": "string",
+            "example": "50000.000000",
+            "description": "Decimal string with 6 places."
+          },
+          "usdValue": {
+            "type": "string",
+            "nullable": true,
+            "example": "37.140545",
+            "description": "Value in USDx, rounded down; null when no fresh rate exists."
+          }
+        },
+        "required": [
+          "currency",
+          "amount",
+          "usdValue"
+        ]
+      },
+      "ValuationRatesDto": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "nullable": true,
+            "example": "exchangerate-api"
+          },
+          "asOf": {
+            "type": "string",
+            "nullable": true,
+            "example": "2026-10-29T00:02:31.000Z"
+          },
+          "unavailableReason": {
+            "type": "string",
+            "nullable": true,
+            "example": null,
+            "description": "Why USD values are missing, when they are."
+          }
+        },
+        "required": [
+          "source",
+          "asOf",
+          "unavailableReason"
+        ]
+      },
+      "CreatedWalletDto": {
+        "type": "object",
+        "properties": {
+          "balances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BalanceDto"
+            }
+          },
+          "totalUsd": {
+            "type": "string",
+            "nullable": true,
+            "example": "47.140545"
+          },
+          "rates": {
+            "$ref": "#/components/schemas/ValuationRatesDto"
+          },
+          "walletId": {
+            "type": "string",
+            "example": "0192f5c2-7b1e-7c40-9d1a-2f6b8f0c9e11"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "example": "ada@example.com"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "nullable": true,
+            "example": null
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-10-29T10:00:00.000Z"
+          },
+          "session": {
+            "description": "A first session, so the new holder is signed in at once.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SessionTokensDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "balances",
+          "totalUsd",
+          "rates",
+          "walletId",
+          "email",
+          "phoneNumber",
+          "createdAt",
+          "session"
+        ]
+      },
+      "CreateWalletDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "ada@example.com",
+            "maxLength": 254
+          },
+          "phoneNumber": {
+            "type": "string",
+            "example": "+2348012345678",
+            "description": "International format, or Nigerian local format."
+          },
+          "password": {
+            "type": "string",
+            "example": "correct horse battery staple",
+            "minLength": 12,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "password"
+        ]
+      },
+      "WalletDto": {
+        "type": "object",
+        "properties": {
+          "balances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BalanceDto"
+            }
+          },
+          "totalUsd": {
+            "type": "string",
+            "nullable": true,
+            "example": "47.140545"
+          },
+          "rates": {
+            "$ref": "#/components/schemas/ValuationRatesDto"
+          },
+          "walletId": {
+            "type": "string",
+            "example": "0192f5c2-7b1e-7c40-9d1a-2f6b8f0c9e11"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "example": "ada@example.com"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "nullable": true,
+            "example": null
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-10-29T10:00:00.000Z"
+          }
+        },
+        "required": [
+          "balances",
+          "totalUsd",
+          "rates",
+          "walletId",
+          "email",
+          "phoneNumber",
+          "createdAt"
+        ]
+      },
+      "WalletBalancesDto": {
+        "type": "object",
+        "properties": {
+          "balances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BalanceDto"
+            }
+          },
+          "totalUsd": {
+            "type": "string",
+            "nullable": true,
+            "example": "47.140545"
+          },
+          "rates": {
+            "$ref": "#/components/schemas/ValuationRatesDto"
+          },
+          "walletId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "balances",
+          "totalUsd",
+          "rates",
+          "walletId"
+        ]
+      },
+      "CreatedWalletKeyDto": {
+        "type": "object",
+        "properties": {
+          "keyId": {
+            "type": "string",
+            "example": "k_3f9a1c0b7d2e"
+          },
+          "name": {
+            "type": "string",
+            "example": "payroll-script"
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-10-29T10:20:00.000Z"
+          },
+          "lastUsedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "key": {
+            "type": "string",
+            "example": "bwk_k_3f9a1c0b7d2e_Vb7...",
+            "description": "Shown only in this answer. Send it as X-Wallet-Key."
+          }
+        },
+        "required": [
+          "keyId",
+          "name",
+          "createdAt",
+          "lastUsedAt",
+          "key"
+        ]
+      },
+      "CreateWalletKeyDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "payroll-script",
+            "minLength": 1,
+            "maxLength": 60
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "WalletKeyDto": {
+        "type": "object",
+        "properties": {
+          "keyId": {
+            "type": "string",
+            "example": "k_3f9a1c0b7d2e"
+          },
+          "name": {
+            "type": "string",
+            "example": "payroll-script"
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-10-29T10:20:00.000Z"
+          },
+          "lastUsedAt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "keyId",
+          "name",
+          "createdAt",
+          "lastUsedAt"
+        ]
+      }
+    }
+  }
+}
