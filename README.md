@@ -70,8 +70,35 @@ The certificate comes from Caddy's own local authority, so the browser warns onc
 docker compose cp proxy:/data/caddy/pki/authorities/local/root.crt ./caddy-root.crt
 ```
 
-Ports are set with `HTTPS_PORT` and `HTTP_PORT`. Every setting is listed, with its meaning,
-in `.env.example`. The compose file works without a `.env`.
+### Settings
+
+You don't need any settings to run locally: the compose file has a working default for each,
+including local-only keys that production refuses to start with. Every setting is listed,
+with what it means, in `.env.example`.
+
+To use your own secrets, write a `.env` with fresh ones:
+
+```bash
+yarn env:new
+```
+
+It copies `.env.example` and replaces the database password, the email and phone encryption
+keys, the lookup key and the operator token with random values. The file is readable only by
+you, and the script won't overwrite an existing `.env` unless you pass `--force`. Two warnings:
+
+- A database volume keeps the password it was created with, and data encrypted with old keys
+  can't be read with new ones. On a machine that already ran the stack, start clean with
+  `docker compose down -v` (this deletes the local data).
+- `docker compose` reads `.env` for the values it passes on, such as `DB_PASSWORD`, `OPS_TOKEN`
+  and the PII keys, so `yarn demo` needs `OPS_TOKEN=<your token>` in front of it for the
+  operator checks.
+
+For a production server, `yarn env:new --production` also sets `NODE_ENV=production` and
+`DB_SSL=verify-full` and writes an ES256 signing key to `keys/jwt/`, because production never
+creates one by itself. You still fill in `DB_HOST`, `DB_SSL_CA` and `CORS_ORIGINS` for your
+servers; the API refuses to start until the CA file is set.
+
+Ports are set with `HTTPS_PORT` and `HTTP_PORT`.
 
 With the stack up, `yarn demo` walks through everything in one go and prints what happens:
 two people sign up, a deposit is retried safely, a quote is honoured, money goes to a phone
