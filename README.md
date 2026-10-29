@@ -633,7 +633,6 @@ Full detail is in [money handling](docs/money-handling.md). In short:
   events, so each would be one more handler.
 - Alerting rules on the metrics (stale rates, parked events, ledger mismatches), and a load test
   on separate machines.
-- Move the metrics to `@prometheus-io/client`, which has replaced the deprecated `prom-client`.
 
 ## Documents
 

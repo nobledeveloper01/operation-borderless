@@ -45,5 +45,11 @@ internally, with no outside service.
 - A separate token keeps operators and wallet holders apart: no wallet credential can read
   metrics, and an operator token can't move money.
 
+**Library.** Metrics use `@prometheus-io/client`, the Prometheus project's own Node client,
+which replaced the deprecated `prom-client` (same API, Apache-2.0). Its default metrics include
+event-loop utilisation, which samples on a 100 ms timer per registry that the library gives no
+way to stop. The timer is `unref`'d, so it never keeps the process alive; production has one
+registry, and only test runs that start many apps have more than one.
+
 **Not done.** No Grafana, alerting rules or tracing backend: they are outside services.
 Metrics live in one process, so with several API instances each must be scraped.
