@@ -20,6 +20,8 @@ Object.assign(process.env, {
   JWT_ACTIVE_KID: 'test-1',
   // Tests never call a real FX provider; they inject fakes and refresh by hand.
   FX_REFRESH_ENABLED: 'false',
+  // Tests deliver outbox events by hand with OutboxDispatcher.drain().
+  OUTBOX_DISPATCH_ENABLED: 'false',
   // Most tests check exact conversion maths, so fees are off unless a test turns them on.
   FEE_BPS: '0',
   OPS_TOKEN: 'test-ops-token-0123456789abcdefghijklmnop',

@@ -28,6 +28,7 @@ export const ErrorCode = {
   QUOTE_EXPIRED: HttpStatus.UNPROCESSABLE_ENTITY,
   QUOTE_MISMATCH: HttpStatus.UNPROCESSABLE_ENTITY,
   QUOTE_ALREADY_USED: HttpStatus.CONFLICT,
+  NOTIFICATION_NOT_FOUND: HttpStatus.NOT_FOUND,
   INTERNAL_ERROR: HttpStatus.INTERNAL_SERVER_ERROR,
 } as const satisfies Record<string, HttpStatus>;
 

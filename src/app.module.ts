@@ -21,6 +21,7 @@ import { HealthModule } from './modules/health/health.module.js';
 import { IdempotencyModule } from './modules/idempotency/idempotency.module.js';
 import { LedgerModule } from './modules/ledger/ledger.module.js';
 import { OpsModule } from './modules/ops/ops.module.js';
+import { OutboxModule } from './modules/outbox/outbox.module.js';
 import { PricingModule } from './modules/pricing/pricing.module.js';
 import { QuotesModule } from './modules/quotes/quotes.module.js';
 import { SwapsModule } from './modules/swaps/swaps.module.js';
@@ -67,6 +68,7 @@ import { WalletsModule } from './modules/wallets/wallets.module.js';
     PricingModule,
     QuotesModule,
     LedgerModule,
+    OutboxModule,
     IdempotencyModule,
     DepositsModule,
     SwapsModule,

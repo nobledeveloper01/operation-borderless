@@ -53,6 +53,8 @@ describe('schema', () => {
         'idempotency_keys',
         'ledger_entries',
         'migrations',
+        'notifications',
+        'outbox_events',
         'platform_entries',
         'refresh_tokens',
         'sessions',

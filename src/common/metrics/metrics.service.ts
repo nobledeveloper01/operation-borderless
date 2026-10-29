@@ -54,6 +54,20 @@ export class MetricsService {
     registers: [this.registry],
   });
 
+  readonly outboxDelivered = new Counter({
+    name: 'borderless_outbox_delivered_total',
+    help: 'Outbox events delivered, by type.',
+    labelNames: ['type'],
+    registers: [this.registry],
+  });
+
+  readonly outboxFailures = new Counter({
+    name: 'borderless_outbox_failures_total',
+    help: 'Failed outbox deliveries, by type; final="true" means the event gave up.',
+    labelNames: ['type', 'final'],
+    registers: [this.registry],
+  });
+
   readonly ledgerMismatches = new Gauge({
     name: 'borderless_ledger_mismatches',
     help: 'Balances that differed from their ledger lines at the last check.',
@@ -80,6 +94,22 @@ export class MetricsService {
         const value = read();
         if (value === undefined) this.reset();
         else this.set(value);
+      },
+    });
+  }
+
+  // Like watch, for values that need a database read; a failed read leaves the gauge empty.
+  watchAsync(name: string, help: string, read: () => Promise<number>): void {
+    new Gauge({
+      name,
+      help,
+      registers: [this.registry],
+      async collect() {
+        try {
+          this.set(await read());
+        } catch {
+          this.reset();
+        }
       },
     });
   }

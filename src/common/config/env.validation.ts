@@ -115,6 +115,17 @@ export class EnvironmentVariables {
   @Max(1000)
   FEE_BPS = 50;
 
+  // Runs the in-process worker that delivers outbox events (tests turn it off and deliver by hand).
+  @Transform(toBool)
+  @IsBoolean()
+  OUTBOX_DISPATCH_ENABLED = true;
+
+  // A debit that takes a balance from at least this many US dollars to below it raises balance.low.
+  @Transform(toInt)
+  @IsInt()
+  @Min(0)
+  LOW_BALANCE_USD = 10;
+
   // How long a quote holds its rate and fee.
   @Transform(toInt)
   @IsInt()

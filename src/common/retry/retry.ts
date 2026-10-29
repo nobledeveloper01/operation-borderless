@@ -18,6 +18,13 @@ export const DB_CONFLICT_RETRY: RetryPolicy = {
   maxDelayMs: 200,
 };
 
+// A failed event delivery waits longer each time, up to five minutes, and gives up after ten tries.
+export const OUTBOX_RETRY: RetryPolicy = {
+  retries: 10,
+  baseDelayMs: 1_000,
+  maxDelayMs: 300_000,
+};
+
 export interface RetryOptions {
   sleep?: (ms: number) => Promise<void>;
   random?: () => number;

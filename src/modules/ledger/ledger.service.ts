@@ -4,6 +4,7 @@ import { AppError } from '../../common/errors/app-error.js';
 import { formatAmount } from '../../common/money/amount.js';
 import type { Stablecoin } from '../../common/currencies/currency.js';
 import { returned } from '../../common/database/returned.js';
+import { OutboxService } from '../outbox/outbox.service.js';
 import { TRANSACTION_COLUMNS } from '../transactions/transaction.mapper.js';
 import type {
   TransactionRow,
@@ -47,6 +48,8 @@ const legKey = (leg: { walletId: string; currency: string }) =>
 // The only code that changes balances: every deposit, swap and transfer is posted through here.
 @Injectable()
 export class LedgerService {
+  constructor(private readonly outbox: OutboxService) {}
+
   // Locks, checks and moves money in one go; it must run inside the caller's transaction.
   async post(
     manager: EntityManager,
@@ -141,7 +144,9 @@ export class LedgerService {
         amount: after,
       });
     }
-    return { transaction, balancesAfter };
+    const posted = { transaction, balancesAfter };
+    await this.outbox.record(manager, posted, legs);
+    return posted;
   }
 
   // Rows are locked in one fixed order, so two opposite transfers can never deadlock each other.
