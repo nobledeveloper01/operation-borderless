@@ -19,7 +19,7 @@ so in the README), NOT APPLICABLE. Checked on 29 Oct 2026 against `main`.
 | Mass-assignment protection                                   | R       | PASS           | TC-041; `whitelist` + `forbidNonWhitelisted`                                                                 |
 | BOLA/IDOR (other wallets answer 404)                         | R       | PASS           | TC-056, TC-057 (transfers and history suites)                                                                |
 | AuthN on every wallet route                                  | R       | PASS           | TC-055; OpenAPI test checks security on every non-public route                                               |
-| JWT config (ES256 only, known `kid`, iss, aud, exp)          | R       | PASS           | TC-058 `test/unit/auth/access-tokens.spec.ts`                                                                |
+| JWT config (ES256 only, known `kid`, iss, aud, exp)          | R       | PASS           | TC-058 `test/unit/modules/auth/access-tokens.spec.ts`                                                        |
 | HTTPS, HTTP redirect, HSTS through the proxy                 | R       | PASS           | TC-060 `scripts/smoke-tls.sh`: HTTPS, HSTS, redirect, TLS 1.2/1.3 only                                       |
 | Database TLS enforced in production config                   | R       | PASS           | TC-061: production refuses `DB_SSL` other than `verify-full`                                                 |
 | Personal data encrypted at rest                              | R       | PASS           | TC-062, TC-063                                                                                               |
@@ -88,13 +88,13 @@ so in the README), NOT APPLICABLE. Checked on 29 Oct 2026 against `main`.
 
 ## H. Business workflows (money)
 
-| Item                                         | Applies | Status         | Evidence needed                                 |
-| -------------------------------------------- | ------- | -------------- | ----------------------------------------------- |
-| Amounts validated server-side, integer units | M       | PASS           | TC-010, TC-012                                  |
-| Exact conversion and rounding                | M       | PASS           | TC-012, TC-028, `test/unit/money/money.spec.ts` |
-| Duplicate processing prevented               | M       | PASS           | TC-021–024, TC-036                              |
-| Transaction records complete                 | M       | PASS           | TC-029                                          |
-| Payments, refunds, webhooks                  | N/A     | NOT APPLICABLE | Deposits are simulated; no rails                |
+| Item                                         | Applies | Status         | Evidence needed                                        |
+| -------------------------------------------- | ------- | -------------- | ------------------------------------------------------ |
+| Amounts validated server-side, integer units | M       | PASS           | TC-010, TC-012                                         |
+| Exact conversion and rounding                | M       | PASS           | TC-012, TC-028, `test/unit/common/money/money.spec.ts` |
+| Duplicate processing prevented               | M       | PASS           | TC-021–024, TC-036                                     |
+| Transaction records complete                 | M       | PASS           | TC-029                                                 |
+| Payments, refunds, webhooks                  | N/A     | NOT APPLICABLE | Deposits are simulated; no rails                       |
 
 ## J. Testing and QA
 
@@ -138,5 +138,5 @@ so in the README), NOT APPLICABLE. Checked on 29 Oct 2026 against `main`.
 | Key reuse with another payload defined    | M       | PASS   | TC-022                                               |
 | Lock ordering prevents deadlocks          | M       | PASS   | TC-027; mutation check deadlocked without the sort   |
 | Retries only on safe operations           | R       | PASS   | Only provider GETs retry; `fetch-json.spec.ts`       |
-| Config validation blocks unsafe start     | R       | PASS   | `test/unit/config/env.validation.spec.ts`            |
+| Config validation blocks unsafe start     | R       | PASS   | `test/unit/common/config/env.validation.spec.ts`     |
 | Traceability complete for mandatory items | M       | PASS   | No PLANNED rows left in requirements-traceability.md |

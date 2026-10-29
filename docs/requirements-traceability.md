@@ -13,7 +13,7 @@ Brief → requirement → component/API → test → evidence → status. Status
 | Wallets: all balances + USD total                  | FR-004 | `wallets`, `fx` / API-002, API-003  | TC-007, TC-008 | test/api/fx.api.spec.ts                                             | PASS   |
 | Deposits: currency + amount, immediate, record     | FR-005 | `deposits`, `ledger` / API-004      | TC-009–011     | test/api/money.api.spec.ts                                          | PASS   |
 | Swaps: within one wallet using FX                  | FR-006 | `swaps`, `ledger`, `fx` / API-005   | TC-012–014     | test/api/money.api.spec.ts                                          | PASS   |
-| Swaps: live rates preferred, fallback              | FR-007 | `fx` / API-009                      | TC-015–018     | test/api/fx.api.spec.ts, test/unit/fx/*                             | PASS   |
+| Swaps: live rates preferred, fallback              | FR-007 | `fx` / API-009                      | TC-015–018     | test/api/fx.api.spec.ts, test/unit/modules/fx/*                     | PASS   |
 | Swaps: reject negative balance                     | FR-008 | `ledger`, DB check / API-005        | TC-019, TC-020 | test/api/money.api.spec.ts                                          | PASS   |
 | Swaps: never process twice                         | FR-009 | `idempotency` / API-004–006         | TC-021–024     | test/api/money.api.spec.ts                                          | PASS   |
 | Transfers: between wallets, same or other currency | FR-010 | `transfers`, `ledger` / API-006     | TC-025–027     | test/api/transfers.api.spec.ts                                      | PASS   |

@@ -134,23 +134,39 @@ flowchart LR
 
 Tests don't go through Caddy: they start the Nest app in-process with Supertest.
 
-## Repository layout (planned)
+## Repository layout
+
+Each feature is a Nest module under `src/modules/`. Code that several modules share lives
+under `src/common/`, and nothing in `common/` holds a feature's business rules.
 
 ```
 operation-borderless/
 ├── src/
 │   ├── main.ts, app.module.ts, app.setup.ts
-│   ├── config/  database/  common/  currencies/
-│   ├── crypto/  auth/  fx/  wallets/  ledger/  idempotency/
-│   ├── deposits/  swaps/  transfers/  transactions/  health/
+│   ├── common/
+│   │   ├── config/        settings checked at startup, the clock
+│   │   ├── database/      connection options, CLI data source, naming
+│   │   ├── crypto/        field encryption for email and phone
+│   │   ├── currencies/    the five stablecoins
+│   │   ├── errors/        error codes, AppError, the exception filter
+│   │   ├── responses/     the success envelope and the ApiEndpoint decorator
+│   │   ├── middleware/    request ID, no-store, body errors
+│   │   ├── http/          logging, outbound fetch, rate-limit groups
+│   │   ├── money/         amounts, rates, conversion
+│   │   └── validation/    amount and ID fields
+│   ├── modules/
+│   │   ├── accounts/  auth/  wallets/
+│   │   ├── deposits/  swaps/  transfers/  transactions/
+│   │   └── ledger/  idempotency/  fx/  health/
 │   └── migrations/
 ├── test/
-│   ├── unit/            pure functions and services with fakes
-│   ├── integration/     services against real PostgreSQL
+│   ├── unit/            mirrors src/: common/ and modules/
+│   ├── integration/     schema and services against real PostgreSQL
 │   ├── api/             Supertest through the full Nest app
 │   └── support/         Testcontainers setup, factories, fake FX provider
+├── scripts/             TLS smoke check and load test
 ├── docs/                these documents, plus openapi.json
-├── Dockerfile, docker-compose.yml, Caddyfile, .env.example
+├── Dockerfile, docker-compose.yml, docker/, .env.example
 ├── .github/workflows/ci.yml
 └── package.json, yarn.lock, tsconfig.json, eslint and prettier config
 ```
