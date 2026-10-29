@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { FetchFailure } from '../../../../src/common/http/fetch-json.js';
 import { validateEnv } from '../../../../src/common/config/env.validation.js';
 import type { FxSnapshotsRepository } from '../../../../src/modules/fx/fx-snapshots.repository.js';
-import { MetricsService } from '../../../../src/common/metrics/metrics.service.js';
+import type { MetricsService } from '../../../../src/common/metrics/metrics.service.js';
 import { FxService } from '../../../../src/modules/fx/fx.service.js';
 import type {
   FxSnapshot,
@@ -56,6 +56,12 @@ const scaled = (
   },
 });
 
+// The real registry starts its own event-loop timer, which would muddle the timer checks below.
+const metrics = {
+  watch: () => undefined,
+  fxRefreshes: { inc: () => undefined },
+} as unknown as MetricsService;
+
 describe('FxService refresh rules', () => {
   let now: Date;
   let store: MemorySnapshots;
@@ -67,7 +73,7 @@ describe('FxService refresh rules', () => {
       store as unknown as FxSnapshotsRepository,
       env(extra),
       () => now,
-      new MetricsService(),
+      metrics,
     );
 
   beforeEach(() => {

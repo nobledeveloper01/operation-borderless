@@ -1339,6 +1339,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@prometheus-io/client@npm:^0.16.1":
+  version: 0.16.1
+  resolution: "@prometheus-io/client@npm:0.16.1"
+  dependencies:
+    "@opentelemetry/api": "npm:^1.4.0"
+    tdigest: "npm:^0.1.1"
+  checksum: 10c0/a6068cab1140329de0d1b86ceeeb589ce7eeba7133c370a33e0ce08d78dd2c30629012dba6444a7c1c780d2a4419991403234b200cb406a3d55a66a3f83509c8
+  languageName: node
+  linkType: hard
+
 "@protobufjs/aspromise@npm:^1.1.1, @protobufjs/aspromise@npm:^1.1.2":
   version: 1.1.2
   resolution: "@protobufjs/aspromise@npm:1.1.2"
@@ -5012,6 +5022,7 @@ __metadata:
     "@nestjs/testing": "npm:^12.0.1"
     "@nestjs/throttler": "npm:^6.7.1"
     "@nestjs/typeorm": "npm:^12.0.2"
+    "@prometheus-io/client": "npm:^0.16.1"
     "@stryker-mutator/core": "npm:^9.6.1"
     "@stryker-mutator/vitest-runner": "npm:^9.6.1"
     "@testcontainers/postgresql": "npm:^12.2.1"
@@ -5036,7 +5047,6 @@ __metadata:
     pino-http: "npm:^11.0.0"
     pino-pretty: "npm:^13.2.0"
     prettier: "npm:^3.4.2"
-    prom-client: "npm:^15.1.3"
     reflect-metadata: "npm:^0.2.2"
     rxjs: "npm:^7.8.1"
     source-map-support: "npm:^0.5.21"
@@ -5435,16 +5445,6 @@ __metadata:
   version: 2.0.3
   resolution: "progress@npm:2.0.3"
   checksum: 10c0/1697e07cb1068055dbe9fe858d242368ff5d2073639e652b75a7eb1f2a1a8d4afd404d719de23c7b48481a6aa0040686310e2dac2f53d776daa2176d3f96369c
-  languageName: node
-  linkType: hard
-
-"prom-client@npm:^15.1.3":
-  version: 15.1.3
-  resolution: "prom-client@npm:15.1.3"
-  dependencies:
-    "@opentelemetry/api": "npm:^1.4.0"
-    tdigest: "npm:^0.1.1"
-  checksum: 10c0/816525572e5799a2d1d45af78512fb47d073c842dc899c446e94d17cfc343d04282a1627c488c7ca1bcd47f766446d3e49365ab7249f6d9c22c7664a5bce7021
   languageName: node
   linkType: hard
 

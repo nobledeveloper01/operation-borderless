@@ -5,7 +5,7 @@ import {
   Gauge,
   Histogram,
   Registry,
-} from 'prom-client';
+} from '@prometheus-io/client';
 
 // Each app gets its own registry, so test apps in one process never share counters.
 @Injectable()
