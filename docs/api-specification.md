@@ -175,43 +175,56 @@ are `null` and `rates.unavailableReason` says why; balances are never hidden by 
 
 ```http
 POST /api/v1/wallets/{walletId}/deposits
-Idempotency-Key: dep-7f3a9c21
+Authorization: Bearer eyJ...
+Idempotency-Key: 7b0c3e9a-4d1f-4c62-9a55-2f9e1b7c0d11
 
 { "currency": "cNGN", "amount": "50000" }
 ```
 
-`201`: the transaction (shape below) plus `balance` after the deposit.
+`201`: the movement result (shape under API-005), with one balance. Money writes are limited
+to 30 a minute per IP. Errors: `400` (amount, currency or key), `401`, `404`, `422` (key
+reused), `429`.
 
 ### API-005 Swap
 
 ```http
 POST /api/v1/wallets/{walletId}/swaps
-Idempotency-Key: swp-1c88e0d2
+Authorization: Bearer eyJ...
+Idempotency-Key: 1c88e0d2-5f0b-4a7e-bb21-9d34c6e8a2f0
 
 { "fromCurrency": "cNGN", "toCurrency": "USDx", "amount": "10000" }
 ```
 
-`201`:
+`201` (the `data` part):
 
 ```json
 {
-  "transactionId": "0192f5c9-...",
-  "type": "SWAP",
-  "status": "COMPLETED",
-  "fromWalletId": "0192f5c2-...",
-  "toWalletId": "0192f5c2-...",
-  "fromCurrency": "cNGN",
-  "fromAmount": "10000.000000",
-  "toCurrency": "USDx",
-  "toAmount": "7.428000",
-  "rate": "0.0007428000",
-  "rateSource": "exchangerate-api",
-  "rateAsOf": "2026-10-29T00:02:31Z",
-  "createdAt": "2026-10-29T10:05:00.000Z"
+  "transaction": {
+    "transactionId": "0192f5c9-...",
+    "type": "SWAP",
+    "status": "COMPLETED",
+    "fromWalletId": "0192f5c2-...",
+    "toWalletId": "0192f5c2-...",
+    "fromCurrency": "cNGN",
+    "fromAmount": "10000.000000",
+    "toCurrency": "USDx",
+    "toAmount": "7.428113",
+    "rate": "0.0007428113",
+    "rateSource": "exchangerate-api",
+    "rateAsOf": "2026-10-29T00:02:31.000Z",
+    "createdAt": "2026-10-29T10:05:00.000Z"
+  },
+  "balances": [
+    { "currency": "cNGN", "amount": "40000.000000" },
+    { "currency": "USDx", "amount": "7.428113" }
+  ]
 }
 ```
 
-(Numbers are illustrative.) Errors: `400`, `404`, `422`, `503`.
+`balances` lists the caller's balances the movement touched, after it. A replay with the same
+key and body returns the same answer with `Idempotent-Replayed: true`. Errors: `400`
+(`SAME_CURRENCY`, validation, key), `401`, `404`, `422` (`INSUFFICIENT_FUNDS`,
+`AMOUNT_TOO_SMALL`, `IDEMPOTENCY_KEY_REUSED`), `429`, `503` (`FX_RATE_UNAVAILABLE`).
 
 ### API-006 Transfer
 

@@ -11,11 +11,11 @@ Brief → requirement → component/API → test → evidence → status. Status
 | Wallets: same email or number can't create two     | FR-002 | `wallets`, unique indexes / API-001 | TC-004, TC-005 | test/api/accounts-auth.api.spec.ts, test/integration/schema.spec.ts | PASS    |
 | Wallets: balance per stablecoin                    | FR-003 | `balances` table / API-001–003      | TC-001, TC-006 | test/api/accounts-auth.api.spec.ts, test/integration/schema.spec.ts | PASS    |
 | Wallets: all balances + USD total                  | FR-004 | `wallets`, `fx` / API-002, API-003  | TC-007, TC-008 | test/api/fx.api.spec.ts                                             | PASS    |
-| Deposits: currency + amount, immediate, record     | FR-005 | `deposits`, `ledger` / API-004      | TC-009–011     | —                                                                   | PLANNED |
-| Swaps: within one wallet using FX                  | FR-006 | `swaps`, `ledger`, `fx` / API-005   | TC-012–014     | —                                                                   | PLANNED |
+| Deposits: currency + amount, immediate, record     | FR-005 | `deposits`, `ledger` / API-004      | TC-009–011     | test/api/money.api.spec.ts                                          | PASS    |
+| Swaps: within one wallet using FX                  | FR-006 | `swaps`, `ledger`, `fx` / API-005   | TC-012–014     | test/api/money.api.spec.ts                                          | PASS    |
 | Swaps: live rates preferred, fallback              | FR-007 | `fx` / API-009                      | TC-015–018     | test/api/fx.api.spec.ts, test/unit/fx/*                             | PASS    |
-| Swaps: reject negative balance                     | FR-008 | `ledger`, DB check / API-005        | TC-019, TC-020 | —                                                                   | PLANNED |
-| Swaps: never process twice                         | FR-009 | `idempotency` / API-004–006         | TC-021–024     | —                                                                   | PLANNED |
+| Swaps: reject negative balance                     | FR-008 | `ledger`, DB check / API-005        | TC-019, TC-020 | test/api/money.api.spec.ts                                          | PASS    |
+| Swaps: never process twice                         | FR-009 | `idempotency` / API-004–006         | TC-021–024     | test/api/money.api.spec.ts                                          | PASS    |
 | Transfers: between wallets, same or other currency | FR-010 | `transfers`, `ledger` / API-006     | TC-025–027     | —                                                                   | PLANNED |
 | Transfers: auto convert at current rate            | FR-011 | `fx`, `transfers` / API-006         | TC-028         | —                                                                   | PLANNED |
 | Transfers: record all fields                       | FR-012 | `transactions` table / API-008      | TC-029         | —                                                                   | PLANNED |
@@ -24,7 +24,7 @@ Brief → requirement → component/API → test → evidence → status. Status
 | History: single transaction by id                  | FR-015 | `transactions` / API-008            | TC-029, TC-033 | —                                                                   | PLANNED |
 | Rates: all pairs with refresh time                 | FR-016 | `fx` / API-009                      | TC-034         | test/api/fx.api.spec.ts                                             | PASS    |
 | (inferred) transfers refuse overdraft              | FR-017 | `ledger`                            | TC-026, TC-035 | —                                                                   | PLANNED |
-| (inferred) deposits and transfers idempotent       | FR-018 | `idempotency`                       | TC-011, TC-036 | —                                                                   | PLANNED |
+| (inferred) deposits and transfers idempotent       | FR-018 | `idempotency`                       | TC-011, TC-036 | test/api/money.api.spec.ts                                          | PASS    |
 
 ## Authentication (beyond the brief)
 
@@ -62,14 +62,14 @@ Brief → requirement → component/API → test → evidence → status. Status
 
 ## Non-functional (recommended)
 
-| Req                                                     | Component          | Tests                  | Status                                           |
-| ------------------------------------------------------- | ------------------ | ---------------------- | ------------------------------------------------ |
-| NFR-010 integer money                                   | `common/money`     | TC-010, TC-012         | PASS (money helpers; money routes still to come) |
-| NFR-011 one transaction per operation                   | `ledger`           | TC-014                 | PLANNED                                          |
-| NFR-012 no races                                        | `ledger`           | TC-020, TC-027, TC-035 | PLANNED                                          |
-| NFR-013 append-only                                     | migration triggers | TC-038                 | PASS                                             |
-| NFR-014 ledger matches balances                         | `ledger`           | TC-037                 | PLANNED                                          |
-| NFR-020/021 FX timeouts, retries, no request-time calls | `fx`               | TC-015, TC-018         | PASS                                             |
-| NFR-040 logs with request ID                            | `common`           | TC-044                 | PASS                                             |
-| NFR-042 health                                          | `health`           | TC-046                 | PLANNED                                          |
-| NFR-054 OpenAPI drift                                   | `test/api`         | TC-039                 | PLANNED                                          |
+| Req                                                     | Component          | Tests                  | Status  |
+| ------------------------------------------------------- | ------------------ | ---------------------- | ------- |
+| NFR-010 integer money                                   | `common/money`     | TC-010, TC-012         | PASS    |
+| NFR-011 one transaction per operation                   | `ledger`           | TC-014                 | PASS    |
+| NFR-012 no races                                        | `ledger`           | TC-020, TC-027, TC-035 | PASS    |
+| NFR-013 append-only                                     | migration triggers | TC-038                 | PASS    |
+| NFR-014 ledger matches balances                         | `ledger`           | TC-037                 | PASS    |
+| NFR-020/021 FX timeouts, retries, no request-time calls | `fx`               | TC-015, TC-018         | PASS    |
+| NFR-040 logs with request ID                            | `common`           | TC-044                 | PASS    |
+| NFR-042 health                                          | `health`           | TC-046                 | PLANNED |
+| NFR-054 OpenAPI drift                                   | `test/api`         | TC-039                 | PLANNED |
