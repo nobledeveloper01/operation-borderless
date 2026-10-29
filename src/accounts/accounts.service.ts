@@ -5,6 +5,7 @@ import { AppError } from '../common/errors/app-error.js';
 import { EnvironmentVariables } from '../config/env.validation.js';
 import { FieldCipher } from '../crypto/field-cipher.js';
 import { STABLECOINS } from '../currencies/currency.js';
+import { returned } from '../database/returned.js';
 import { Account } from './entities.js';
 
 const UNIQUE_VIOLATION = '23505';
@@ -128,19 +129,26 @@ export class AccountsService {
     };
   }
 
-  // Counts a wrong password in one statement, locking the account once the limit is reached.
-  async recordFailedLogin(accountId: string): Promise<void> {
-    await this.db.query(
-      `UPDATE accounts
-          SET failed_logins = CASE WHEN failed_logins + 1 >= $2 THEN 0 ELSE failed_logins + 1 END,
-              locked_until = CASE WHEN failed_logins + 1 >= $2 THEN now() + make_interval(mins => $3) ELSE locked_until END
-        WHERE id = $1`,
-      [
-        accountId,
-        this.config.LOGIN_MAX_FAILURES,
-        this.config.LOGIN_LOCK_MINUTES,
-      ],
+  // Claims one login attempt in a single statement before the password is checked, so parallel guesses can't skip the lock.
+  async reserveLoginAttempt(accountId: string): Promise<boolean> {
+    const rows = returned<{ id: string }>(
+      await this.db.query(
+        `UPDATE accounts
+            SET failed_logins = CASE WHEN locked_until IS NOT NULL THEN 1 ELSE failed_logins + 1 END,
+                locked_until = CASE
+                  WHEN (CASE WHEN locked_until IS NOT NULL THEN 1 ELSE failed_logins + 1 END) >= $2
+                  THEN now() + make_interval(mins => $3)
+                  ELSE NULL END
+          WHERE id = $1 AND (locked_until IS NULL OR locked_until <= now())
+          RETURNING id`,
+        [
+          accountId,
+          this.config.LOGIN_MAX_FAILURES,
+          this.config.LOGIN_LOCK_MINUTES,
+        ],
+      ),
     );
+    return rows.length === 1;
   }
 
   async clearFailedLogins(accountId: string): Promise<void> {

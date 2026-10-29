@@ -23,12 +23,11 @@ export class AuthService {
       await burnPasswordCheck(dto.password);
       throw new AppError('UNAUTHENTICATED', LOGIN_REFUSED);
     }
-    const passwordOk = await verifyPassword(account.passwordHash, dto.password);
-    const locked =
-      account.lockedUntil !== null && account.lockedUntil > new Date();
-    if (locked) throw new AppError('UNAUTHENTICATED', LOGIN_REFUSED);
-    if (!passwordOk) {
-      await this.accounts.recordFailedLogin(account.id);
+    if (!(await this.accounts.reserveLoginAttempt(account.id))) {
+      await burnPasswordCheck(dto.password);
+      throw new AppError('UNAUTHENTICATED', LOGIN_REFUSED);
+    }
+    if (!(await verifyPassword(account.passwordHash, dto.password))) {
       throw new AppError('UNAUTHENTICATED', LOGIN_REFUSED);
     }
 
