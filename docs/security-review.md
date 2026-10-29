@@ -1,0 +1,46 @@
+# Security Review (design stage)
+
+This is the threat model and the planned control for each threat. Nothing here is verified
+yet; the Test column says what proves each control.
+
+## Context
+
+- No authentication, by the brief (p.2). The API is a sandbox with simulated money.
+- Personal data: email and phone number.
+- Outside call: one fixed FX URL, set by config, never by request input.
+
+## Threats and controls
+
+| Threat | Applies? | Planned control | Test |
+| --- | --- | --- | --- |
+| Anyone moves money from any wallet (no auth) | Yes, accepted | Random UUID wallet IDs; documented limitation; production would add API keys or OAuth plus ownership checks | — |
+| Wallet enumeration by email/phone | Yes | Create returns `409` with a generic message; lookup endpoint is Could-have and rate limited if built | TC-005 |
+| SQL injection | Yes | TypeORM parameters only; raw SQL uses `$n` placeholders; no string-built SQL | Lint rule + review; TC-040 |
+| Mass assignment | Yes | DTOs with `whitelist` + `forbidNonWhitelisted`; balances, status, rate never accepted from the client | TC-041 |
+| Bad input (types, sizes) | Yes | class-validator on every field; amount regex; body limit 16 KB; query limits | TC-042 |
+| Float money errors / tampered rates | Yes | Integer units; rates only from the stored snapshot; client never sends a rate | TC-012, TC-028 |
+| Double spend by retries | Yes | Idempotency key in the money transaction | TC-021–TC-024 |
+| Races (overdraft, lost update) | Yes | Ordered `FOR UPDATE` locks + `CHECK (amount >= 0)` | TC-020, TC-027 |
+| Malicious or broken FX data | Yes | Strict response validation; positive finite numbers; all codes present | TC-017 |
+| SSRF | Low | Provider URL from config only, `https` required by config validation, no redirects followed | TC-018 |
+| Resource exhaustion | Yes | Throttler per IP, `limit` max 100, request size limit, DB statement and lock timeouts, FX fetch timeout | TC-043 |
+| Error leakage | Yes | Global filter: no stack traces or SQL text; generic `500` with request ID | TC-044 |
+| Log leakage | Yes | pino redaction of `email`, `phoneNumber`, `authorization` headers; no bodies logged | Review |
+| Secrets in repo | Yes | No real secrets needed; `.env` ignored; `.env.example` placeholders only; secret scan before submission | Checklist |
+| CORS abuse | Low | CORS off by default (no browser client); `CORS_ORIGINS` allowlist if set | TC-045 |
+| Security headers | Low (JSON API) | `helmet` defaults; Swagger UI gets a relaxed CSP only on `/docs` | TC-045 |
+| Vulnerable dependencies | Yes | `yarn npm audit` before submission; few dependencies | Checklist |
+| CSRF, XSS, file upload, webhooks, cookies | No | No browser sessions, no HTML output, no uploads, no webhooks | N/A |
+
+## Accepted risks
+
+1. **No authentication or ownership.** The brief excludes it. Stated in the README with what
+   we would add.
+2. **Reference rates, not market prices.** Stated in the README and in `GET /fx/rates`.
+3. **Rounding remainder** under one millionth per conversion is not booked.
+4. **Swagger UI is public** in the sandbox. In production it would be off or behind auth.
+
+## Production work (not built)
+
+API keys or OAuth with per-wallet ownership, least-privilege DB role, TLS at a proxy,
+secret manager, audit of who changed what, alerting on FX failures and lock timeouts.

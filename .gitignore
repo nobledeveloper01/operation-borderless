@@ -1,0 +1,15 @@
+node_modules/
+dist/
+coverage/
+*.log
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.DS_Store
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+.pnp.*
+*.pdf
