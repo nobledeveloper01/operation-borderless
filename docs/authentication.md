@@ -1,6 +1,6 @@
 # Authentication and Authorization
 
-The brief says "No full authentication is required" (p.2). We add it anyway, because a
+The brief says "No full authentication is required" (p.2). I add it anyway, because a
 wallet API where anyone with an ID can move money is the biggest gap in the design. It must
 not break the brief: a wallet is still created with an email or a mobile number, and one
 identifier still gives one wallet.

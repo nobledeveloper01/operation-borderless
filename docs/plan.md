@@ -2,7 +2,7 @@
 
 ## Mandatory versus recommended
 
-| Mandatory (brief) | Recommended (ours) |
+| Mandatory (brief) | Recommended (my additions) |
 | --- | --- |
 | Wallets, unique identifiers, balances, USD total | Ledger lines and append-only triggers |
 | Deposits, swaps, transfers with conversion | Health and readiness checks |
@@ -58,7 +58,7 @@ start once hours 34–39 are green.
 | Risk | Likelihood | Response |
 | --- | --- | --- |
 | Both free FX sources down for over 2 h past a publication | Low | Swaps and transfers return 503 (by design); `FX_FIXED_TABLE` for offline demos |
-| Primary blocks us for calling too often | Low | Call about once a day, after its published next-update time |
+| Primary blocks the API for calling too often | Low | Call about once a day, after its published next-update time |
 | Testcontainers fails on reviewer's machine (no Docker) | Medium | README says Docker is required; also `docker compose run --rm test` |
 | Yarn 4 / Corepack friction | Low | `packageManager` pinned; Dockerfile enables Corepack |
 | Encryption and auth eat the buffer | Medium | Fixed order: money features and their tests before any polish; cut the could-haves first |

@@ -1,10 +1,10 @@
 # ADR-009: Encryption in transit and at rest; no message-level body encryption for now
 
-**Context.** We want a production-grade codebase. Data to protect: request and response
+**Context.** I want a production-grade codebase. Data to protect: request and response
 bodies (balances, amounts, email, phone, tokens), personal data in the database, and the
 keys that sign access tokens.
 
-## Decision: what we build
+## Decision: what I build
 
 | Layer | Control |
 | --- | --- |
@@ -15,7 +15,7 @@ keys that sign access tokens.
 | Token signing | ES256 (ECDSA P-256) instead of a shared HMAC secret. Every token carries a `kid`; several public keys can be trusted at once so keys rotate without logging everyone out. |
 | At rest, disk | Not built: it is a hosting setting (encrypted volumes or a managed database with encryption at rest). Documented in the deployment notes. |
 
-## Decision: what we do not build now
+## Decision: what I do not build now
 
 **1. Message-level encryption of request and response bodies (JWE, RFC 7516).**
 
@@ -32,7 +32,7 @@ requires it. Neither applies to this sandbox. It would also:
 non-repudiation for partner settlement files and webhooks, which this API doesn't have.
 About 3 hours.
 
-**3. Our own encryption scheme on bodies** (for example AES with a shared key in the app).
+**3. A home-made encryption scheme on bodies** (for example AES with a shared key in the app).
 It adds no protection over TLS, and a shared key in every client is easy to leak.
 
 **When to revisit.** Add opt-in JWE when a partner integration passes through a third party

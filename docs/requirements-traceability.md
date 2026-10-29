@@ -26,7 +26,7 @@ Brief → requirement → component/API → test → evidence → status. Status
 | (inferred) transfers refuse overdraft | FR-017 | `ledger` | TC-026, TC-035 | — | PLANNED |
 | (inferred) deposits and transfers idempotent | FR-018 | `idempotency` | TC-011, TC-036 | — | PLANNED |
 
-## Authentication (ours, beyond the brief)
+## Authentication (beyond the brief)
 
 | Req | Component / API | Tests | Status |
 | --- | --- | --- | --- |

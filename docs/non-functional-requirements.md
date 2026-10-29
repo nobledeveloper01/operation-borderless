@@ -1,7 +1,7 @@
 # Non-Functional Requirements
 
-"Mandatory" means the brief states it. "Recommended" means we add it because it is cheap and
-protects money correctness or the reviewer's experience. Numbers marked *proposed* are our
+"Mandatory" means the brief states it. "Recommended" means I add it because it is cheap and
+protects money correctness or the reviewer's experience. Numbers marked *proposed* are my
 own targets; the brief sets none.
 
 ## Stack and tooling (brief p.1–2)
@@ -9,10 +9,10 @@ own targets; the brief sets none.
 | ID | Requirement | Type |
 | --- | --- | --- |
 | NFR-001 | Node.js LTS with TypeScript, `strict: true` | Mandatory |
-| NFR-002 | Express or NestJS (we use NestJS) | Mandatory |
+| NFR-002 | Express or NestJS (I use NestJS) | Mandatory |
 | NFR-003 | SQL or NoSQL database, choice justified in the README | Mandatory |
-| NFR-004 | Redis, BullMQ or RabbitMQ only where they earn their place (we use none) | Mandatory |
-| NFR-005 | Jest or Vitest plus Supertest (we use Vitest) | Mandatory |
+| NFR-004 | Redis, BullMQ or RabbitMQ only where they earn their place (I use none) | Mandatory |
+| NFR-005 | Jest or Vitest plus Supertest (I use Vitest) | Mandatory |
 | NFR-006 | Yarn, ESLint, Prettier | Mandatory |
 | NFR-007 | Docker and docker compose start the API and its dependencies with one command | Mandatory |
 | NFR-008 | No frontend | Mandatory |
@@ -40,7 +40,7 @@ own targets; the brief sets none.
 ## Performance (*proposed*, checked only roughly)
 
 - Reads p95 under 100 ms and money writes p95 under 200 ms on a laptop with 20 parallel
-  clients. Not a brief requirement; we report a measurement only if we run one.
+  clients. Not a brief requirement; I report a measurement only if I run one.
 - History queries use an index on `(wallet_id, created_at DESC)`; no per-item queries.
 
 ## Security

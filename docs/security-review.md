@@ -6,7 +6,7 @@ yet; the Test column says what proves each control, and the
 
 ## Context
 
-- The brief doesn't require authentication (p.2); we add accounts, sessions and wallet keys
+- The brief doesn't require authentication (p.2); I add accounts, sessions and wallet keys
   ([authentication.md](authentication.md)). The API is a sandbox with simulated money.
 - Personal data: email and phone number.
 - Outside call: one fixed FX URL, set by config, never by request input.
@@ -44,7 +44,7 @@ yet; the Test column says what proves each control, and the
 
 ## Encryption
 
-What we encrypt, what we don't, and why: [ADR-009](decisions/ADR-009-encryption.md). In
+What I encrypt, what I don't, and why: [ADR-009](decisions/ADR-009-encryption.md). In
 short: TLS for every body in transit, field encryption for personal data at rest, ES256 for
 tokens. Message-level body encryption (JWE) and signed responses (JWS) are not built now,
 because TLS already covers this API's threats and both would break Swagger and `curl` for

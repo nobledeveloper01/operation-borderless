@@ -19,7 +19,7 @@ where every balance change can be explained by a transaction and a rate.
 | API client (wallet holder's app) | Create a wallet, move money, see balances and history |
 | Reviewer | Run the project with one command, read clear docs, see tests prove the money rules |
 
-The brief doesn't require authentication (p.2). We add it so only a wallet's holder can use
+The brief doesn't require authentication (p.2). I add it so only a wallet's holder can use
 it; see [authentication.md](authentication.md).
 
 ## Supported stablecoins
@@ -71,10 +71,10 @@ daily publication, the API shows the last rates as stale and refuses swaps and t
 | US-11 | As a client, I read all current rates and when each was refreshed. | Must |
 | US-12 | As a client, I preview what a swap or transfer would give before sending it. | Could |
 | US-13 | As a client, I find a wallet by email or mobile number. | Could |
-| US-15 | As a holder, I log in with my identifier and password and stay signed in with refresh tokens. | Must (ours) |
-| US-16 | As a holder, I log out and my session stops working at once. | Must (ours) |
-| US-17 | As a holder, I create and revoke API keys for scripts that act on my wallet. | Must (ours) |
-| US-18 | As a holder, no one else can read or move my wallet's money. | Must (ours) |
+| US-15 | As a holder, I log in with my identifier and password and stay signed in with refresh tokens. | Must (beyond the brief) |
+| US-16 | As a holder, I log out and my session stops working at once. | Must (beyond the brief) |
+| US-17 | As a holder, I create and revoke API keys for scripts that act on my wallet. | Must (beyond the brief) |
+| US-18 | As a holder, no one else can read or move my wallet's money. | Must (beyond the brief) |
 | US-14 | As an operator, I check the API and database are healthy. | Should |
 
 ## Business rules
@@ -91,8 +91,8 @@ daily publication, the API shows the last rates as stale and refuses swaps and t
 | BR-08 | A transfer records sender, receiver, both amounts and currencies, the rate and a timestamp. | Brief p.2 |
 | BR-09 | A wallet can't transfer to itself (use a swap). | Inferred |
 | BR-10 | Amounts are positive, have at most 6 decimal places, and are capped per operation. | Inferred (A-04, A-05) |
-| BR-12 | Only the wallet's owner (session or wallet key) can read it or move its money; transfers can go to any wallet. | Ours |
-| BR-13 | Passwords are hashed with argon2id; tokens and keys are stored only as hashes. | Ours |
+| BR-12 | Only the wallet's owner (session or wallet key) can read it or move its money; transfers can go to any wallet. | Beyond the brief |
+| BR-13 | Passwords are hashed with argon2id; tokens and keys are stored only as hashes. | Beyond the brief |
 | BR-11 | No fees or spreads. Rounding of converted amounts is down, so no money is created. | Inferred (A-06) |
 
 ## Features and MoSCoW
@@ -102,7 +102,7 @@ deposits, swaps with live rates and fallback, overdraft refusal, idempotency, tr
 conversion and full records, history with pagination and filters, transaction by ID, rates
 with refresh times, Docker compose, `yarn test`, OpenAPI spec, README.
 
-**Must (ours, beyond the brief):** accounts, login, refresh rotation, logout, wallet keys,
+**Must (beyond the brief):** accounts, login, refresh rotation, logout, wallet keys,
 ownership checks.
 
 **Should (recommended, cheap, raises quality):** ledger lines per balance change, health and

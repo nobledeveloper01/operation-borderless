@@ -62,7 +62,7 @@ Borderless follows the second:
 
 | Setting | Value | Why |
 | --- | --- | --- |
-| `FX_MAX_DATA_AGE_HOURS` | **26** | One 24-hour publication cycle plus 2 hours' grace. Measured from the provider's own update time, not from when we fetched it. |
+| `FX_MAX_DATA_AGE_HOURS` | **26** | One 24-hour publication cycle plus 2 hours' grace. Measured from the provider's own update time, not from when the API fetched it. |
 | Execution on stale rates | **Refused** (`503 FX_RATE_UNAVAILABLE`) | Fail closed: money never moves on a rate from a missed publication. |
 | Quote validity (if the quote endpoint is built) | **30 seconds** | Typical remittance quote window. |
 | Client-supplied rates | Never accepted | The server prices every operation. |
@@ -70,9 +70,9 @@ Borderless follows the second:
 ### Refresh and fallback
 
 1. **Primary refresh:** on startup, then 5 minutes after the provider's
-   `time_next_update_utc`. This keeps us on the latest publication while calling about once
+   `time_next_update_utc`. This keeps the API on the latest publication while calling about once
    a day, as the provider asks. 3 s timeout, up to 2 retries with full-jitter backoff (base
-   500 ms) on network errors, timeouts and 5xx. A `429` is not retried; we wait 30 minutes.
+   500 ms) on network errors, timeouts and 5xx. A `429` is not retried; the next try waits 30 minutes.
 2. **Failure:** if the primary fails or its data is older than 26 h, fetch the secondary
    (same timeout and retry rules). Failed refreshes retry every 15 minutes with jitter until
    one source succeeds.
@@ -111,7 +111,7 @@ given.
 - A parallel request with the same key blocks on the unique index until the first commits or
   rolls back. On commit it replays; on rollback its own insert succeeds and it runs. So no
   lookup-then-insert race exists.
-- Failures roll back the key with everything else. A retry after a failure runs again. We
+- Failures roll back the key with everything else. A retry after a failure runs again. I
   don't store error answers: a later retry may legitimately succeed (for example after a
   deposit).
 - Keys expire after 24 h; a job deletes expired rows hourly. An expired key can be reused.

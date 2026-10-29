@@ -1,6 +1,6 @@
 # ADR-003: TypeORM with hand-checked migrations
 
-**Context.** We need migrations, row locks inside transactions, and a few raw SQL statements
+**Context.** The design needs migrations, row locks inside transactions, and a few raw SQL statements
 (`ON CONFLICT`, ordered `FOR UPDATE`).
 
 **Decision.** TypeORM 1.1 via `@nestjs/typeorm`, `synchronize` off, migrations written and

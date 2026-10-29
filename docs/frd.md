@@ -220,38 +220,38 @@ Same as FR-009. Tests TC-011, TC-036.
   would get now, with the rate. No money moves.
 - **FR-020 Wallet lookup:** `GET /api/v1/wallets?email=` or `?phoneNumber=`.
 
-## FR-022 Log in (ours)
+## FR-022 Log in (beyond the brief)
 
 - `POST /api/v1/auth/login` with identifier + password → `200` with access and refresh
   tokens. Wrong identifier, wrong password or locked account → the same `401`. 5 failures
   lock the account for 15 minutes.
 - **Tests:** TC-047, TC-048, TC-049.
 
-## FR-023 Refresh with rotation (ours)
+## FR-023 Refresh with rotation (beyond the brief)
 
 - `POST /api/v1/auth/refresh` → new pair; the old refresh token stops working. Reusing a used
   token revokes the whole session (`401`).
 - **Tests:** TC-050, TC-051.
 
-## FR-024 Log out (ours)
+## FR-024 Log out (beyond the brief)
 
 - `POST /auth/logout` revokes this session; `POST /auth/logout-all` revokes all. The access
   token stops working on the next request.
 - **Tests:** TC-052.
 
-## FR-025 Wallet keys (ours)
+## FR-025 Wallet keys (beyond the brief)
 
 - Create (key shown once), list (no secrets), revoke. Max 5 active. Session only.
 - A key acts only on its own wallet; a revoked key → `401`.
 - **Tests:** TC-053, TC-054.
 
-## FR-026 Ownership on every wallet route (ours)
+## FR-026 Ownership on every wallet route (beyond the brief)
 
 - Balances, history, deposits, swaps, transfers (sender), transaction by ID (sender or
   receiver) need the owner. Others → `404`. No credentials → `401`.
 - **Tests:** TC-055, TC-056, TC-057.
 
-## FR-027 Token checks (ours)
+## FR-027 Token checks (beyond the brief)
 
 - Expired, wrongly signed, `alg: none`, wrong `iss`/`aud`, malformed → `401`.
 - **Tests:** TC-058.
