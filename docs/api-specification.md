@@ -100,6 +100,8 @@ test fails if the two drift.
 | API-017 | `POST /wallets/{walletId}/keys`              | Create a wallet key (shown once)        | 201       |
 | API-018 | `GET /wallets/{walletId}/keys`               | List keys, no secrets                   | 200       |
 | API-019 | `DELETE /wallets/{walletId}/keys/{keyId}`    | Revoke a key                            | 200       |
+| API-020 | `GET /ops/metrics`                           | Prometheus metrics (operator token)     | 200       |
+| API-021 | `GET /ops/ledger-check`                      | Balances versus ledger (operator token) | 200       |
 | API-011 | `GET /fx/quote`                              | Could-have: price preview               | 200       |
 | API-012 | `GET /wallets?email=` / `?phoneNumber=`      | Could-have: lookup                      | 200       |
 

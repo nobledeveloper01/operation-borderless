@@ -414,6 +414,29 @@ erDiagram
 
 `transactions` and `ledger_entries` are append-only: a trigger refuses `UPDATE` and `DELETE`.
 
+## Operations
+
+Two operator routes sit behind their own token (`X-Ops-Token`, from `OPS_TOKEN`). Wallet
+sessions and keys can't use them, and with no token set they answer `404`. The compose stack
+ships a local-only token:
+
+```bash
+curl -k https://localhost:8443/api/v1/ops/metrics \
+  -H 'X-Ops-Token: local-ops-token-for-the-compose-stack-only'
+curl -k https://localhost:8443/api/v1/ops/ledger-check \
+  -H 'X-Ops-Token: local-ops-token-for-the-compose-stack-only'
+```
+
+- `metrics` is Prometheus text built inside the API: requests and latency by route template,
+  money movements, idempotent replays, database conflict retries, FX refresh outcomes and rate
+  age, the last ledger check, and process CPU, memory and event-loop lag. No outside service
+  is involved.
+- `ledger-check` compares every balance with the sum of its ledger lines in one consistent
+  snapshot and lists any that differ. It also runs every hour and logs an error if it finds
+  one.
+
+See [ADR-013](docs/decisions/ADR-013-ops-metrics-ledger-check.md).
+
 ## How I handled the hard parts
 
 Full detail is in [money handling](docs/money-handling.md). In short:

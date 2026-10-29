@@ -16,3 +16,4 @@ Each record says what I decided, why, and what it costs.
 | [010](ADR-010-modules-and-common.md)         | Features in `src/modules`, shared code in `src/common`                      |
 | [011](ADR-011-fx-provider-terms.md)          | Keep ExchangeRate-API despite its no-redistribution clause                  |
 | [012](ADR-012-retry-policies.md)             | One retry helper with full-jitter exponential backoff                       |
+| [013](ADR-013-ops-metrics-ledger-check.md)   | Metrics and a ledger check inside the API, behind an operator token         |

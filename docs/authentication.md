@@ -87,6 +87,7 @@ Both lead to the same check: the caller must own the wallet it acts on.
 | Deposits, swaps                                           | Session or key, own wallet                                              |
 | `POST /transfers`                                         | Session or key, must own `fromWalletId`; `toWalletId` can be any wallet |
 | `GET /transactions/{transactionId}`                       | Session or key, caller's wallet must be sender or receiver              |
+| `GET /ops/metrics`, `GET /ops/ledger-check`               | Operator token in `X-Ops-Token` only; `404` when `OPS_TOKEN` is unset   |
 
 - No header or a bad token/key → `401 UNAUTHENTICATED`.
 - Valid caller, someone else's wallet or transaction → `404` (same as not found), so wallet
