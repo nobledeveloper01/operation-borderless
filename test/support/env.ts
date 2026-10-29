@@ -1,3 +1,6 @@
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { inject } from 'vitest';
 
 const db = inject('db');
@@ -11,6 +14,9 @@ Object.assign(process.env, {
   DB_PASSWORD: db.password,
   DB_SSL: 'disable',
   RATE_LIMIT_PER_MINUTE: '1000',
+  AUTH_RATE_LIMIT_PER_MINUTE: '1000',
+  JWT_KEYS_DIR: mkdtempSync(join(tmpdir(), 'borderless-jwt-')),
+  JWT_ACTIVE_KID: 'test-1',
   PII_ENCRYPTION_KEYS: '1:bG9jYWwtcGlpLWVuY3J5cHRpb24ta2V5LXYxLTAwMDE=',
   PII_LOOKUP_KEY: 'bG9jYWwtcGlpLWxvb2t1cC1rZXktZm9yLWRldi0wMDA=',
 });

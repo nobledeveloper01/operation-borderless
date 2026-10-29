@@ -3,7 +3,14 @@ import { HttpStatus } from '@nestjs/common';
 // Clients match on these codes, so once one ships it keeps its name.
 export const ErrorCode = {
   VALIDATION_FAILED: HttpStatus.BAD_REQUEST,
+  UNAUTHENTICATED: HttpStatus.UNAUTHORIZED,
+  SESSION_REVOKED: HttpStatus.UNAUTHORIZED,
+  SESSION_REQUIRED: HttpStatus.FORBIDDEN,
   ROUTE_NOT_FOUND: HttpStatus.NOT_FOUND,
+  WALLET_NOT_FOUND: HttpStatus.NOT_FOUND,
+  KEY_NOT_FOUND: HttpStatus.NOT_FOUND,
+  WALLET_ALREADY_EXISTS: HttpStatus.CONFLICT,
+  TOO_MANY_KEYS: HttpStatus.CONFLICT,
   PAYLOAD_TOO_LARGE: HttpStatus.PAYLOAD_TOO_LARGE,
   RATE_LIMITED: HttpStatus.TOO_MANY_REQUESTS,
   SERVICE_BUSY: HttpStatus.SERVICE_UNAVAILABLE,

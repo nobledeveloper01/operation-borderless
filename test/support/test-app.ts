@@ -20,6 +20,7 @@ export async function createTestApp(
     bodyParser: false,
   });
   configureApp(app);
-  await app.init();
+  // A real port lets many parallel supertest calls share one server.
+  await app.listen(0, '127.0.0.1');
   return app;
 }

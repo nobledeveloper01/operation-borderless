@@ -1,12 +1,19 @@
 import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import type { TlsOptions } from 'node:tls';
 import type { DataSourceOptions } from 'typeorm';
 import type { EnvironmentVariables } from '../config/env.validation.js';
+import {
+  Account,
+  Balance,
+  RefreshToken,
+  Session,
+  Wallet,
+  WalletKey,
+} from '../accounts/entities.js';
 import { migrations } from '../migrations/index.js';
-import { SnakeNamingStrategy } from './snake-naming.strategy.js';
 
-const here = fileURLToPath(new URL('.', import.meta.url));
+const entities = [Account, Balance, RefreshToken, Session, Wallet, WalletKey];
+import { SnakeNamingStrategy } from './snake-naming.strategy.js';
 
 function ssl(config: EnvironmentVariables): boolean | TlsOptions {
   if (config.DB_SSL === 'disable') return false;
@@ -29,7 +36,7 @@ export function databaseOptions(
     password: config.DB_PASSWORD,
     ssl: ssl(config),
     namingStrategy: new SnakeNamingStrategy(),
-    entities: [`${here}../**/*.entity.{js,ts}`],
+    entities,
     migrations,
     synchronize: false,
     migrationsRun: false,

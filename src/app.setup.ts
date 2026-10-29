@@ -20,6 +20,14 @@ export function buildOpenApi(app: INestApplication): OpenAPIObject {
       'Multi-currency stablecoin wallet sandbox: wallets, deposits, swaps, transfers and FX rates.',
     )
     .setVersion('1.0.0')
+    .addBearerAuth(
+      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+      'bearer',
+    )
+    .addApiKey(
+      { type: 'apiKey', in: 'header', name: 'X-Wallet-Key' },
+      'walletKey',
+    )
     .build();
   return SwaggerModule.createDocument(app, config);
 }

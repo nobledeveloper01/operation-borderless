@@ -16,6 +16,7 @@ export class HealthController {
   @Get()
   @ApiEndpoint({
     summary: 'Is the process up?',
+    access: 'public',
     message: 'The API is up',
     type: HealthDto,
   })
@@ -26,6 +27,7 @@ export class HealthController {
   @Get('ready')
   @ApiEndpoint({
     summary: 'Can the API serve traffic?',
+    access: 'public',
     message: 'The API is ready',
     type: HealthDto,
     errors: [HttpStatus.SERVICE_UNAVAILABLE],

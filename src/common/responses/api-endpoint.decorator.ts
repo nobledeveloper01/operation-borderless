@@ -5,11 +5,18 @@ import {
   type Type,
 } from '@nestjs/common';
 import {
+  ApiBearerAuth,
   ApiExtraModels,
   ApiOperation,
   ApiResponse,
+  ApiSecurity,
   getSchemaPath,
 } from '@nestjs/swagger';
+import {
+  type Access,
+  AuthRateLimited,
+  RouteAccess,
+} from '../../auth/access.decorators.js';
 import { ErrorResponseDto } from '../errors/error-response.dto.js';
 import { ResponseMessage } from './response-message.decorator.js';
 import { SuccessResponseDto } from './success-response.dto.js';
@@ -22,6 +29,8 @@ export interface EndpointOptions {
   isArray?: boolean;
   errors?: HttpStatus[];
   description?: string;
+  access?: Access;
+  authRateLimit?: boolean;
 }
 
 // Any route can hit these, so no controller has to list them again.
@@ -30,7 +39,7 @@ const COMMON_ERRORS = [
   HttpStatus.INTERNAL_SERVER_ERROR,
 ];
 
-// One decorator per route sets its status, its message and its whole Swagger contract.
+// One decorator per route sets who may call it, its status, its message and its whole Swagger contract.
 export function ApiEndpoint(options: EndpointOptions) {
   const status = options.status ?? HttpStatus.OK;
   const dataSchema = options.type
@@ -38,9 +47,27 @@ export function ApiEndpoint(options: EndpointOptions) {
       ? { type: 'array', items: { $ref: getSchemaPath(options.type) } }
       : { $ref: getSchemaPath(options.type) }
     : { type: 'object', nullable: true };
-  const errors = [...new Set([...(options.errors ?? []), ...COMMON_ERRORS])];
+  const access = options.access ?? 'any';
+  const accessErrors =
+    access === 'public'
+      ? []
+      : access === 'session'
+        ? [HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN]
+        : [HttpStatus.UNAUTHORIZED];
+  const errors = [
+    ...new Set([...(options.errors ?? []), ...accessErrors, ...COMMON_ERRORS]),
+  ];
+  const security =
+    access === 'public'
+      ? []
+      : access === 'session'
+        ? [ApiBearerAuth('bearer')]
+        : [ApiBearerAuth('bearer'), ApiSecurity('walletKey')];
 
   return applyDecorators(
+    RouteAccess(access),
+    ...(options.authRateLimit ? [AuthRateLimited()] : []),
+    ...security,
     HttpCode(status),
     ResponseMessage(options.message),
     ApiOperation({
