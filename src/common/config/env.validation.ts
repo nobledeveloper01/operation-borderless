@@ -60,6 +60,15 @@ export class EnvironmentVariables {
   @IsString()
   CORS_ORIGINS?: string;
 
+  // Operators send this as X-Ops-Token to read metrics and run the ledger check; unset hides those routes.
+  @Transform(({ value }: { value: unknown }) =>
+    value === '' ? undefined : value,
+  )
+  @IsOptional()
+  @IsString()
+  @MinLength(32)
+  OPS_TOKEN?: string;
+
   @Transform(toInt)
   @IsInt()
   @Min(1)
@@ -178,6 +187,9 @@ export function validateEnv(
     problems.push('DB_SSL_CA is required when DB_SSL is verify-full');
   }
   problems.push(...keyProblems(env));
+  if (env.NODE_ENV === 'production' && env.OPS_TOKEN?.startsWith('local-')) {
+    problems.push('Production cannot use the local-only OPS_TOKEN');
+  }
   if (problems.length > 0) {
     throw new Error(`Invalid environment: ${problems.join('; ')}`);
   }

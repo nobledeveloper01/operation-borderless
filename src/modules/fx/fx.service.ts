@@ -6,6 +6,7 @@ import {
   type OnModuleInit,
 } from '@nestjs/common';
 import { CLOCK, type Clock } from '../../common/clock.js';
+import { MetricsService } from '../../common/metrics/metrics.service.js';
 import { AppError } from '../../common/errors/app-error.js';
 import { FetchFailure } from '../../common/http/fetch-json.js';
 import { crossRate, RATE_SCALE } from '../../common/money/rate.js';
@@ -39,7 +40,23 @@ export class FxService implements OnModuleInit, OnModuleDestroy {
     private readonly snapshots: FxSnapshotsRepository,
     private readonly config: EnvironmentVariables,
     @Inject(CLOCK) private readonly now: Clock,
-  ) {}
+    private readonly metrics: MetricsService,
+  ) {
+    metrics.watch(
+      'borderless_fx_rate_age_seconds',
+      "Age of the rates in use, from the provider's own update time.",
+      () =>
+        this.current
+          ? (this.now().getTime() - this.current.providerUpdatedAt.getTime()) /
+            1000
+          : undefined,
+    );
+    metrics.watch(
+      'borderless_fx_rates_fresh',
+      '1 when swaps and transfers can be priced, 0 when the rates are stale or missing.',
+      () => (this.isFresh(this.current) ? 1 : 0),
+    );
+  }
 
   // Startup never waits on a provider: it loads the last snapshot and refreshes in the background.
   async onModuleInit(): Promise<void> {
@@ -101,9 +118,12 @@ export class FxService implements OnModuleInit, OnModuleDestroy {
 
   // Tries the primary, then the secondary, then (only if allowed) the fixed table; one refresh runs at a time.
   refresh(): Promise<RefreshOutcome> {
-    this.refreshing ??= this.runRefresh().finally(
-      () => (this.refreshing = undefined),
-    );
+    this.refreshing ??= this.runRefresh()
+      .then((outcome) => {
+        this.metrics.fxRefreshes.inc({ outcome: outcome.kind });
+        return outcome;
+      })
+      .finally(() => (this.refreshing = undefined));
     return this.refreshing;
   }
 

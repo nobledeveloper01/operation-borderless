@@ -6,9 +6,14 @@ import {
 } from '@nestjs/common';
 import { DataSource, type EntityManager } from 'typeorm';
 import { AppError } from '../../common/errors/app-error.js';
-import { isTransientConflict } from '../../common/database/db-errors.js';
+import {
+  isTransientConflict,
+  pgCode,
+} from '../../common/database/db-errors.js';
 import { returned } from '../../common/database/returned.js';
+import { MetricsService } from '../../common/metrics/metrics.service.js';
 import { DB_CONFLICT_RETRY, withRetry } from '../../common/retry/retry.js';
+import type { TransactionType } from '../transactions/transaction.dto.js';
 import { sameHash } from '../auth/secrets.js';
 import type { IdempotencyRequest } from './idempotency-key.decorator.js';
 
@@ -25,7 +30,10 @@ export class IdempotencyService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(IdempotencyService.name);
   private timer: NodeJS.Timeout | undefined;
 
-  constructor(private readonly db: DataSource) {}
+  constructor(
+    private readonly db: DataSource,
+    private readonly metrics: MetricsService,
+  ) {}
 
   onModuleInit(): void {
     this.timer = setInterval(() => void this.removeExpired(), CLEANUP_EVERY_MS);
@@ -42,20 +50,33 @@ export class IdempotencyService implements OnModuleInit, OnModuleDestroy {
     request: IdempotencyRequest,
     work: (
       manager: EntityManager,
-    ) => Promise<{ body: T; transactionId: string }>,
+    ) => Promise<{ body: T; transactionId: string; type: TransactionType }>,
   ): Promise<IdempotentResult<T>> {
-    return withRetry(
-      () => this.attempt(accountId, request, work),
+    let type: TransactionType | undefined;
+    const result = await withRetry(
+      () =>
+        this.attempt(accountId, request, async (manager) => {
+          const done = await work(manager);
+          type = done.type;
+          return done;
+        }),
       DB_CONFLICT_RETRY,
       isTransientConflict,
       {
-        onRetry: (attempt, error, delayMs) =>
+        onRetry: (attempt, error, delayMs) => {
+          const code = pgCode(error) ?? 'unknown';
+          this.metrics.dbConflictRetries.inc({ code });
           this.logger.warn(
-            { attempt, code: (error as { code?: string }).code, delayMs },
+            { attempt, code, delayMs },
             'Retrying a money transaction after a database conflict',
-          ),
+          );
+        },
       },
     );
+    // Counted only after the commit, so a rolled-back attempt never shows up as a movement.
+    if (result.replayed) this.metrics.idempotentReplays.inc();
+    else if (type) this.metrics.moneyMovements.inc({ type });
+    return result;
   }
 
   private attempt<T>(
@@ -63,7 +84,7 @@ export class IdempotencyService implements OnModuleInit, OnModuleDestroy {
     request: IdempotencyRequest,
     work: (
       manager: EntityManager,
-    ) => Promise<{ body: T; transactionId: string }>,
+    ) => Promise<{ body: T; transactionId: string; type: TransactionType }>,
   ): Promise<IdempotentResult<T>> {
     return this.db.transaction(async (manager) => {
       // An expired key may be used again, so its old row is cleared first.

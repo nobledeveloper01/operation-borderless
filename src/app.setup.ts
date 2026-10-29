@@ -12,6 +12,8 @@ import { bodyErrorsMiddleware } from './common/middleware/body-errors.middleware
 import { noStoreMiddleware } from './common/middleware/no-store.middleware.js';
 import { requestIdMiddleware } from './common/middleware/request-id.middleware.js';
 import { EnvironmentVariables } from './common/config/env.validation.js';
+import { httpMetricsMiddleware } from './common/metrics/http-metrics.middleware.js';
+import { MetricsService } from './common/metrics/metrics.service.js';
 
 export const API_PREFIX = 'api/v1';
 
@@ -30,6 +32,10 @@ export function buildOpenApi(app: INestApplication): OpenAPIObject {
       { type: 'apiKey', in: 'header', name: 'X-Wallet-Key' },
       'walletKey',
     )
+    .addApiKey(
+      { type: 'apiKey', in: 'header', name: 'X-Ops-Token' },
+      'opsToken',
+    )
     .build();
   return SwaggerModule.createDocument(app, config);
 }
@@ -43,6 +49,7 @@ export function configureApp(app: NestExpressApplication): void {
   app.set('trust proxy', config.TRUST_PROXY ? 1 : false);
   // Order matters: the ID comes first so even a rejected body gets one in its error.
   app.use(requestIdMiddleware);
+  app.use(httpMetricsMiddleware(app.get(MetricsService)));
   app.use(noStoreMiddleware);
   app.useBodyParser('json', { limit: '16kb' });
   app.use(bodyErrorsMiddleware);

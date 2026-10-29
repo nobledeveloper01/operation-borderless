@@ -50,6 +50,7 @@ export class DepositsService {
       return {
         body: toMovementResult(posted, walletId),
         transactionId: posted.transaction.id,
+        type: posted.transaction.type,
       };
     });
   }

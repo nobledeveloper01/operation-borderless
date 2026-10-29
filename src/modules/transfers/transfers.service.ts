@@ -74,6 +74,7 @@ export class TransfersService {
       return {
         body: toMovementResult(posted, dto.fromWalletId),
         transactionId: posted.transaction.id,
+        type: posted.transaction.type,
       };
     });
   }

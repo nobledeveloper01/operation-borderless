@@ -9,6 +9,7 @@ import { outsideGroup } from './common/http/rate-limit-groups.js';
 import { SuccessInterceptor } from './common/responses/success.interceptor.js';
 import { AppConfigModule } from './common/config/config.module.js';
 import { CryptoModule } from './common/crypto/crypto.module.js';
+import { MetricsModule } from './common/metrics/metrics.module.js';
 import { EnvironmentVariables } from './common/config/env.validation.js';
 import { databaseOptions } from './common/database/database.options.js';
 import { ACCOUNT_ENTITIES } from './modules/accounts/entities.js';
@@ -19,6 +20,7 @@ import { FxModule } from './modules/fx/fx.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { IdempotencyModule } from './modules/idempotency/idempotency.module.js';
 import { LedgerModule } from './modules/ledger/ledger.module.js';
+import { OpsModule } from './modules/ops/ops.module.js';
 import { SwapsModule } from './modules/swaps/swaps.module.js';
 import { TransactionsModule } from './modules/transactions/transactions.module.js';
 import { TransfersModule } from './modules/transfers/transfers.module.js';
@@ -28,6 +30,7 @@ import { WalletsModule } from './modules/wallets/wallets.module.js';
   imports: [
     AppConfigModule,
     CryptoModule,
+    MetricsModule,
     LoggerModule.forRootAsync({
       inject: [EnvironmentVariables],
       useFactory: loggerOptions,
@@ -67,6 +70,7 @@ import { WalletsModule } from './modules/wallets/wallets.module.js';
     TransactionsModule,
     HealthModule,
     WalletsModule,
+    OpsModule,
   ],
   providers: [
     // Guards run in this order, so the rate limit applies before any credential is checked.

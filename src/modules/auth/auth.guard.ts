@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { DataSource } from 'typeorm';
+import { EnvironmentVariables } from '../../common/config/env.validation.js';
 import { AppError } from '../../common/errors/app-error.js';
 import { ACCESS, type Access } from '../../common/http/route-access.js';
 import { AccessTokens } from './access-tokens.js';
@@ -21,6 +22,7 @@ export class AuthGuard implements CanActivate {
     private readonly reflector: Reflector,
     private readonly tokens: AccessTokens,
     private readonly db: DataSource,
+    private readonly config: EnvironmentVariables,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -32,6 +34,7 @@ export class AuthGuard implements CanActivate {
     if (access === 'public') return true;
 
     const req = context.switchToHttp().getRequest<AuthenticatedRequest>();
+    if (access === 'ops') return this.checkOpsToken(req.headers['x-ops-token']);
     const bearer = req.headers.authorization;
     const walletKey = req.headers['x-wallet-key'];
     if (bearer && walletKey) {
@@ -57,6 +60,19 @@ export class AuthGuard implements CanActivate {
       );
     }
     req.principal = principal;
+    return true;
+  }
+
+  // Without a configured token the operator routes look like routes that don't exist.
+  private checkOpsToken(sent: string | string[] | undefined): boolean {
+    const expected = this.config.OPS_TOKEN;
+    if (!expected) throw new AppError('ROUTE_NOT_FOUND', 'Route not found.');
+    if (typeof sent !== 'string' || !sameHash(sha256(sent), sha256(expected))) {
+      throw new AppError(
+        'UNAUTHENTICATED',
+        'This route needs the operator token in X-Ops-Token.',
+      );
+    }
     return true;
   }
 

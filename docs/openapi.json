@@ -2985,6 +2985,247 @@
           "Wallet keys"
         ]
       }
+    },
+    "/api/v1/ops/metrics": {
+      "get": {
+        "description": "Plain text in the Prometheus format, for a scraper or a person with curl.",
+        "operationId": "OpsController_scrape",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Metrics",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, wrong or expired credentials",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 401
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not yours",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 404
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 429
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 500
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opsToken": []
+          }
+        ],
+        "summary": "Prometheus metrics for this API process",
+        "tags": [
+          "Operations"
+        ]
+      }
+    },
+    "/api/v1/ops/ledger-check": {
+      "get": {
+        "description": "Runs now; the same check also runs every hour and sets a metric.",
+        "operationId": "OpsController_ledgerCheck",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Ledger checked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 200
+                        },
+                        "message": {
+                          "example": "Ledger checked"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/LedgerCheckDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, wrong or expired credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 401
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found, or not yours",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 404
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 429
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "statusCode": {
+                          "example": 500
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opsToken": []
+          }
+        ],
+        "summary": "Check that every balance equals its ledger lines",
+        "tags": [
+          "Operations"
+        ]
+      }
     }
   },
   "info": {
@@ -3006,6 +3247,11 @@
         "type": "apiKey",
         "in": "header",
         "name": "X-Wallet-Key"
+      },
+      "opsToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Ops-Token"
       }
     },
     "schemas": {
@@ -4009,6 +4255,80 @@
           "name",
           "createdAt",
           "lastUsedAt"
+        ]
+      },
+      "LedgerMismatchDto": {
+        "type": "object",
+        "properties": {
+          "walletId": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "cNGN",
+              "cGHS",
+              "cXAF",
+              "USDx",
+              "EURx"
+            ]
+          },
+          "balance": {
+            "type": "string",
+            "example": "10.000000"
+          },
+          "ledger": {
+            "type": "string",
+            "example": "9.000000",
+            "description": "The sum of this balance's ledger lines."
+          }
+        },
+        "required": [
+          "walletId",
+          "currency",
+          "balance",
+          "ledger"
+        ]
+      },
+      "LedgerCheckDto": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "description": "True when every balance equals its ledger lines."
+          },
+          "checkedAt": {
+            "type": "string",
+            "example": "2026-10-29T12:00:00.000Z"
+          },
+          "balancesChecked": {
+            "type": "number",
+            "example": 540
+          },
+          "mismatchCount": {
+            "type": "number",
+            "example": 0
+          },
+          "transactionsWithoutLines": {
+            "type": "number",
+            "example": 0,
+            "description": "Transactions with no ledger lines, which should never happen."
+          },
+          "mismatches": {
+            "description": "The first 100 balances that differ from their ledger lines.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LedgerMismatchDto"
+            }
+          }
+        },
+        "required": [
+          "ok",
+          "checkedAt",
+          "balancesChecked",
+          "mismatchCount",
+          "transactionsWithoutLines",
+          "mismatches"
         ]
       }
     }

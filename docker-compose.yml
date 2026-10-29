@@ -34,6 +34,8 @@ services:
       # Turn on for an offline demo: prices from a built-in table, marked fixed-table.
       FX_FIXED_TABLE: ${FX_FIXED_TABLE:-false}
       TRUST_PROXY: 'true'
+      # Local-only operator token for /api/v1/ops; production refuses any value starting with local-.
+      OPS_TOKEN: ${OPS_TOKEN:-local-ops-token-for-the-compose-stack-only}
       # Local-only keys; the app refuses to start with them when NODE_ENV is production.
       PII_ENCRYPTION_KEYS: ${PII_ENCRYPTION_KEYS:-1:bG9jYWwtcGlpLWVuY3J5cHRpb24ta2V5LXYxLTAwMDE=}
       PII_ACTIVE_KEY_VERSION: ${PII_ACTIVE_KEY_VERSION:-1}

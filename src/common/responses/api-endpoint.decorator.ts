@@ -9,6 +9,7 @@ import {
   ApiHeader,
   ApiExtraModels,
   ApiOperation,
+  ApiProduces,
   ApiResponse,
   ApiSecurity,
   getSchemaPath,
@@ -33,6 +34,8 @@ export interface EndpointOptions {
   rateLimit?: RateLimitGroup | 'none';
   // Money writes need an Idempotency-Key header; this documents it and its errors once.
   idempotent?: boolean;
+  // A plain-text answer, such as Prometheus metrics, skips the JSON envelope.
+  produces?: 'text/plain';
 }
 
 const IDEMPOTENCY_HEADER_DOC = {
@@ -64,7 +67,9 @@ export function ApiEndpoint(options: EndpointOptions) {
       ? []
       : access === 'session'
         ? [HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN]
-        : [HttpStatus.UNAUTHORIZED];
+        : access === 'ops'
+          ? [HttpStatus.UNAUTHORIZED, HttpStatus.NOT_FOUND]
+          : [HttpStatus.UNAUTHORIZED];
   // Money writes take row locks, so a lock timeout can answer 503 SERVICE_BUSY.
   const idempotencyErrors = options.idempotent
     ? [
@@ -89,7 +94,31 @@ export function ApiEndpoint(options: EndpointOptions) {
       ? []
       : access === 'session'
         ? [ApiBearerAuth('bearer')]
-        : [ApiBearerAuth('bearer'), ApiSecurity('walletKey')];
+        : access === 'ops'
+          ? [ApiSecurity('opsToken')]
+          : [ApiBearerAuth('bearer'), ApiSecurity('walletKey')];
+  const success = options.produces
+    ? ApiResponse({
+        status,
+        description: options.message,
+        content: { [options.produces]: { schema: { type: 'string' } } },
+      })
+    : ApiResponse({
+        status,
+        description: options.message,
+        schema: {
+          allOf: [
+            { $ref: getSchemaPath(SuccessResponseDto) },
+            {
+              properties: {
+                statusCode: { example: status },
+                message: { example: options.message },
+                data: dataSchema,
+              },
+            },
+          ],
+        },
+      });
 
   return applyDecorators(
     RouteAccess(access),
@@ -111,22 +140,8 @@ export function ApiEndpoint(options: EndpointOptions) {
       ErrorResponseDto,
       ...(options.type ? [options.type] : []),
     ),
-    ApiResponse({
-      status,
-      description: options.message,
-      schema: {
-        allOf: [
-          { $ref: getSchemaPath(SuccessResponseDto) },
-          {
-            properties: {
-              statusCode: { example: status },
-              message: { example: options.message },
-              data: dataSchema,
-            },
-          },
-        ],
-      },
-    }),
+    ...(options.produces ? [ApiProduces(options.produces)] : []),
+    success,
     ...errors.map((code) =>
       ApiResponse({
         status: code,

@@ -41,6 +41,23 @@ describe('validateEnv', () => {
     }
   });
 
+  it('treats an empty operator token as unset and refuses a short or local one in production', () => {
+    expect(validateEnv({ ...base, OPS_TOKEN: '' }).OPS_TOKEN).toBeUndefined();
+    expect(() => validateEnv({ ...base, OPS_TOKEN: 'short' })).toThrow(
+      /OPS_TOKEN/,
+    );
+    expect(() =>
+      validateEnv({
+        ...base,
+        NODE_ENV: 'production',
+        DB_SSL: 'require',
+        PII_ENCRYPTION_KEYS: '1:' + Buffer.alloc(32, 7).toString('base64'),
+        PII_LOOKUP_KEY: Buffer.alloc(32, 9).toString('base64'),
+        OPS_TOKEN: 'local-ops-token-for-the-compose-stack-only',
+      }),
+    ).toThrow(/local-only OPS_TOKEN/);
+  });
+
   it('TC-061 refuses the local-only keys in production', () => {
     expect(() =>
       validateEnv({

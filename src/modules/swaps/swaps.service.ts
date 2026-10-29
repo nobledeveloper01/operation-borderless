@@ -69,6 +69,7 @@ export class SwapsService {
       return {
         body: toMovementResult(posted, walletId),
         transactionId: posted.transaction.id,
+        type: posted.transaction.type,
       };
     });
   }
