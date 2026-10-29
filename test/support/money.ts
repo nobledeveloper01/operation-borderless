@@ -23,7 +23,12 @@ export function deposit(
 export function swap(
   app: NestExpressApplication,
   wallet: TestWallet,
-  body: { fromCurrency: string; toCurrency: string; amount: string },
+  body: {
+    fromCurrency: string;
+    toCurrency: string;
+    amount: string;
+    quoteId?: string;
+  },
   key = newKey(),
 ) {
   return request(app.getHttpServer())
@@ -69,6 +74,7 @@ export function transfer(
     fromCurrency: string;
     toCurrency?: string;
     amount: string;
+    quoteId?: string;
   },
   key = newKey(),
 ) {

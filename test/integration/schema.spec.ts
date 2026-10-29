@@ -48,6 +48,7 @@ describe('schema', () => {
       expect(tables.map((t) => t.tablename)).toEqual([
         'accounts',
         'balances',
+        'fx_quotes',
         'fx_snapshots',
         'idempotency_keys',
         'ledger_entries',

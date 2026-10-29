@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { AppError } from '../../common/errors/app-error.js';
 import { parseAmount } from '../../common/money/amount.js';
-import { PricingService, pricedFields } from '../pricing/pricing.service.js';
+import { pricedFields } from '../pricing/pricing.service.js';
+import { QuotesService } from '../quotes/quotes.service.js';
 import type { IdempotencyRequest } from '../idempotency/idempotency-key.decorator.js';
 import {
   IdempotencyService,
@@ -19,7 +20,7 @@ export class SwapsService {
   constructor(
     private readonly ledger: LedgerService,
     private readonly idempotency: IdempotencyService,
-    private readonly pricing: PricingService,
+    private readonly quotes: QuotesService,
   ) {}
 
   swap(
@@ -36,10 +37,15 @@ export class SwapsService {
     }
     return this.idempotency.run(accountId, request, async (manager) => {
       // Priced inside the claim, so a replay returns the first answer even if the rates have gone stale since.
-      const price = this.pricing.price(
-        dto.fromCurrency,
-        dto.toCurrency,
-        parseAmount(dto.amount),
+      const price = await this.quotes.priceMovement(
+        manager,
+        accountId,
+        {
+          from: dto.fromCurrency,
+          to: dto.toCurrency,
+          amount: parseAmount(dto.amount),
+        },
+        dto.quoteId,
       );
       const posted = await this.ledger.post(
         manager,

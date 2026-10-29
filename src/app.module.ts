@@ -22,6 +22,7 @@ import { IdempotencyModule } from './modules/idempotency/idempotency.module.js';
 import { LedgerModule } from './modules/ledger/ledger.module.js';
 import { OpsModule } from './modules/ops/ops.module.js';
 import { PricingModule } from './modules/pricing/pricing.module.js';
+import { QuotesModule } from './modules/quotes/quotes.module.js';
 import { SwapsModule } from './modules/swaps/swaps.module.js';
 import { TransactionsModule } from './modules/transactions/transactions.module.js';
 import { TransfersModule } from './modules/transfers/transfers.module.js';
@@ -64,6 +65,7 @@ import { WalletsModule } from './modules/wallets/wallets.module.js';
     AuthModule,
     FxModule,
     PricingModule,
+    QuotesModule,
     LedgerModule,
     IdempotencyModule,
     DepositsModule,

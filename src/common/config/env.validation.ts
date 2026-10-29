@@ -115,6 +115,13 @@ export class EnvironmentVariables {
   @Max(1000)
   FEE_BPS = 50;
 
+  // How long a quote holds its rate and fee.
+  @Transform(toInt)
+  @IsInt()
+  @Min(5)
+  @Max(300)
+  QUOTE_TTL_SECONDS = 30;
+
   // One direction per entry, for example "cNGN:cGHS=25,USDx:EURx=0".
   @IsOptional()
   @IsString()

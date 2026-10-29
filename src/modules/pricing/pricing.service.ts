@@ -11,6 +11,14 @@ import {
 import { formatRate } from '../../common/money/rate.js';
 import { FxService } from '../fx/fx.service.js';
 
+export interface HeldRate {
+  rate: bigint;
+  rateSource: string;
+  rateAsOf: Date | null;
+  fxSnapshotId: string | null;
+  feeBps: number;
+}
+
 export interface Price {
   amount: bigint;
   feeBps: number;
@@ -55,10 +63,21 @@ export class PricingService {
     return this.overrides.get(pairKey(from, to)) ?? this.config.FEE_BPS;
   }
 
+  // Prices at the current rate and fee.
   price(from: Stablecoin, to: Stablecoin, amount: bigint): Price {
     const quote = this.fx.quote(from, to);
-    const feeBps = this.feeBps(from, to);
-    const priced = priceConversion(amount, quote.rate, feeBps);
+    return this.priceAt(to, amount, {
+      rate: quote.rate,
+      rateSource: quote.source,
+      rateAsOf: quote.asOf,
+      fxSnapshotId: quote.snapshotId,
+      feeBps: this.feeBps(from, to),
+    });
+  }
+
+  // Prices at a rate and fee fixed earlier, which is how a quote is honoured.
+  priceAt(to: Stablecoin, amount: bigint, held: HeldRate): Price {
+    const priced = priceConversion(amount, held.rate, held.feeBps);
     if (priced.received === 0n) {
       throw new AppError(
         'AMOUNT_TOO_SMALL',
@@ -67,12 +86,12 @@ export class PricingService {
     }
     return {
       amount,
-      feeBps,
+      feeBps: held.feeBps,
       ...priced,
-      rate: formatRate(quote.rate),
-      rateSource: quote.source,
-      rateAsOf: quote.asOf,
-      fxSnapshotId: quote.snapshotId,
+      rate: formatRate(held.rate),
+      rateSource: held.rateSource,
+      rateAsOf: held.rateAsOf,
+      fxSnapshotId: held.fxSnapshotId,
     };
   }
 }

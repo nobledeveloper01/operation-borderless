@@ -20,9 +20,13 @@ export const IdParam = (name: string) =>
   );
 
 // A UUID in a request body, checked and lowercased the same way as route parameters.
-export const UuidField = (name: string, description: string) =>
+export const UuidField = (
+  name: string,
+  description: string,
+  { required = true }: { required?: boolean } = {},
+) =>
   applyDecorators(
-    ApiProperty({ description, format: 'uuid' }),
+    ApiProperty({ description, format: 'uuid', required }),
     Transform(({ value }) => lowercase(value)),
     IsUUID('all', { message: `${name} must be a UUID.` }),
   );

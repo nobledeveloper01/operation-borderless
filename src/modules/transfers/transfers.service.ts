@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { AppError } from '../../common/errors/app-error.js';
 import { parseAmount } from '../../common/money/amount.js';
-import { PricingService, pricedFields } from '../pricing/pricing.service.js';
+import { pricedFields } from '../pricing/pricing.service.js';
+import { QuotesService } from '../quotes/quotes.service.js';
 import type { IdempotencyRequest } from '../idempotency/idempotency-key.decorator.js';
 import {
   IdempotencyService,
@@ -19,7 +20,7 @@ export class TransfersService {
   constructor(
     private readonly ledger: LedgerService,
     private readonly idempotency: IdempotencyService,
-    private readonly pricing: PricingService,
+    private readonly quotes: QuotesService,
   ) {}
 
   // Moves money to another wallet, converting at the current rate when the currencies differ.
@@ -36,10 +37,15 @@ export class TransfersService {
     }
     const toCurrency = dto.toCurrency ?? dto.fromCurrency;
     return this.idempotency.run(accountId, request, async (manager) => {
-      const price = this.pricing.price(
-        dto.fromCurrency,
-        toCurrency,
-        parseAmount(dto.amount),
+      const price = await this.quotes.priceMovement(
+        manager,
+        accountId,
+        {
+          from: dto.fromCurrency,
+          to: toCurrency,
+          amount: parseAmount(dto.amount),
+        },
+        dto.quoteId,
       );
       const posted = await this.ledger.post(
         manager,

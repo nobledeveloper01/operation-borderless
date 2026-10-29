@@ -33,4 +33,12 @@ export class CreateTransferDto {
     'Amount of fromCurrency to send, decimal string with up to 6 places.',
   )
   amount: string;
+
+  @UuidField(
+    'quoteId',
+    'A quote from POST /quotes; the movement then gets exactly that price.',
+    { required: false },
+  )
+  @IsOptional()
+  quoteId?: string;
 }
