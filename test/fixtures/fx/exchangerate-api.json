@@ -1,0 +1,22 @@
+{
+  "result": "success",
+  "provider": "https://www.exchangerate-api.com",
+  "documentation": "https://www.exchangerate-api.com/docs/free",
+  "terms_of_use": "https://www.exchangerate-api.com/terms",
+  "time_last_update_unix": 1793232151,
+  "time_last_update_utc": "Thu, 29 Oct 2026 00:02:31 +0000",
+  "time_next_update_unix": 1793319581,
+  "time_next_update_utc": "Fri, 30 Oct 2026 00:19:41 +0000",
+  "time_eol_unix": 0,
+  "base_code": "USD",
+  "rates": {
+    "USD": 1,
+    "NGN": 1346.236888,
+    "GHS": 11.639916,
+    "XAF": 588.52908,
+    "EUR": 0.897215,
+    "GBP": 0.751538,
+    "KES": 129.832372,
+    "ZAR": 16.633923
+  }
+}
